@@ -35,9 +35,6 @@ importers:
       imports-loader:
         specifier: 5.0.0
         version: 5.0.0(webpack@5.104.1)
-      pnpm:
-        specifier: 10.4.1
-        version: 10.4.1
       replace-in-file-webpack-plugin:
         specifier: 1.0.6
         version: 1.0.6
@@ -2891,11 +2888,6 @@ packages:
   pkg-dir@4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
     engines: {node: '>=8'}
-
-  pnpm@10.4.1:
-    resolution: {integrity: sha512-x1O2w616+hOvOI+m2AgDWgCOMOqZk/WMZmPivF/yFnmqg02wlJhxKapNSIuG31f3tjSYGy+CfNysxpjMDPuIrw==}
-    engines: {node: '>=18.12'}
-    hasBin: true
 
   portfinder@1.0.38:
     resolution: {integrity: sha512-rEwq/ZHlJIKw++XtLAO8PPuOQA/zaPJOZJ37BVuN97nLpMJeuDVLVGRwbFoBgLudgdTMP2hdRJP++H+8QOA3vg==}
@@ -6747,8 +6739,6 @@ snapshots:
   pkg-dir@4.2.0:
     dependencies:
       find-up: 4.1.0
-
-  pnpm@10.4.1: {}
 
   portfinder@1.0.38:
     dependencies:
