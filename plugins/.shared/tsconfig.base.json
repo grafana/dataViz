@@ -1,53 +1,52 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../.config/tsconfig.json",
   "exclude": [
     "node_modules",
     "webpack.config.ts",
     "webpack-shared.*",
+    "webpack-monorepo.*",
     ".config",
     "tests",
     "**/*.test.ts",
     "**/*.test.tsx"
   ],
   "compilerOptions": {
-    "esModuleInterop": true,
-    "isolatedModules": true,
+    /* Monorepo module/target overrides on top of the vendored create-plugin base.
+       The base extends @grafana/tsconfig (module esnext, target es2018,
+       moduleResolution node, jsx react, lib es2022); we pin the values the
+       bundler + project references expect instead. */
     "module": "ESNext",
     "target": "ES2017",
     "lib": ["ESNext", "DOM", "dom.iterable"],
     "moduleResolution": "Bundler",
-    "preserveWatchOutput": true,
-    "skipLibCheck": true,
-    "emitDeclarationOnly": true,
-    "declarationMap": false,
     "jsx": "preserve",
+
+    /* Project-reference / incremental build settings for the workspace.
+       `declaration` is re-enabled here because the vendored base disables it,
+       but composite projects require declaration emit. */
     "composite": true,
     "incremental": true,
-    "resolveJsonModule": true,
-    "experimentalDecorators": true,
-    "useDefineForClassFields": true,
-    "allowJs": true,
-    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationMap": false,
+    "preserveWatchOutput": true,
 
-    /* Linting */
-    "strict": true,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "noUnusedLocals": true,
+    /* Monorepo-specific compiler options not covered by the base. */
+    "isolatedModules": true,
+    "allowJs": true,
+    "allowArbitraryExtensions": true,
+    "useDefineForClassFields": true,
+    "verbatimModuleSyntax": true,
+    "noErrorTruncation": true,
+    "stripInternal": true,
+
+    /* Extra strictness beyond @grafana/tsconfig's defaults. */
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "alwaysStrict": true,
-    "noImplicitReturns": true,
-    "forceConsistentCasingInFileNames": true,
     "noUncheckedIndexedAccess": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitOverride": true,
-    "exactOptionalPropertyTypes": true,
-    "sourceMap": true,
-    "strictPropertyInitialization": true,
-    "stripInternal": true,
-    "allowArbitraryExtensions": true,
-    "verbatimModuleSyntax": true,
-    "noErrorTruncation": true
+    "exactOptionalPropertyTypes": true
   }
 }

@@ -11,6 +11,9 @@ importers:
       '@biomejs/biome':
         specifier: 2.5.3
         version: 2.5.3
+      '@grafana/tsconfig':
+        specifier: 2.0.1
+        version: 2.0.1
       '@swc/core':
         specifier: 1.15.0
         version: 1.15.0(@swc/helpers@0.5.17)
