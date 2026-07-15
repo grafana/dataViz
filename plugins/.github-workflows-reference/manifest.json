@@ -1,0 +1,12 @@
+{
+  "repo": "grafana/plugin-tools",
+  "ref": "89cd91c6e47f6f62554c7b8eda8de550494a6ba9",
+  "templatePath": "packages/create-plugin/templates/github/workflows",
+  "files": [
+    "bundle-stats.yml",
+    "ci.yml",
+    "cp-update.yml",
+    "is-compatible.yml",
+    "release.yml"
+  ]
+}

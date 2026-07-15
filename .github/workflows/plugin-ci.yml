@@ -1,0 +1,123 @@
+# Reusable CI for a single plugin in the monorepo (Layer 1/2 of the CI layering).
+#
+# This is the monorepo-adapted equivalent of create-plugin's `ci.yml`
+# (see plugins/.github-workflows-reference/ci.yml). It wraps the same pinned
+# grafana/plugin-actions/* and runs type-check/lint/test/build for ONE plugin,
+# then packages, validates, and runs the Grafana API compatibility check.
+#
+# The pnpm workspace lives in `plugins/`, so install and turbo run there while
+# packaging/validation target the plugin's own dist under `working-directory`.
+name: Plugin CI
+
+on:
+  workflow_call:
+    inputs:
+      package-name:
+        description: 'pnpm workspace package name, e.g. @plugins/grafana-workspace-panel'
+        required: true
+        type: string
+      working-directory:
+        description: 'Repo-root-relative plugin dir, e.g. plugins/packages/@plugins/grafana-workspace-panel'
+        required: true
+        type: string
+      node-version:
+        description: 'Node.js version'
+        required: false
+        default: '22'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build (${{ inputs.package-name }})
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: plugins/package.json
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: pnpm
+          cache-dependency-path: plugins/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: plugins
+        run: pnpm install --frozen-lockfile
+
+      - name: Check types
+        working-directory: plugins
+        run: pnpm exec turbo run type-check --filter=${{ inputs.package-name }}...
+
+      - name: Lint
+        working-directory: plugins
+        run: pnpm exec turbo run lint --filter=${{ inputs.package-name }}...
+
+      - name: Unit tests
+        working-directory: plugins
+        run: pnpm exec turbo run test:ci --filter=${{ inputs.package-name }}...
+
+      - name: Build frontend
+        working-directory: plugins
+        run: pnpm exec turbo run build --filter=${{ inputs.package-name }}...
+
+      - name: Get plugin metadata
+        id: metadata
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          sudo apt-get install -y jq
+          plugin_id=$(jq -r .id dist/plugin.json)
+          plugin_version=$(jq -r .info.version dist/plugin.json)
+          {
+            echo "plugin-id=${plugin_id}"
+            echo "plugin-version=${plugin_version}"
+            echo "archive=${plugin_id}-${plugin_version}.zip"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Package plugin
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          mv dist "${PLUGIN_ID}"
+          zip "${ARCHIVE}" "${PLUGIN_ID}" -r
+        env:
+          ARCHIVE: ${{ steps.metadata.outputs.archive }}
+          PLUGIN_ID: ${{ steps.metadata.outputs.plugin-id }}
+
+      - name: Check plugin.json
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          docker run --pull=always \
+            -v "$PWD/${ARCHIVE}:/archive.zip" \
+            grafana/plugin-validator-cli -analyzer=metadatavalid /archive.zip
+        env:
+          ARCHIVE: ${{ steps.metadata.outputs.archive }}
+
+      - name: Find module.ts or module.tsx
+        id: find-module-ts
+        run: |
+          MODULETS="$(find "${WORKING_DIRECTORY}/src" -type f \( -name "module.ts" -o -name "module.tsx" \))"
+          echo "modulets=${MODULETS}" >> "$GITHUB_OUTPUT"
+        env:
+          WORKING_DIRECTORY: ${{ inputs.working-directory }}
+
+      - name: Compatibility check
+        uses: grafana/plugin-actions/is-compatible@is-compatible/v1.0.2
+        with:
+          module: ${{ steps.find-module-ts.outputs.modulets }}
+          comment-pr: 'no'
+          fail-if-incompatible: 'yes'
+
+      - name: Archive build
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}
+          path: ${{ inputs.working-directory }}/${{ steps.metadata.outputs.plugin-id }}
+          retention-days: 5

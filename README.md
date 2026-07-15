@@ -97,6 +97,11 @@ Then update:
 - `vitest.config.base.mts` - add an alias if tests import the package
 - Docker files - add a `dist` volume / mount and allow the id as unsigned if you want it loaded by the Docker Grafana stack
 
+If the plugin you are importing already uses Jest, ESLint, or Prettier, see the
+[Tooling Migration Guide](./plugins/docs/tooling-migration.md) for how to migrate
+it to the repo's Biome + Vitest standard (or keep its existing tooling if you
+can't migrate yet).
+
 ### Add a shared package
 
 Create shared code that multiple plugins can use:

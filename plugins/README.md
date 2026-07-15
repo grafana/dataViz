@@ -19,12 +19,14 @@ plugins/
 │   ├── tsconfig.json           #   create-plugin TS base
 │   └── .cprc.json              #   pinned create-plugin version
 ├── .config-reference/          # Pristine create-plugin scaffold; the `update` target (not built)
+├── .github-workflows-reference/ # Pinned snapshot of create-plugin's workflow templates (sync:workflows)
 ├── .shared/                    # Layer 2: monorepo-wide overrides
 │   ├── tsconfig.base.json     #   extends ../.config/tsconfig.json (+ project-reference settings)
 │   ├── tsconfig.json          #   shared packages TS config
 │   └── webpack-monorepo.ts    #   extends ../.config/webpack/webpack.config.ts
 ├── scripts/
-│   └── sync-config.mjs         # Copies the vendored subset from .config-reference into .config
+│   ├── sync-config.mjs         # Copies the vendored subset from .config-reference into .config
+│   └── sync-workflows.mjs      # Refreshes the create-plugin workflow reference + reports drift
 ├── packages/
 │   ├── @shared/               # Shared libraries
 │   │   └── core/              # Core utilities (@shared/core)
@@ -234,6 +236,11 @@ are also supported — copy this package and change `plugin.json` accordingly.
 7. Keep the per-plugin `LICENSE` file (the vendored base copies it into `dist`)
 8. If you want it loaded by the Docker Grafana stack, add a `dist` volume in `docker-compose.yaml`, mount it in `docker-compose.grafana.yaml`, and add its id to `GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS`
 
+If the plugin you are importing already ships Jest/ESLint/Prettier, follow the
+[Tooling Migration Guide](./docs/tooling-migration.md) to converge it on the
+repo's Biome + Vitest standard, or to keep its existing tooling working when
+migration isn't yet feasible.
+
 ## Build config layering & updating from create-plugin
 
 The webpack/TypeScript build config is composed in three layers so we can track
@@ -284,6 +291,51 @@ pnpm build && pnpm type-check
 ESLint/Prettier/Jest/Dockerfile/rspack files stay in the reference plugin and are
 never synced. Bump the pinned version intentionally via `pnpm update:config`
 (recorded in `plugins/.config/.cprc.json`).
+
+## CI / GitHub workflows
+
+CI applies the same "track create-plugin upstream, override where needed" idea as
+the build config, but in native GitHub Actions form. The workflows live at the
+**repository root** (`.github/workflows/`, one level above `plugins/`) because
+that is where GitHub requires them:
+
+- **`plugin-ci.yml` (Layer 1/2 — reusable).** A `workflow_call` workflow that runs
+  `type-check` → `lint` → `test:ci` → `build` for a single plugin (via Turbo
+  filters), then packages it, validates `plugin.json`, and runs the Grafana API
+  compatibility check using the pinned `grafana/plugin-actions/is-compatible`.
+- **`ci.yml` (Layer 3 — driver).** Discovers every plugin under
+  `packages/@plugins/*` and fans out to `plugin-ci.yml` via a matrix. Adding a
+  plugin needs **no** workflow edits.
+- **`release.yml`.** Triggered by per-plugin scoped tags `<plugin-id>-v<semver>`
+  (e.g. `grafana-workspace-panel-v1.2.3`); resolves the plugin from the tag,
+  builds it, validates the version, and creates a draft GitHub release. It does
+  not use `grafana/plugin-actions/build-plugin` directly because that action has
+  no working-directory support and assumes a single plugin at the repo root.
+- **`bundle-stats.yml`.** Matrix wrapper around `grafana/plugin-actions/bundle-size`.
+  Marked `continue-on-error` because that action installs at the repo root and
+  does not yet support this nested pnpm workspace (kept as a tracked wrapper).
+- **`cp-update.yml`.** Scheduled job that runs this repo's `update:config` +
+  `sync:config` and opens a PR — the monorepo equivalent of create-plugin's
+  `cp-update.yml`.
+
+### Tracking upstream workflow changes
+
+The create-plugin workflow templates are Handlebars and assume a single plugin at
+the repo root, so they are **not** vendored verbatim. Instead a pinned snapshot
+lives in `plugins/.github-workflows-reference/` (see its `manifest.json`), and a
+dedicated command reports upstream drift — especially `grafana/plugin-actions/*`
+version bumps — so it can be ported into the real workflows:
+
+```bash
+# Re-fetch the snapshot at the pinned ref and print a drift report
+pnpm sync:workflows
+```
+
+This is **intentionally separate** from `update:config`/`sync:config`; CI
+workflows and the vendored `.config/` base track upstream on independent
+cadences. To adopt a newer create-plugin release, bump `ref` in
+`.github-workflows-reference/manifest.json`, re-run `pnpm sync:workflows`, and
+reconcile `.github/workflows/*`.
 
 ## Key Features
 

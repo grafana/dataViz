@@ -1,0 +1,50 @@
+# CI driver (Layer 3): discovers every plugin under plugins/packages/@plugins/*
+# and fans out to the reusable plugin-ci.yml. Adding a plugin needs no edits here.
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    name: Discover plugins
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Build plugin matrix
+        id: set-matrix
+        working-directory: plugins/packages/@plugins
+        run: |
+          matrix=$(for d in */; do
+            d="${d%/}"
+            [ -f "$d/package.json" ] || continue
+            name=$(jq -r .name "$d/package.json")
+            echo "{\"name\":\"$name\",\"dir\":\"$d\",\"workdir\":\"plugins/packages/@plugins/$d\"}"
+          done | jq -s -c '{include: .}')
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  plugin:
+    name: ${{ matrix.name }}
+    needs: discover
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
+    uses: ./.github/workflows/plugin-ci.yml
+    with:
+      package-name: ${{ matrix.name }}
+      working-directory: ${{ matrix.workdir }}

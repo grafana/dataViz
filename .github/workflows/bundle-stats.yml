@@ -1,0 +1,64 @@
+# Bundle-size reporting, one job per plugin (matrix), wrapping the pinned
+# grafana/plugin-actions/bundle-size action (see plugins/.github-workflows-reference/bundle-stats.yml).
+#
+# CAVEAT: the pinned bundle-size action runs its dependency install at the REPO
+# ROOT, but this monorepo's pnpm workspace lives in plugins/, so the install
+# currently fails here. The job is therefore marked continue-on-error (it never
+# blocks a PR) and kept as an experimental/tracked wrapper until the action
+# supports a nested working-directory install (or a root install shim is added).
+name: Bundle Stats
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+
+jobs:
+  discover:
+    name: Discover plugins
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Build plugin matrix
+        id: set-matrix
+        working-directory: plugins/packages/@plugins
+        run: |
+          matrix=$(for d in */; do
+            d="${d%/}"
+            [ -f "$d/package.json" ] || continue
+            name=$(jq -r .name "$d/package.json")
+            echo "{\"name\":\"$name\",\"dir\":\"$d\",\"workdir\":\"plugins/packages/@plugins/$d\"}"
+          done | jq -s -c '{include: .}')
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  compare:
+    name: bundle-size (${{ matrix.name }})
+    needs: discover
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: grafana/plugin-actions/bundle-size@bundle-size/v1.0.2
+        with:
+          working-directory: ${{ matrix.workdir }}
+          main-branch-stats-artifact: main-branch-stats-${{ matrix.dir }}

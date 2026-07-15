@@ -12,6 +12,7 @@
 			"!**/node_modules",
 			"!**/.config",
 			"!**/.config-reference",
+			"!**/.github-workflows-reference",
 			"!**/dist",
 			"!**/deps",
 			"!**/lib",

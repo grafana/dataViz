@@ -1,0 +1,68 @@
+# Monorepo equivalent of create-plugin's cp-update.yml.
+#
+# create-plugin's version runs `create-plugin update` at the repo root via
+# grafana/plugin-actions/create-plugin-update. This monorepo instead refreshes
+# the vendored build base through the reference plugin: it runs THIS repo's
+# `update:config` (create-plugin update against plugins/.config-reference) and
+# `sync:config` (copy the vendored subset into plugins/.config), then opens a PR.
+#
+# This is unrelated to `sync:workflows`, which tracks CI workflow templates
+# separately and is a manual, reviewed step.
+name: Create Plugin Config Update
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 1 * *' # once a month on the 1st
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: plugins/package.json
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: pnpm
+          cache-dependency-path: plugins/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: plugins
+        run: pnpm install --frozen-lockfile
+
+      - name: Refresh vendored create-plugin config
+        working-directory: plugins
+        run: |
+          pnpm run update:config
+          pnpm run sync:config
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7.0.11
+        with:
+          commit-message: 'chore: update vendored create-plugin config'
+          branch: chore/update-config
+          delete-branch: true
+          title: 'chore: update vendored create-plugin config'
+          body: |
+            Automated refresh of the vendored `@grafana/create-plugin` build base.
+
+            Ran `pnpm update:config` (create-plugin update against
+            `plugins/.config-reference`) followed by `pnpm sync:config` (copy the
+            vendored subset into `plugins/.config`).
+
+            Review the `plugins/.config` diff, then run `pnpm build` and
+            `pnpm type-check` across the workspace before merging.
+
+            > CI workflows are tracked separately via `pnpm sync:workflows`.

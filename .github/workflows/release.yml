@@ -1,0 +1,127 @@
+# Monorepo-aware release, triggered by per-plugin scoped tags: <plugin-id>-v<semver>
+# e.g. `grafana-workspace-panel-v1.2.3`.
+#
+# NOTE: create-plugin's release.yml uses grafana/plugin-actions/build-plugin, but
+# that action (and its package-plugin) has no working-directory input and enforces
+# `tag == v<package.version>`, so it only works for a single plugin at the repo
+# root. In this monorepo we resolve the plugin from the scoped tag, build it via
+# turbo, and create the draft release with the SAME pinned action build-plugin
+# uses internally (softprops/action-gh-release). Signing is left as an opt-in step.
+name: Release
+
+on:
+  push:
+    tags:
+      - '*-v[0-9]+.[0-9]+.[0-9]+'
+
+permissions: read-all
+
+jobs:
+  release:
+    name: Release ${{ github.ref_name }}
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: plugins/package.json
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: pnpm
+          cache-dependency-path: plugins/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: plugins
+        run: pnpm install --frozen-lockfile
+
+      - name: Resolve plugin from tag
+        id: resolve
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          PLUGIN_ID="${TAG%-v*}"
+          VERSION="${TAG##*-v}"
+          WORKDIR=""
+          for d in plugins/packages/@plugins/*/; do
+            [ -f "$d/src/plugin.json" ] || continue
+            id=$(jq -r .id "$d/src/plugin.json")
+            if [ "$id" = "$PLUGIN_ID" ]; then
+              WORKDIR="${d%/}"
+              break
+            fi
+          done
+          if [ -z "$WORKDIR" ]; then
+            echo "::error::No plugin under plugins/packages/@plugins/* has id '$PLUGIN_ID' (from tag '$TAG')."
+            exit 1
+          fi
+          NAME=$(jq -r .name "$WORKDIR/package.json")
+          PKG_VERSION=$(jq -r .version "$WORKDIR/package.json")
+          if [ "$PKG_VERSION" != "$VERSION" ]; then
+            echo "::error::Tag version v$VERSION does not match $WORKDIR/package.json version $PKG_VERSION."
+            exit 1
+          fi
+          {
+            echo "plugin-id=$PLUGIN_ID"
+            echo "version=$VERSION"
+            echo "workdir=$WORKDIR"
+            echo "name=$NAME"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build frontend
+        working-directory: plugins
+        run: pnpm exec turbo run build --filter=${{ steps.resolve.outputs.name }}...
+
+      - name: Package plugin
+        id: package
+        working-directory: ${{ steps.resolve.outputs.workdir }}
+        run: |
+          DIST_VERSION=$(jq -r .info.version dist/plugin.json)
+          if [ "$DIST_VERSION" != "$VERSION" ]; then
+            echo "::error::Built dist/plugin.json version $DIST_VERSION does not match tag version $VERSION."
+            exit 1
+          fi
+          ARCHIVE="${PLUGIN_ID}-${VERSION}.zip"
+          mv dist "${PLUGIN_ID}"
+          zip "${ARCHIVE}" "${PLUGIN_ID}" -r
+          sha1sum "${ARCHIVE}" | cut -f1 -d' ' > "${ARCHIVE}.sha1"
+          echo "archive=${{ steps.resolve.outputs.workdir }}/${ARCHIVE}" >> "$GITHUB_OUTPUT"
+          echo "archive-sha1=${{ steps.resolve.outputs.workdir }}/${ARCHIVE}.sha1" >> "$GITHUB_OUTPUT"
+        env:
+          PLUGIN_ID: ${{ steps.resolve.outputs.plugin-id }}
+          VERSION: ${{ steps.resolve.outputs.version }}
+
+      # Uncomment to sign the plugin before release (requires a Grafana access
+      # policy token saved as the GRAFANA_ACCESS_POLICY_TOKEN secret). Signing
+      # must run against the built dist BEFORE the "Package plugin" step above.
+      # See https://grafana.com/developers/plugin-tools/publish-a-plugin/sign-a-plugin
+      # - name: Sign plugin
+      #   working-directory: ${{ steps.resolve.outputs.workdir }}
+      #   run: pnpm dlx @grafana/sign-plugin@latest
+      #   env:
+      #     GRAFANA_ACCESS_POLICY_TOKEN: ${{ secrets.GRAFANA_ACCESS_POLICY_TOKEN }}
+
+      - name: Validate packaged plugin
+        working-directory: ${{ steps.resolve.outputs.workdir }}
+        run: |
+          docker run --pull=always \
+            -v "$PWD/${PLUGIN_ID}-${VERSION}.zip:/archive.zip" \
+            grafana/plugin-validator-cli -analyzer=metadatavalid /archive.zip
+        env:
+          PLUGIN_ID: ${{ steps.resolve.outputs.plugin-id }}
+          VERSION: ${{ steps.resolve.outputs.version }}
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
+        with:
+          draft: true
+          generate_release_notes: true
+          files: |
+            ${{ steps.package.outputs.archive }}
+            ${{ steps.package.outputs.archive-sha1 }}
