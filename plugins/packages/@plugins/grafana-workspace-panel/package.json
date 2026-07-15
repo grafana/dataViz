@@ -4,9 +4,9 @@
   "private": true,
   "description": "Example Grafana panel plugin",
   "scripts": {
-    "build": "webpack -c ./webpack.config.mjs --env production",
-    "build:dev": "webpack -c ./webpack.config.mjs --env development",
-    "dev": "webpack -w -c ./webpack.config.mjs --env development",
+    "build": "webpack -c ./webpack.config.ts --env production --disable-interpret",
+    "build:dev": "webpack -c ./webpack.config.ts --env development --disable-interpret",
+    "dev": "webpack -w -c ./webpack.config.ts --env development --disable-interpret",
     "lint": "biome lint src",
     "lint:fix": "biome lint --write src",
     "format": "biome format src",

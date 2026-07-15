@@ -3,6 +3,10 @@ import type { Configuration, RuleSetRule } from 'webpack';
 import { merge } from 'webpack-merge';
 import grafanaConfig, { type Env } from '../.config/webpack/webpack.config.ts';
 
+// Re-export so per-package (Layer 3) configs can type their `env` argument
+// without reaching into the vendored `.config` base directly.
+export type { Env };
+
 // Layer 2 of the build-config chain: monorepo-wide overrides applied on top of
 // the verbatim create-plugin base (`plugins/.config/webpack/webpack.config.ts`).
 // Per-package configs (Layer 3) merge their entry/plugin-id specifics on top of
@@ -75,6 +79,18 @@ export async function monorepoConfig(env: Env): Promise<Configuration> {
 
 	if (base.module && Array.isArray(base.module.rules)) {
 		applyMonorepoSwcOptions(base.module.rules as (RuleSetRule | '...')[]);
+	}
+
+	// The vendored base points `cache.buildDependencies.config` at a per-plugin
+	// `<cwd>/.config/webpack/webpack.config.ts`, which does not exist in the
+	// monorepo (the base lives once at `plugins/.config`). Repoint it in-place at
+	// the real base + this override so webpack's filesystem cache invalidates
+	// correctly. We overwrite rather than merge because webpack-merge would
+	// concatenate the arrays and keep the unresolvable package-local path.
+	if (base.cache && typeof base.cache === 'object') {
+		base.cache.buildDependencies = {
+			config: [path.resolve(import.meta.dirname, '../.config/webpack/webpack.config.ts'), import.meta.filename],
+		};
 	}
 
 	return merge(base, {
