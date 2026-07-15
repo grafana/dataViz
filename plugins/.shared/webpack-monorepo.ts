@@ -1,5 +1,6 @@
+import fs from 'node:fs';
 import path from 'node:path';
-import type { Configuration, RuleSetRule } from 'webpack';
+import webpack, { type Configuration, type RuleSetRule } from 'webpack';
 import { merge } from 'webpack-merge';
 import grafanaConfig, { type Env } from '../.config/webpack/webpack.config.ts';
 
@@ -74,12 +75,59 @@ function applyMonorepoSwcOptions(rules: (RuleSetRule | '...')[]): void {
 	}
 }
 
+// The vendored base derives its create-plugin version banner from a per-plugin
+// `<cwd>/.config/.cprc.json`, which does not exist in the monorepo (the base
+// lives once at `plugins/.config`). Read the shared file so the banner reflects
+// the actual vendored create-plugin version instead of the missing-file
+// fallback object.
+function vendoredCreatePluginVersion(): string {
+	try {
+		const cprcPath = path.resolve(import.meta.dirname, '../.config/.cprc.json');
+		const parsed: unknown = JSON.parse(fs.readFileSync(cprcPath, 'utf8'));
+		if (parsed && typeof parsed === 'object' && typeof (parsed as { version?: unknown }).version === 'string') {
+			return (parsed as { version: string }).version;
+		}
+	} catch {
+		// Missing/unreadable .cprc.json: fall back to the same sentinel the base uses.
+	}
+	return 'unknown';
+}
+
+// Because the base's per-plugin `.cprc.json` lookup misses in the monorepo, its
+// `BannerPlugin` renders `version: [object Object]`. Rebuild that plugin with
+// the version sourced from the shared `.config/.cprc.json`. We recreate rather
+// than mutate because BannerPlugin precomputes its banner in the constructor.
+function fixCreatePluginVersionBanner(base: Configuration, version: string): void {
+	if (!Array.isArray(base.plugins)) {
+		return;
+	}
+	base.plugins = base.plugins.map((plugin) => {
+		const options = (plugin as { options?: { banner?: unknown; raw?: boolean; entryOnly?: boolean } } | undefined)
+			?.options;
+		if (
+			plugin?.constructor?.name === 'BannerPlugin' &&
+			options &&
+			typeof options.banner === 'string' &&
+			options.banner.includes('[create-plugin]')
+		) {
+			return new webpack.BannerPlugin({
+				banner: options.banner.replace('[object Object]', version),
+				raw: options.raw,
+				entryOnly: options.entryOnly,
+			});
+		}
+		return plugin;
+	});
+}
+
 export async function monorepoConfig(env: Env): Promise<Configuration> {
 	const base = await grafanaConfig(env);
 
 	if (base.module && Array.isArray(base.module.rules)) {
 		applyMonorepoSwcOptions(base.module.rules as (RuleSetRule | '...')[]);
 	}
+
+	fixCreatePluginVersionBanner(base, vendoredCreatePluginVersion());
 
 	// The vendored base points `cache.buildDependencies.config` at a per-plugin
 	// `<cwd>/.config/webpack/webpack.config.ts`, which does not exist in the

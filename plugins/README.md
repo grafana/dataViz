@@ -1,15 +1,30 @@
-# Grafana dataViz Plugins - Ejected Monorepo
+# Grafana dataViz Plugins - Hybrid create-plugin Monorepo
 
-A Grafana **frontend** plugin monorepo using the "ejected" approach. It provides full control over the build system, dependencies, and tooling, and is scoped to **panel and app plugins only** (no Go backend plugins).
+A Grafana **frontend** plugin monorepo. It vendors the compat-sensitive parts of
+`@grafana/create-plugin`'s build config verbatim (so we cheaply absorb upstream
+webpack/tsconfig/Grafana-compat updates) and layers monorepo-native overrides on
+top. It is scoped to **panel and app plugins only** (no Go backend plugins).
+
+The build config is layered — see
+[Build config layering & updating from create-plugin](#build-config-layering--updating-from-create-plugin).
 
 ## Structure
 
 ```
 plugins/
-├── .shared/                    # Shared build configurations
-│   ├── tsconfig.base.json     # Base TypeScript config (strict)
-│   ├── tsconfig.json          # Shared packages TS config
-│   └── webpack-shared.mjs     # Shared webpack config
+├── .config/                    # Layer 1: create-plugin base, vendored VERBATIM (do not edit)
+│   ├── webpack/                #   webpack.config.ts + BuildModeWebpackPlugin.ts
+│   ├── bundler/                #   constants/utils/externals/copyFiles (imported by webpack)
+│   ├── types/                  #   ambient type shims (*.d.ts)
+│   ├── tsconfig.json           #   create-plugin TS base
+│   └── .cprc.json              #   pinned create-plugin version
+├── .config-reference/          # Pristine create-plugin scaffold; the `update` target (not built)
+├── .shared/                    # Layer 2: monorepo-wide overrides
+│   ├── tsconfig.base.json     #   extends ../.config/tsconfig.json (+ project-reference settings)
+│   ├── tsconfig.json          #   shared packages TS config
+│   └── webpack-monorepo.ts    #   extends ../.config/webpack/webpack.config.ts
+├── scripts/
+│   └── sync-config.mjs         # Copies the vendored subset from .config-reference into .config
 ├── packages/
 │   ├── @shared/               # Shared libraries
 │   │   └── core/              # Core utilities (@shared/core)
@@ -24,9 +39,10 @@ plugins/
 │           │   ├── module.ts          # PanelPlugin entry
 │           │   ├── plugin.json
 │           │   └── types.ts
+│           ├── LICENSE                # Per-plugin (copied into dist by the base)
 │           ├── package.json
 │           ├── tsconfig.json
-│           └── webpack.config.mjs
+│           └── webpack.config.ts      # Layer 3: thin override merging the monorepo layer
 ├── provisioning/              # Grafana provisioning (TestData datasource + demo dashboard)
 ├── docker-compose.yaml        # Plugin build/watch stack
 ├── docker-compose.grafana.yaml # Grafana instance stack
@@ -200,7 +216,7 @@ are also supported — copy this package and change `plugin.json` accordingly.
 2. Add `package.json` with exports
 3. Add `tsconfig.json` extending `.shared/tsconfig.json`
 4. Update root `tsconfig.json` references
-5. Update aliases in `.shared/webpack-shared.mjs`
+5. Update aliases in `.shared/webpack-monorepo.ts`
 
 ### Plugin Package
 
@@ -210,10 +226,64 @@ are also supported — copy this package and change `plugin.json` accordingly.
    ```
 2. Update `package.json` `name`
 3. Update `src/plugin.json` `id`, `name`, and metadata
-4. Update `webpack.config.mjs` (`PLUGIN_ID` and the `uniqueName` argument)
+4. Update `webpack.config.ts` (the `PLUGIN_ID` constant). Entry, plugin.json
+   resolution, copy rules and version substitution all come from the shared
+   layers — the per-package config only merges genuinely package-specific bits.
 5. Update `tsconfig.json` `paths` alias
 6. Add the package to root `tsconfig.json` references and, if you write tests that import it, to the aliases in `vitest.config.base.mts`
-7. If you want it loaded by the Docker Grafana stack, add a `dist` volume in `docker-compose.yaml`, mount it in `docker-compose.grafana.yaml`, and add its id to `GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS`
+7. Keep the per-plugin `LICENSE` file (the vendored base copies it into `dist`)
+8. If you want it loaded by the Docker Grafana stack, add a `dist` volume in `docker-compose.yaml`, mount it in `docker-compose.grafana.yaml`, and add its id to `GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS`
+
+## Build config layering & updating from create-plugin
+
+The webpack/TypeScript build config is composed in three layers so we can track
+`@grafana/create-plugin` upstream while keeping monorepo-specific behavior:
+
+1. **Layer 1 — `plugins/.config/` (vendored verbatim, do not edit).** The
+   compat-sensitive create-plugin base: `webpack/`, `bundler/`, `types/`,
+   `tsconfig.json`, `.cprc.json`. These are copied byte-for-byte from
+   create-plugin output. **Never hand-edit them** — changes are overwritten on
+   the next sync.
+2. **Layer 2 — `plugins/.shared/`.** Monorepo-wide overrides that extend Layer 1:
+   `webpack-monorepo.ts` (imports the base webpack config, adds workspace
+   aliases, Turbo-scoped cache, SWC/React-runtime parity, and repoints
+   create-plugin's per-plugin `.config` assumptions at the shared base) and
+   `tsconfig.base.json` (extends `../.config/tsconfig.json` with project-reference
+   settings).
+3. **Layer 3 — per package.** Each plugin's `webpack.config.ts` merges the
+   monorepo layer and adds only package-specific concerns (e.g. `PLUGIN_ID`).
+
+Biome, Vitest, and Turbo are intentionally **monorepo-native** and are NOT taken
+from create-plugin's `.config`.
+
+### Loading the TypeScript webpack config
+
+Each plugin's `build`/`dev` scripts pass `--disable-interpret` so webpack-cli
+loads `webpack.config.ts` through Node's native TypeScript support (Node ≥ 22.18
+/ 24) instead of requiring a `ts-node`-style loader.
+
+### Updating from create-plugin
+
+`@grafana/create-plugin` has no monorepo support, so upstream refreshes go
+through the pristine reference plugin in `plugins/.config-reference/` rather than
+per package:
+
+```bash
+# 1. Refresh the reference plugin's .config via create-plugin's migrations
+pnpm update:config
+
+# 2. Copy the vendored subset (webpack/, bundler/, types/, tsconfig.json, .cprc.json)
+#    from .config-reference/.config into plugins/.config, then print a diff
+pnpm sync:config
+
+# 3. Validate across the workspace before committing
+pnpm build && pnpm type-check
+```
+
+`sync:config` only copies the vendored subset — create-plugin's
+ESLint/Prettier/Jest/Dockerfile/rspack files stay in the reference plugin and are
+never synced. Bump the pinned version intentionally via `pnpm update:config`
+(recorded in `plugins/.config/.cprc.json`).
 
 ## Key Features
 
@@ -225,15 +295,14 @@ are also supported — copy this package and change `plugin.json` accordingly.
 
 ## Differences from @grafana/create-plugin
 
-This "ejected" approach differs from the standard `@grafana/create-plugin`:
+This hybrid approach differs from a standard `@grafana/create-plugin` plugin:
 
-- ✅ Full control over webpack configuration
 - ✅ Monorepo support with shared packages
 - ✅ Custom build pipeline with Turborepo
 - ✅ Strict TypeScript configuration
-- ✅ Modern tooling (Biome.js, SWC)
-- ❌ More manual configuration required
-- ❌ No automatic updates from @grafana/create-plugin
+- ✅ Modern tooling (Biome.js, SWC, Vitest) instead of ESLint/Prettier/Jest
+- ✅ Still tracks create-plugin's webpack/tsconfig base via `pnpm update:config` + `pnpm sync:config`
+- ❌ Some monorepo-specific configuration required on top of the vendored base
 
 ## License
 

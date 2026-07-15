@@ -43,6 +43,8 @@
     "format:fix": "turbo format:fix",
     "clean": "turbo clean",
     "check": "turbo format test:ci lint type-check",
+    "update:config": "cd .config-reference && pnpm dlx @grafana/create-plugin@latest update --force",
+    "sync:config": "node scripts/sync-config.mjs",
     "plugin": "docker compose up",
     "server": "GRAFANA_VERSION=${GRAFANA_VERSION:-latest} GRAFANA_PORT=${GRAFANA_PORT:-3001} GRAFANA_CONTAINER_NAME=${GRAFANA_CONTAINER_NAME:-grafana-dataviz-${GRAFANA_PORT:-3001}} COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-${GRAFANA_CONTAINER_NAME:-grafana-dataviz-${GRAFANA_PORT:-3001}}} docker compose -f docker-compose.grafana.yaml up"
   },

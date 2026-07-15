@@ -4,7 +4,6 @@
   "exclude": [
     "node_modules",
     "webpack.config.ts",
-    "webpack-shared.*",
     "webpack-monorepo.*",
     ".config",
     "tests",
