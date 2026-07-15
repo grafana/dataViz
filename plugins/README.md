@@ -191,6 +191,14 @@ All commands use Turborepo to orchestrate tasks across packages:
 - `pnpm clean` - Clean build artifacts
 - `pnpm check` - Run all checks (format, test, lint, type-check)
 
+Maintenance commands (track `@grafana/create-plugin` upstream — see
+[Build config layering](#build-config-layering--updating-from-create-plugin) and
+[CI / GitHub workflows](#ci--github-workflows)):
+
+- `pnpm update:config` - Refresh the reference plugin's `.config` via `create-plugin update`
+- `pnpm sync:config` - Copy the vendored `.config` subset from the reference plugin
+- `pnpm sync:workflows` - Refresh the create-plugin workflow reference and report CI drift
+
 ## Plugin Structure (Frontend / React + TypeScript)
 
 ### Panel plugin (`grafana-workspace-panel`)
@@ -310,7 +318,8 @@ that is where GitHub requires them:
   (e.g. `grafana-workspace-panel-v1.2.3`); resolves the plugin from the tag,
   builds it, validates the version, and creates a draft GitHub release. It does
   not use `grafana/plugin-actions/build-plugin` directly because that action has
-  no working-directory support and assumes a single plugin at the repo root.
+  no working-directory support and assumes a single plugin at the repo root. See
+  [docs/releasing.md](docs/releasing.md) for the tag convention and release steps.
 - **`bundle-stats.yml`.** Matrix wrapper around `grafana/plugin-actions/bundle-size`.
   Marked `continue-on-error` because that action installs at the repo root and
   does not yet support this nested pnpm workspace (kept as a tracked wrapper).
