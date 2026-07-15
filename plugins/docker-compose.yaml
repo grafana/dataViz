@@ -1,7 +1,10 @@
-# This stack builds the plugin once and watches for changes, writing the
-# compiled output into the shared `workspace-panel-dist` volume. Grafana
-# instances (see docker-compose.grafana.yaml / `pnpm run server`) attach to
-# that same volume, so a single build is shared across many Grafana containers.
+# This stack builds every plugin in the workspace once and watches for changes,
+# aggregating each plugin's compiled `dist` into the shared `plugins-dist`
+# volume (keyed by plugin id). Grafana instances (see
+# docker-compose.grafana.yaml / `pnpm run server`) attach to that same volume as
+# their plugins path, so a single build of all plugins is shared across many
+# Grafana containers. Adding a plugin needs no edits here — it is discovered
+# automatically from `packages/@plugins/*`.
 services:
   plugin-precache:
     build:
@@ -9,11 +12,11 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./:/app/workspace
-      - workspace-panel-dist:/app/workspace/packages/@plugins/grafana-workspace-panel/dist/
+      - plugins-dist:/app/plugins-dist
       - workspace-node-modules:/app/workspace/node_modules/
       - workspace-pnpm-store:/root/.local/share/pnpm/store
     working_dir: /app/workspace
-    command: sh -c "pnpm build"
+    command: sh -c "pnpm build && node scripts/aggregate-plugins.mjs --target /app/plugins-dist"
 
   plugin:
     build:
@@ -27,17 +30,16 @@ services:
       - '35729:35729' # live reload port
     volumes:
       - ./:/app/workspace
-      - workspace-panel-dist:/app/workspace/packages/@plugins/grafana-workspace-panel/dist/
+      - plugins-dist:/app/plugins-dist
       - workspace-node-modules:/app/workspace/node_modules/
       - workspace-pnpm-store:/root/.local/share/pnpm/store
     working_dir: /app/workspace
-    command: pnpm dev
+    # Watch + re-aggregate in the background while webpack rebuilds every plugin.
+    command: sh -c "node scripts/aggregate-plugins.mjs --target /app/plugins-dist --watch & pnpm dev"
     healthcheck:
-      # Report healthy only once the plugin's frontend build artifacts exist, so
-      # consumers know the plugin is loadable by Grafana.
-      test: >-
-        test -f /app/workspace/packages/@plugins/grafana-workspace-panel/dist/plugin.json &&
-        test -f /app/workspace/packages/@plugins/grafana-workspace-panel/dist/module.js
+      # Report healthy only once every plugin's frontend build artifacts have
+      # been aggregated, so consumers know all plugins are loadable by Grafana.
+      test: node /app/workspace/scripts/aggregate-plugins.mjs --target /app/plugins-dist --check
       interval: 10s
       timeout: 5s
       retries: 30
@@ -46,9 +48,10 @@ volumes:
   workspace-node-modules:
   workspace-pnpm-store:
   # Fixed name so Grafana stacks in other Compose projects can attach to the
-  # same volume as an external volume (see docker-compose.grafana.yaml).
-  workspace-panel-dist:
-    name: workspace-panel-dist
+  # same volume as an external volume (see docker-compose.grafana.yaml). Holds
+  # one subdirectory per plugin id plus a `.plugin-ids` manifest.
+  plugins-dist:
+    name: plugins-dist
 
 networks:
   default:

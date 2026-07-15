@@ -1,8 +1,8 @@
-# A single Grafana instance that attaches to the shared plugin build produced
-# by the plugin stack (docker-compose.yaml / `pnpm run plugin`).
+# A single Grafana instance that attaches to the shared, aggregated plugin build
+# produced by the plugin stack (docker-compose.yaml / `pnpm run plugin`).
 #
 # Run one instance per Compose project so multiple versions/ports can coexist,
-# each sharing the same read-only plugin dist but with its own Grafana data:
+# each sharing the same read-only plugins dir but with its own Grafana data:
 #
 #   GRAFANA_VERSION=13.1.0 GRAFANA_PORT=3002 pnpm run server
 #   GRAFANA_VERSION=12.4.5 GRAFANA_PORT=3003 pnpm run server
@@ -13,33 +13,51 @@ services:
     ports:
       - '${GRAFANA_PORT:-3001}:3000'
     # Grafana scans plugins only once at startup. If it starts before the plugin
-    # build finishes, the plugin is marked "not installed" until a restart. Since
+    # build finishes, plugins are marked "not installed" until a restart. Since
     # this stack runs in a separate Compose project it can't use `depends_on` on
-    # the plugin build, so gate startup on the frontend build artifacts appearing
-    # in the volume.
+    # the plugin build, so gate startup on the aggregated build appearing in the
+    # volume: wait for the `.plugin-ids` manifest and every listed plugin's
+    # frontend artifacts, then derive the unsigned allow list from the same
+    # manifest so no plugin ids are hardcoded here.
     # ($$ escapes $ so Compose passes it through to the shell.)
     entrypoint:
       - sh
       - -c
       - |
-        panel=/var/lib/grafana/plugins/grafana-workspace-panel
-        echo "Waiting for plugin build in $$panel ..."
-        until [ -f "$$panel/plugin.json" ] && [ -f "$$panel/module.js" ]; do
+        plugins_dir=/var/lib/grafana/plugins
+        ids_file="$$plugins_dir/$$IDS_FILE"
+        echo "Waiting for aggregated plugin builds in $$plugins_dir ..."
+        until [ -s "$$ids_file" ]; do
           sleep 2
         done
-        echo "Plugin build detected. Starting Grafana."
+        ids=$$(cat "$$ids_file")
+        ready=0
+        while [ "$$ready" -eq 0 ]; do
+          ready=1
+          for id in $$(echo "$$ids" | tr ',' ' '); do
+            if [ ! -f "$$plugins_dir/$$id/plugin.json" ] || [ ! -f "$$plugins_dir/$$id/module.js" ]; then
+              ready=0
+            fi
+          done
+          [ "$$ready" -eq 0 ] && sleep 2
+        done
+        export GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS="$${GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS:-$$ids}"
+        echo "Plugins ready ($$ids). Starting Grafana."
         exec /run.sh
     volumes:
-      # Shared, read-only: every Grafana instance reads the same plugin build.
-      - workspace-panel-dist:/var/lib/grafana/plugins/grafana-workspace-panel:ro
+      # Shared, read-only: every Grafana instance reads the same aggregated build
+      # (one subdir per plugin id) as its plugins path.
+      - plugins-dist:/var/lib/grafana/plugins:ro
       - ./provisioning:/etc/grafana/provisioning
       # Per-instance Grafana data (project-scoped, not shared across instances).
       - workspace-data-grafana:/var/lib/grafana
     environment:
+      # Name of the manifest file written by scripts/aggregate-plugins.mjs.
+      IDS_FILE: .plugin-ids
+
       # Grafana settings
       GF_AUTH_ANONYMOUS_ENABLED: 'true'
       GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
-      GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: grafana-workspace-panel
 
       # Enable debug logging
       GF_LOG_LEVEL: debug
@@ -50,8 +68,8 @@ services:
 volumes:
   # Provided by the plugin stack (docker-compose.yaml). Must exist before
   # starting Grafana, i.e. run `pnpm run plugin` first.
-  workspace-panel-dist:
+  plugins-dist:
     external: true
-    name: workspace-panel-dist
+    name: plugins-dist
   # Project-scoped so each Grafana instance gets its own isolated data.
   workspace-data-grafana:

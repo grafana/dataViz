@@ -25,6 +25,7 @@ plugins/
 │   ├── tsconfig.json          #   shared packages TS config
 │   └── webpack-monorepo.ts    #   extends ../.config/webpack/webpack.config.ts
 ├── scripts/
+│   ├── aggregate-plugins.mjs   # Mirrors each plugin's dist into the shared Grafana plugins volume
 │   ├── sync-config.mjs         # Copies the vendored subset from .config-reference into .config
 │   └── sync-workflows.mjs      # Refreshes the create-plugin workflow reference + reports drift
 ├── packages/
@@ -45,7 +46,7 @@ plugins/
 │           ├── package.json
 │           ├── tsconfig.json
 │           └── webpack.config.ts      # Layer 3: thin override merging the monorepo layer
-├── provisioning/              # Grafana provisioning (TestData datasource + demo dashboard)
+├── provisioning/              # Grafana provisioning (TestData datasource, demo dashboard, app plugins)
 ├── docker-compose.yaml        # Plugin build/watch stack
 ├── docker-compose.grafana.yaml # Grafana instance stack
 ├── Dockerfile                 # Node + pnpm build image
@@ -137,11 +138,18 @@ GRAFANA_VERSION=12.4.5 GRAFANA_PORT=3003 pnpm run server
 ```
 
 The Docker Compose setup:
-- Builds the frontend (webpack) for every plugin
+- Builds the frontend (webpack) for every plugin discovered under `packages/@plugins/*`
 - Watch mode auto-rebuilds on source changes
-- Mounts each plugin's dist folder into Grafana
+- Aggregates every plugin's `dist` into the shared `plugins-dist` volume (one
+  subdir per plugin id) and mounts it into Grafana as its plugins path, so all
+  built plugins load at once — adding a plugin needs no Compose edits
+- Derives `GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS` automatically from the set
+  of built plugins (via the `.plugin-ids` manifest), so unsigned plugin ids are
+  never hardcoded
 - Enables anonymous access (no login required)
-- Provisions a TestData DB datasource and a demo dashboard; the panel is available in the panel picker
+- Provisions a TestData DB datasource and a demo dashboard; panel plugins are
+  available in the panel picker. App plugins must be enabled in
+  `provisioning/plugins/app-plugins.yaml`
 
 ### Local Development
 
@@ -242,7 +250,10 @@ are also supported — copy this package and change `plugin.json` accordingly.
 5. Update `tsconfig.json` `paths` alias
 6. Add the package to root `tsconfig.json` references and, if you write tests that import it, to the aliases in `vitest.config.base.mts`
 7. Keep the per-plugin `LICENSE` file (the vendored base copies it into `dist`)
-8. If you want it loaded by the Docker Grafana stack, add a `dist` volume in `docker-compose.yaml`, mount it in `docker-compose.grafana.yaml`, and add its id to `GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS`
+8. The Docker Grafana stack picks it up automatically — its `dist` is aggregated
+   into the shared plugins volume and its id is added to the unsigned allow list
+   with no Compose edits. For an **app** plugin (`type: app`), also add an entry
+   to `provisioning/plugins/app-plugins.yaml` so Grafana enables it.
 
 If the plugin you are importing already ships Jest/ESLint/Prettier, follow the
 [Tooling Migration Guide](./docs/tooling-migration.md) to converge it on the

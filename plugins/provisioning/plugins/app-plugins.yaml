@@ -1,0 +1,14 @@
+apiVersion: 1
+
+# App plugin provisioning. Panel plugins (e.g. grafana-workspace-panel) need no
+# provisioning and appear in the panel picker automatically once loaded. App
+# plugins (type: app, e.g. grafana-echarts-app) must be enabled here — add one
+# entry per app plugin:
+#
+#   apps:
+#     - type: grafana-echarts-app
+#       org_id: 1
+#       disabled: false
+#
+# Left empty by default so the harness works with panel-only plugin sets.
+apps: []
