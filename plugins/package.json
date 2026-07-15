@@ -49,5 +49,8 @@
     "plugin": "docker compose up",
     "server": "GRAFANA_VERSION=${GRAFANA_VERSION:-latest} GRAFANA_PORT=${GRAFANA_PORT:-3001} GRAFANA_CONTAINER_NAME=${GRAFANA_CONTAINER_NAME:-grafana-dataviz-${GRAFANA_PORT:-3001}} COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-${GRAFANA_CONTAINER_NAME:-grafana-dataviz-${GRAFANA_PORT:-3001}}} docker compose -f docker-compose.grafana.yaml up"
   },
-  "packageManager": "pnpm@10.28.2"
+  "packageManager": "pnpm@10.28.2",
+  "engines": {
+    "node": ">=22.18.0"
+  }
 }

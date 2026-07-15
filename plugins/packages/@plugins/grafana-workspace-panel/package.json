@@ -2,6 +2,7 @@
   "name": "@plugins/grafana-workspace-panel",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Example Grafana panel plugin",
   "scripts": {
     "build": "webpack -c ./webpack.config.ts --env production --disable-interpret",
