@@ -1,0 +1,58 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.3/schema.json",
+  "root": false,
+  "extends": "//",
+  "linter": {
+    "rules": {
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noNonNullAssertedOptionalChain": "off",
+        "useIterableCallbackReturn": "off",
+        "noImplicitAnyLet": "off",
+        "noEvolvingTypes": "off"
+      },
+      "complexity": {
+        "noExcessiveCognitiveComplexity": "off",
+        "noForEach": "off",
+        "useRegexLiterals": "off",
+        "useSimplifiedLogicExpression": "off",
+        "noUselessFragments": "off"
+      },
+      "performance": {
+        "useTopLevelRegex": "off",
+        "noDelete": "off"
+      },
+      "security": {
+        "noSecrets": "off"
+      },
+      "style": {
+        "noParameterAssign": "off",
+        "noNonNullAssertion": "off",
+        "useDefaultParameterLast": "off",
+        "useExplicitLengthCheck": "off"
+      },
+      "correctness": {
+        "useHookAtTopLevel": "off",
+        "noUnusedFunctionParameters": "off",
+        "useExhaustiveDependencies": "off",
+        "noEmptyPattern": "off"
+      },
+      "a11y": {
+        "noSvgWithoutTitle": "off",
+        "noStaticElementInteractions": "off",
+        "useKeyWithClickEvents": "off",
+        "useSemanticElements": "off",
+        "useButtonType": "off",
+        "useAriaPropsSupportedByRole": "off"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["src/panelcfg.gen.ts", "src/img/icons/manifest.ts", "src/img/bg/manifest.ts"],
+      "linter": { "enabled": false },
+      "formatter": { "enabled": false },
+      "assist": { "actions": { "source": { "organizeImports": "off" } } }
+    }
+  ]
+}

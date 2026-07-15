@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../.shared/tsconfig.base.json",
+  "include": ["src", "src/**/*.json", "**/package.json"],
+  "compilerOptions": {
+    "paths": {
+      "@grafana-canvas-panel/*": ["./*"]
+    },
+    "baseUrl": "./src",
+    "rootDir": "./src",
+    "outDir": "./.cache/tsbuild",
+    "resolveJsonModule": true,
+
+    /* Canvas mirrors core-Grafana source written against @grafana/tsconfig.
+       Relax the monorepo base's *extra* strictness (beyond @grafana/tsconfig)
+       for this package only, so the ported code type-checks as upstream.
+       Tracked tech debt: tighten incrementally (see docs/tooling-migration.md). */
+    "noUncheckedIndexedAccess": false,
+    "noPropertyAccessFromIndexSignature": false,
+    "exactOptionalPropertyTypes": false,
+    "noImplicitOverride": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": false
+  },
+  "references": []
+}
