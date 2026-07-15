@@ -1,11 +1,13 @@
 # Bundle-size reporting, one job per plugin (matrix), wrapping the pinned
 # grafana/plugin-actions/bundle-size action (see plugins/.github-workflows-reference/bundle-stats.yml).
 #
-# CAVEAT: the pinned bundle-size action runs its dependency install at the REPO
-# ROOT, but this monorepo's pnpm workspace lives in plugins/, so the install
-# currently fails here. The job is therefore marked continue-on-error (it never
-# blocks a PR) and kept as an experimental/tracked wrapper until the action
-# supports a nested working-directory install (or a root install shim is added).
+# NOTE ON THE NESTED WORKSPACE: this monorepo's pnpm workspace lives in plugins/,
+# but the bundle-size action's "Install dependencies" step runs at the REPO ROOT
+# and ignores the working-directory input (only its build/stats step honours it).
+# We therefore install the workspace ourselves in plugins/ (mirroring plugin-ci.yml)
+# before invoking the action, and keep a tiny root package.json + .npmrc shim so
+# the action's own root-level `pnpm install` is a harmless no-op instead of
+# failing with ERR_PNPM_NO_PKG_MANIFEST.
 name: Bundle Stats
 
 on:
@@ -48,7 +50,6 @@ jobs:
   compare:
     name: bundle-size (${{ matrix.name }})
     needs: discover
-    continue-on-error: true
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
@@ -57,6 +58,24 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: plugins/package.json
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: plugins/pnpm-lock.yaml
+
+      # Install the real workspace where it actually lives. The bundle-size
+      # action's own install step runs at the repo root (see the note at the top
+      # of this file), so it can't do this for us.
+      - name: Install dependencies
+        working-directory: plugins
+        run: pnpm install --frozen-lockfile
 
       - uses: grafana/plugin-actions/bundle-size@bundle-size/v1.0.2
         with:

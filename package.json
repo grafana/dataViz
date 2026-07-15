@@ -1,0 +1,7 @@
+{
+  "name": "grafana-dataviz",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Repo-root install shim. The real pnpm workspace lives in ./plugins. This manifest exists only so tooling that installs at the repository root (e.g. grafana/plugin-actions/bundle-size, whose install step ignores its working-directory input) does not fail with ERR_PNPM_NO_PKG_MANIFEST. Day-to-day work happens in ./plugins.",
+  "packageManager": "pnpm@10.28.2"
+}

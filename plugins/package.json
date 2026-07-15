@@ -34,6 +34,7 @@
     "build:dev": "turbo build:dev",
     "build-types": "turbo build-types",
     "type-check": "turbo type-check",
+    "typecheck": "pnpm run type-check",
     "dev": "turbo dev",
     "test": "turbo test",
     "test:ci": "turbo test:ci",
