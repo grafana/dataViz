@@ -35,6 +35,9 @@ jobs:
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: '22'
+          # Disable setup-node's package-manager cache in this release workflow to avoid cache poisoning:
+          # https://docs.zizmor.sh/audits/#cache-poisoning
+          package-manager-cache: false
 
       - name: Install dependencies
         working-directory: plugins
