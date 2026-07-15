@@ -38,12 +38,12 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
         with:
           package_json_file: plugins/package.json
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ inputs.node-version }}
           cache: pnpm
@@ -55,19 +55,27 @@ jobs:
 
       - name: Check types
         working-directory: plugins
-        run: pnpm exec turbo run type-check --filter=${{ inputs.package-name }}...
+        run: pnpm exec turbo run type-check --filter="$PACKAGE_NAME"...
+        env:
+          PACKAGE_NAME: ${{ inputs.package-name }}
 
       - name: Lint
         working-directory: plugins
-        run: pnpm exec turbo run lint --filter=${{ inputs.package-name }}...
+        run: pnpm exec turbo run lint --filter="$PACKAGE_NAME"...
+        env:
+          PACKAGE_NAME: ${{ inputs.package-name }}
 
       - name: Unit tests
         working-directory: plugins
-        run: pnpm exec turbo run test:ci --filter=${{ inputs.package-name }}...
+        run: pnpm exec turbo run test:ci --filter="$PACKAGE_NAME"...
+        env:
+          PACKAGE_NAME: ${{ inputs.package-name }}
 
       - name: Build frontend
         working-directory: plugins
-        run: pnpm exec turbo run build --filter=${{ inputs.package-name }}...
+        run: pnpm exec turbo run build --filter="$PACKAGE_NAME"...
+        env:
+          PACKAGE_NAME: ${{ inputs.package-name }}
 
       - name: Get plugin metadata
         id: metadata
