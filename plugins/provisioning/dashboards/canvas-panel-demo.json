@@ -1,0 +1,134 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "workspace-testdata"
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 18,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "inlineEditing": true,
+        "panZoom": true,
+        "showAdvancedTypes": true,
+        "zoomToContent": true,
+        "tooltip": {
+          "mode": "single"
+        },
+        "root": {
+          "name": "Element 1652144470596",
+          "type": "frame",
+          "elements": [
+            {
+              "name": "Title",
+              "type": "text",
+              "config": {
+                "align": "center",
+                "valign": "middle",
+                "color": {
+                  "fixed": "#ffffff"
+                },
+                "size": 24,
+                "text": {
+                  "mode": "fixed",
+                  "fixed": "Canvas Panel Demo"
+                }
+              },
+              "background": {
+                "color": {
+                  "fixed": "#3274d9"
+                }
+              },
+              "placement": {
+                "top": 40,
+                "left": 60,
+                "width": 320,
+                "height": 60,
+                "rotation": 0
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "connections": []
+            },
+            {
+              "name": "Metric",
+              "type": "metric-value",
+              "config": {
+                "align": "center",
+                "valign": "middle",
+                "color": {
+                  "fixed": "#ffffff"
+                },
+                "size": 28,
+                "text": {
+                  "mode": "field",
+                  "fixed": "",
+                  "field": "Value"
+                }
+              },
+              "background": {
+                "color": {
+                  "fixed": "#37872d"
+                }
+              },
+              "placement": {
+                "top": 140,
+                "left": 60,
+                "width": 320,
+                "height": 90,
+                "rotation": 0
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "connections": []
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "workspace-testdata"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "alias": "Value",
+          "seriesCount": 1
+        }
+      ],
+      "title": "Canvas Panel Demo",
+      "type": "grafana-canvas-panel"
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["canvas"],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "title": "Canvas Panel Demo",
+  "uid": "canvas-panel-demo",
+  "version": 1,
+  "weekStart": ""
+}

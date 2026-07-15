@@ -17,6 +17,7 @@ export function createVitestConfig() {
     resolve: {
       alias: {
         '@grafana-workspace-panel': relativePath('./packages/@plugins/grafana-workspace-panel/src/'),
+        '@grafana-canvas-panel': relativePath('./packages/@plugins/grafana-canvas-panel/src/'),
         '@shared/core': relativePath('./packages/@shared/core/src/'),
       },
     },

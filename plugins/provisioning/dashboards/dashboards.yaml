@@ -1,10 +1,10 @@
 apiVersion: 1
 
-# Loads any dashboard JSON in this folder. The example dashboard renders the
-# grafana-workspace-panel plugin with TestData DB, so `pnpm run server` shows
-# the panel with data immediately.
+# Loads any dashboard JSON in this folder. The example dashboards render the
+# migrated panel plugins (grafana-workspace-panel, grafana-canvas-panel) with
+# TestData DB, so `pnpm run server` shows the panels with data immediately.
 providers:
-  - name: Workspace
+  - name: dataViz plugins
     orgId: 1
     folder: ''
     type: file
