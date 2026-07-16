@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../.shared/tsconfig.base.json",
+  "include": ["src", "**/package.json"],
+  "exclude": ["node_modules", "dist", ".cache", "**/*.test.ts", "**/*.test.tsx"],
+  "compilerOptions": {
+    "paths": {
+      "@marcusolsson-dynamictext-panel/*": ["./*"]
+    },
+    "baseUrl": "./src",
+    "rootDir": "./src",
+    "outDir": "./.cache/tsbuild",
+
+    /* Relax the monorepo base's *extra* strictness for this migrated,
+       third-party-derived plugin. Grafana `strict` (strictNullChecks etc.) is
+       kept; only the additional guards the upstream code predates are dialed
+       back. Tracked tech debt — tighten incrementally. */
+    "verbatimModuleSyntax": false,
+    "noUncheckedIndexedAccess": false,
+    "noPropertyAccessFromIndexSignature": false,
+    "exactOptionalPropertyTypes": false,
+    "noUnusedParameters": false,
+    "noUnusedLocals": false
+  }
+}

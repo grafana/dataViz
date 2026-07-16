@@ -98,6 +98,23 @@
 		}
 	},
 	"javascript": {
+		"globals": [
+			"describe",
+			"it",
+			"test",
+			"suite",
+			"expect",
+			"expectTypeOf",
+			"assert",
+			"vi",
+			"vitest",
+			"beforeAll",
+			"afterAll",
+			"beforeEach",
+			"afterEach",
+			"onTestFinished",
+			"onTestFailed"
+		],
 		"formatter": {
 			"quoteStyle": "single",
 			"jsxQuoteStyle": "double",

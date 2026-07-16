@@ -17,6 +17,7 @@ export function createVitestConfig() {
     resolve: {
       alias: {
         '@grafana-workspace-panel': relativePath('./packages/@plugins/grafana-workspace-panel/src/'),
+        '@marcusolsson-dynamictext-panel': relativePath('./packages/@plugins/marcusolsson-dynamictext-panel/src/'),
         '@shared/core': relativePath('./packages/@shared/core/src/'),
       },
     },

@@ -1,0 +1,372 @@
+import { cx } from '@emotion/css';
+import {
+	type AlertErrorPayload,
+	type AlertPayload,
+	AppEvents,
+	type DataFrame,
+	type EventBus,
+	formattedValueToString,
+	type InterpolateFunction,
+	type PanelData,
+	type TimeRange,
+} from '@grafana/data';
+import { getAppEvents } from '@grafana/runtime';
+import type { TimeZone } from '@grafana/schema';
+import { Alert, LoadingBar, useStyles2, useTheme2 } from '@grafana/ui';
+import type React from 'react';
+import { useCallback, useEffect, useState } from 'react';
+
+import { TEST_IDS } from '../../constants';
+import { useDashboardRefresh } from '../../hooks';
+import { type PanelOptions, RenderMode, type RowItem } from '../../types';
+import { generateHtml } from '../../utils';
+import { Row } from '../Row';
+import { getStyles } from './Text.styles';
+
+/**
+ * Properties
+ */
+interface Props {
+	/**
+	 * Options
+	 *
+	 * @type {PanelOptions}
+	 */
+	options: PanelOptions;
+
+	/**
+	 * Frame
+	 *
+	 * @type {DataFrame}
+	 */
+	frame?: DataFrame;
+
+	/**
+	 * Time range of the current dashboard
+	 *
+	 * @type {TimeRange}
+	 */
+	timeRange: TimeRange;
+
+	/**
+	 * Time zone of the current dashboard
+	 *
+	 * @type {TimeZone}
+	 */
+	timeZone: TimeZone;
+
+	/**
+	 * Replace Variables
+	 *
+	 * @type {InterpolateFunction}
+	 */
+	replaceVariables: InterpolateFunction;
+
+	/**
+	 * Event Bus
+	 *
+	 * @type {EventBus}
+	 */
+	eventBus: EventBus;
+
+	/**
+	 * Data
+	 *
+	 * @type {PanelData}
+	 */
+	data: PanelData;
+
+	/**
+	 * Get User Preference
+	 */
+	getUserPreference: (key: string) => Promise<unknown>;
+
+	/**
+	 * Set User Preference
+	 */
+	setUserPreference: <T>(key: string, data: T) => Promise<T>;
+
+	/**
+	 * Render increment from Grafana's PanelProps
+	 * Used to trigger onContentReady JS after renders introduced by core (e.g. variable changes)
+	 *
+	 * @type {number}
+	 */
+	renderCounter: number;
+}
+
+/**
+ * Text
+ */
+export const Text: React.FC<Props> = ({
+	options,
+	frame,
+	timeRange,
+	timeZone,
+	replaceVariables,
+	eventBus,
+	data: panelData,
+	getUserPreference,
+	setUserPreference,
+	renderCounter,
+}) => {
+	/**
+	 * Generated rows
+	 */
+	const [rows, setRows] = useState<RowItem[]>([]);
+
+	/**
+	 * Loading state
+	 */
+	const [isLoading, setIsLoading] = useState<boolean>(false);
+
+	/**
+	 * Generate html error
+	 */
+	const [error, setError] = useState<unknown | null>(null);
+
+	/**
+	 * Theme and Styles
+	 */
+	const theme = useTheme2();
+
+	/**
+	 * Styles
+	 */
+	const styles = useStyles2(getStyles);
+	const className = cx(styles.highlight, styles.frame, 'dt-row');
+
+	/**
+	 * Events
+	 */
+	const appEvents = getAppEvents();
+
+	const notifySuccess = useCallback(
+		(payload: AlertPayload) => appEvents.publish({ type: AppEvents.alertSuccess.name, payload }),
+		[appEvents]
+	);
+
+	const notifyError = useCallback(
+		(payload: AlertErrorPayload) => appEvents.publish({ type: AppEvents.alertError.name, payload }),
+		[appEvents]
+	);
+
+	/**
+	 * Refresh dashboard
+	 */
+	const refreshDashboard = useDashboardRefresh();
+
+	/**
+	 * HTML
+	 */
+	const getHtml = useCallback(
+		async (htmlData: Record<string, unknown>, content: string) => {
+			setIsLoading(true);
+			const result = {
+				...(await generateHtml({
+					data: htmlData,
+					content,
+					helpers: options.helpers,
+					timeRange,
+					timeZone,
+					replaceVariables,
+					eventBus,
+					options,
+					panelData,
+					dataFrame: frame,
+					notifySuccess,
+					notifyError,
+					theme,
+					partials: options?.contentPartials,
+					refreshDashboard,
+					getUserPreference,
+					setUserPreference,
+				})),
+				data: htmlData,
+			};
+			setIsLoading(false);
+			return result;
+		},
+		[
+			options,
+			timeRange,
+			timeZone,
+			replaceVariables,
+			eventBus,
+			panelData,
+			frame,
+			notifySuccess,
+			notifyError,
+			theme,
+			refreshDashboard,
+			getUserPreference,
+			setUserPreference,
+		]
+	);
+
+	useEffect(() => {
+		let unsubscribeFn: undefined | unknown;
+
+		const run = async () => {
+			/**
+			 * Reset error before html generation
+			 */
+			setError(null);
+
+			try {
+				if (!frame?.length) {
+					/**
+					 * For empty frame
+					 */
+					const { html, unsubscribe } = await getHtml({}, options.defaultContent);
+
+					setRows([
+						{
+							html,
+							data: {},
+							panelData,
+							dataFrame: frame,
+						},
+					]);
+					unsubscribeFn = unsubscribe;
+				} else {
+					/**
+					 * Frame returned
+					 */
+					const frames = options.renderMode === RenderMode.DATA ? panelData.series : [frame];
+					const templateData = frames.map((frame) =>
+						frame.fields.reduce(
+							(acc, { config, name, values, display }) => {
+								values.forEach((value, i) => {
+									/**
+									 * Formatted Value
+									 */
+									const formattedValue = display?.(value);
+
+									let fieldObject = {
+										...acc[i],
+										[config.displayName || name]:
+											config.unit && formattedValue ? formattedValueToString(formattedValue) : value,
+									};
+
+									if (options.status) {
+										/**
+										 * Status Color
+										 */
+										const statusColor = options.status === name ? formattedValue?.color : acc[i]?.statusColor;
+
+										fieldObject = {
+											...fieldObject,
+											statusColor,
+										};
+									}
+
+									/**
+									 * Set Value and Status Color
+									 */
+									acc[i] = fieldObject;
+								});
+
+								return acc;
+							},
+							[] as Array<Record<string, unknown>>
+						)
+					);
+
+					if (options.renderMode === RenderMode.EVERY_ROW) {
+						/**
+						 * For every row in data frame
+						 */
+						const rows = await Promise.all(templateData[0].map((row) => getHtml(row, options.content)));
+
+						setRows(
+							rows.map(({ html, data }) => ({
+								html,
+								data,
+								panelData,
+								dataFrame: frame,
+							}))
+						);
+
+						/**
+						 * Call unsubscribe for all rows
+						 */
+						unsubscribeFn = () => {
+							rows.forEach(({ unsubscribe }) => {
+								if (unsubscribe && typeof unsubscribe === 'function') {
+									unsubscribe();
+								}
+							});
+						};
+					} else {
+						/**
+						 * For whole data frame
+						 */
+						const data = options.renderMode === RenderMode.DATA ? templateData : templateData[0];
+						const { html, unsubscribe } = await getHtml({ data }, options.content);
+						setRows([{ html, data, panelData, dataFrame: frame }]);
+
+						unsubscribeFn = unsubscribe;
+					}
+				}
+			} catch (e) {
+				setError(e);
+			}
+		};
+
+		run();
+
+		return () => {
+			if (unsubscribeFn && typeof unsubscribeFn === 'function') {
+				unsubscribeFn();
+			}
+		};
+	}, [
+		frame,
+		frame?.fields,
+		frame?.length,
+		getHtml,
+		options.content,
+		options.defaultContent,
+		options.renderMode,
+		options.status,
+		panelData,
+	]);
+
+	if (error) {
+		return (
+			<div className={styles.frame}>
+				<Alert title="Couldn't build text from template" severity="error" data-testid={TEST_IDS.text.error}>
+					Please make sure the Content is a valid template and Helpers are correct.
+				</Alert>
+
+				{<pre data-testid={TEST_IDS.text.errorContent}>{error instanceof Error ? error.message : `${error}`}</pre>}
+			</div>
+		);
+	}
+
+	return (
+		<>
+			{isLoading && (
+				<div className={styles.loadingBar}>
+					<LoadingBar width={250} />
+				</div>
+			)}
+			{rows.map((row, index) => (
+				<Row
+					renderCounter={renderCounter}
+					key={index}
+					item={row}
+					className={className}
+					afterRender={options.afterRender}
+					eventBus={eventBus}
+					timeRange={timeRange}
+					timeZone={timeZone}
+					replaceVariables={replaceVariables}
+					getUserPreference={getUserPreference}
+					setUserPreference={setUserPreference}
+				/>
+			))}
+		</>
+	);
+};
