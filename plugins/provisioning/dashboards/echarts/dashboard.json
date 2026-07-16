@@ -1,0 +1,819 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "workspace-testdata"
+      },
+      "description": "Empty result: exercises the panel's no-data view.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "seriesType": "line",
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "workspace-testdata"
+          },
+          "refId": "A",
+          "scenarioId": "no_data_points"
+        }
+      ],
+      "title": "No data",
+      "type": "grafana-echartscartesian-panel"
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "workspace-testdata"
+      },
+      "description": "Query error: TestData 'Flaky Query' scenario with a 100% error probability, so the query always fails and the panel shows its error state.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "seriesType": "line",
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "workspace-testdata"
+          },
+          "refId": "A",
+          "scenarioId": "flaky_query",
+          "errorProbability": 100,
+          "errorStatusCode": 500,
+          "errorMessage": "Simulated failure (flaky_query at 100% error probability)"
+        }
+      ],
+      "title": "Query error (flaky_query @ 100%)",
+      "type": "grafana-echartscartesian-panel"
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "workspace-testdata"
+      },
+      "description": "Category-axis cartesian (Group 2): CSV content provides a string category field (Department) plus two numeric fields; the Convert field type transformation pins the types the CSV source cannot express, and the panel renders a multi-series bar chart on a category x-axis (no time field).",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "options": {
+        "seriesType": "bar",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "workspace-testdata"
+          },
+          "refId": "A",
+          "scenarioId": "csv_content",
+          "csvContent": "Department,Budget,Actual\nSales,43,50\nMarketing,30,45\nEngineering,60,55\nSupport,25,30\nOperations,40,35"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "fields": {},
+            "conversions": [
+              {
+                "targetField": "Department",
+                "destinationType": "string"
+              },
+              {
+                "targetField": "Budget",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "Actual",
+                "destinationType": "number"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "Category bar \u2014 Numeric frame (Budget vs Actual)",
+      "type": "grafana-echartscartesian-panel"
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "workspace-testdata"
+      },
+      "description": "Numeric-looking category x-axis: the Year column holds numeric-looking labels (2007\u20132011). The CSV source would infer them as numbers, so the Convert field type transformation forces Year back to string to keep a category axis (not a continuous value axis).",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 4,
+      "options": {
+        "seriesType": "bar",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "workspace-testdata"
+          },
+          "refId": "A",
+          "scenarioId": "csv_content",
+          "csvContent": "Year,Revenue,Cost\n2007,120,80\n2008,150,90\n2009,170,110\n2010,140,100\n2011,200,130"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "fields": {},
+            "conversions": [
+              {
+                "targetField": "Year",
+                "destinationType": "string"
+              },
+              {
+                "targetField": "Revenue",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "Cost",
+                "destinationType": "number"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "Numeric-labeled bar \u2014 category x-axis (years)",
+      "type": "grafana-echartscartesian-panel"
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "workspace-testdata"
+      },
+      "description": "Time-axis cartesian: a wide CSV frame (Time + two numeric series). The Convert field type transformation pins Time to the time type the CSV source cannot express, so both series render on a time x-axis.",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 16
+      },
+      "id": 5,
+      "options": {
+        "seriesType": "line",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "workspace-testdata"
+          },
+          "refId": "A",
+          "scenarioId": "csv_content",
+          "csvContent": "Time,Series A,Series B\n2021-01-01T00:00:00Z,10,40\n2021-01-01T01:00:00Z,20,50\n2021-01-01T02:00:00Z,15,45\n2021-01-01T03:00:00Z,25,55\n2021-01-01T04:00:00Z,30,60"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "fields": {},
+            "conversions": [
+              {
+                "targetField": "Time",
+                "destinationType": "time"
+              },
+              {
+                "targetField": "Series A",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "Series B",
+                "destinationType": "number"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "Time-series line",
+      "type": "grafana-echartscartesian-panel"
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "workspace-testdata"
+      },
+      "description": "Category-axis cartesian (Group 2) as a line: the same CSV Numeric frame (Department) rendered with a line series type. Convert field type keeps Department categorical, so the x-axis stays categorical because there is no time field.",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 16
+      },
+      "id": 6,
+      "options": {
+        "seriesType": "line",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "workspace-testdata"
+          },
+          "refId": "A",
+          "scenarioId": "csv_content",
+          "csvContent": "Department,Budget,Actual\nSales,43,50\nMarketing,30,45\nEngineering,60,55\nSupport,25,30\nOperations,40,35"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "fields": {},
+            "conversions": [
+              {
+                "targetField": "Department",
+                "destinationType": "string"
+              },
+              {
+                "targetField": "Budget",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "Actual",
+                "destinationType": "number"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "Category line \u2014 Numeric frame (multi-series)",
+      "type": "grafana-echartscartesian-panel"
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "workspace-testdata"
+      },
+      "description": "Line chart over numeric-looking category labels (years 2007\u20132011). Convert field type forces Year to string, so it stays a category axis; the labels only look numeric.",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 16
+      },
+      "id": 7,
+      "options": {
+        "seriesType": "line",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "workspace-testdata"
+          },
+          "refId": "A",
+          "scenarioId": "csv_content",
+          "csvContent": "Year,Revenue,Cost\n2007,120,80\n2008,150,90\n2009,170,110\n2010,140,100\n2011,200,130"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "fields": {},
+            "conversions": [
+              {
+                "targetField": "Year",
+                "destinationType": "string"
+              },
+              {
+                "targetField": "Revenue",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "Cost",
+                "destinationType": "number"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "Numeric-labeled line \u2014 category x-axis (years)",
+      "type": "grafana-echartscartesian-panel"
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "workspace-testdata"
+      },
+      "description": "Single-series Numeric frame from CSV (one string field + one numeric field): Convert field type pins Fruit to string and Count to number, so each row becomes a category on the x-axis.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 8,
+      "options": {
+        "seriesType": "bar",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "workspace-testdata"
+          },
+          "refId": "A",
+          "scenarioId": "csv_content",
+          "csvContent": "Fruit,Count\nApples,120\nBananas,90\nCherries,60\nDates,30\nElderberries,15"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "fields": {},
+            "conversions": [
+              {
+                "targetField": "Fruit",
+                "destinationType": "string"
+              },
+              {
+                "targetField": "Count",
+                "destinationType": "number"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "Single-series category bar \u2014 Numeric frame",
+      "type": "grafana-echartscartesian-panel"
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "workspace-testdata"
+      },
+      "description": "Stacked category bar: the same Budget vs Actual Numeric frame with the panel-level 'Stack series' option on, so the two bar series stack per department instead of drawing side by side.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 9,
+      "options": {
+        "seriesType": "bar",
+        "stackSeries": true,
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "workspace-testdata"
+          },
+          "refId": "A",
+          "scenarioId": "csv_content",
+          "csvContent": "Department,Budget,Actual\nSales,43,50\nMarketing,30,45\nEngineering,60,55\nSupport,25,30\nOperations,40,35"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "fields": {},
+            "conversions": [
+              {
+                "targetField": "Department",
+                "destinationType": "string"
+              },
+              {
+                "targetField": "Budget",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "Actual",
+                "destinationType": "number"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "Stacked category bar \u2014 Budget + Actual",
+      "type": "grafana-echartscartesian-panel"
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "workspace-testdata"
+      },
+      "description": "Stacked time-series bar with a per-field override: the panel-level 'Stack series' option is on, but a field override opts 'Series B' out of the stack, so it renders as a separate (unstacked) bar next to the stacked group.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "id": 10,
+      "options": {
+        "seriesType": "bar",
+        "stackSeries": true,
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Series B"
+            },
+            "properties": [
+              {
+                "id": "custom.seriesType",
+                "value": "bar"
+              },
+              {
+                "id": "custom.stackSeries",
+                "value": false
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "workspace-testdata"
+          },
+          "refId": "A",
+          "scenarioId": "csv_content",
+          "csvContent": "Time,Series A,Series B\n2021-01-01T00:00:00Z,10,40\n2021-01-01T01:00:00Z,20,50\n2021-01-01T02:00:00Z,15,45\n2021-01-01T03:00:00Z,25,55\n2021-01-01T04:00:00Z,30,60"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "fields": {},
+            "conversions": [
+              {
+                "targetField": "Time",
+                "destinationType": "time"
+              },
+              {
+                "targetField": "Series A",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "Series B",
+                "destinationType": "number"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "Stacked time-series bar \u2014 per-field override",
+      "type": "grafana-echartscartesian-panel"
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "workspace-testdata"
+      },
+      "description": "Per-field unit overrides: 'Series A' is overridden to 'bytes' and 'Series B' to 'percent'. With the tooltip in 'All' mode, each row must format with its own unit (e.g. '10 B' and '40%'), proving field overrides reach the tooltip.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "id": 11,
+      "options": {
+        "seriesType": "line",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Series A"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Series B"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "workspace-testdata"
+          },
+          "refId": "A",
+          "scenarioId": "csv_content",
+          "csvContent": "Time,Series A,Series B\n2021-01-01T00:00:00Z,10,60\n2021-01-01T01:00:00Z,20,45\n2021-01-01T02:00:00Z,15,50\n2021-01-01T03:00:00Z,25,35\n2021-01-01T04:00:00Z,30,20"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "fields": {},
+            "conversions": [
+              {
+                "targetField": "Time",
+                "destinationType": "time"
+              },
+              {
+                "targetField": "Series A",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "Series B",
+                "destinationType": "number"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "Per-field units \u2014 tooltip override",
+      "type": "grafana-echartscartesian-panel"
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "workspace-testdata"
+      },
+      "description": "Per-unit y-axes: three series with distinct units. 'Series A' (bytes) uses the auto left axis, 'Series B' (percent) is forced to the right, and 'Series C' (watt) hides its axis while still plotting. Each y-axis is labeled in its own unit.",
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "id": 12,
+      "options": {
+        "seriesType": "line",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Series A"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Series B"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Series C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "watt"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "hidden"
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "workspace-testdata"
+          },
+          "refId": "A",
+          "scenarioId": "csv_content",
+          "csvContent": "Time,Series A,Series B,Series C\n2021-01-01T00:00:00Z,1048576,40,120\n2021-01-01T01:00:00Z,2097152,55,90\n2021-01-01T02:00:00Z,1572864,45,150\n2021-01-01T03:00:00Z,3145728,60,110\n2021-01-01T04:00:00Z,2621440,50,180"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "fields": {},
+            "conversions": [
+              {
+                "targetField": "Time",
+                "destinationType": "time"
+              },
+              {
+                "targetField": "Series A",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "Series B",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "Series C",
+                "destinationType": "number"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "Per-unit y-axes \u2014 left/right/hidden",
+      "type": "grafana-echartscartesian-panel"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "2021-01-01T00:00:00.000Z",
+    "to": "2021-01-01T04:00:00.000Z"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Provisioned echarts dashboard",
+  "uid": "a538aeff-5a8a-42a5-901c-938d896fdd6f",
+  "version": 6,
+  "weekStart": ""
+}

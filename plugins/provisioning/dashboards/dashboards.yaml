@@ -1,8 +1,9 @@
 apiVersion: 1
 
-# Loads any dashboard JSON in this folder. The example dashboard renders the
-# grafana-workspace-panel plugin with TestData DB, so `pnpm run server` shows
-# the panel with data immediately.
+# Loads any dashboard JSON under this folder. Subdirectories become Grafana
+# folders when foldersFromFilesStructure is true (e.g. echarts/* → "echarts").
+# Workspace demo: grafana-workspace-panel with TestData DB.
+# ECharts examples: copied from grafana-echarts-panel provisioning.
 providers:
   - name: Workspace
     orgId: 1
@@ -14,4 +15,4 @@ providers:
     allowUiUpdates: true
     options:
       path: /etc/grafana/provisioning/dashboards
-      foldersFromFilesStructure: false
+      foldersFromFilesStructure: true

@@ -147,7 +147,8 @@ The Docker Compose setup:
   of built plugins (via the `.plugin-ids` manifest), so unsigned plugin ids are
   never hardcoded
 - Enables anonymous access (no login required)
-- Provisions a TestData DB datasource and a demo dashboard; panel plugins are
+- Provisions a TestData DB datasource, a workspace demo dashboard, and ECharts
+  example dashboards under `provisioning/dashboards/echarts/`; panel plugins are
   available in the panel picker. App plugins must be enabled in
   `provisioning/plugins/app-plugins.yaml`
 
