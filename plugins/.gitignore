@@ -5,7 +5,11 @@ node_modules/
 
 # Build outputs
 dist/
+# Ignore compiled `lib/` output dirs, but not real source under `src/lib/`
+# (e.g. the echarts plugin's engine lives in `src/lib/**`).
 lib/
+!**/src/lib/
+!**/src/lib/**
 deps/
 .cache/
 *.tsbuildinfo

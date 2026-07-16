@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../.shared/tsconfig.base.json",
+  "include": ["src", "**/package.json"],
+  "exclude": [
+    "node_modules",
+    "webpack.config.ts",
+    "webpack-monorepo.*",
+    ".config",
+    "tests",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "src/test"
+  ],
+  "compilerOptions": {
+    "paths": {
+      "@grafana-echarts-app/*": ["./*"],
+      // echarts ships its `types/src/**` .d.ts files but only maps `types/dist/*`
+      // in its package `exports`, so `moduleResolution: Bundler` cannot resolve
+      // the deep `echarts/types/src/...` type-only imports. Map them to the
+      // on-disk files (relative to baseUrl ./src -> ../node_modules).
+      "echarts/types/*": ["../node_modules/echarts/types/*"]
+    },
+    "baseUrl": "./src",
+    "rootDir": "./src",
+    "outDir": "./.cache/tsbuild",
+    // The inherited create-plugin `typeRoots` (../node_modules/@types, relative
+    // to plugins/.config) points at the workspace root, but pnpm keeps this
+    // package's @types (node/react/react-dom) package-local. Point at them so
+    // globals like `process` (from @types/node) are picked up.
+    "typeRoots": ["./node_modules/@types"],
+
+    // Tracked tech debt: this plugin was migrated from a repo built against
+    // @grafana/tsconfig, which does not enable the monorepo's extra strictness.
+    // Relax those extra flags for this package only (the repo-wide `strict`
+    // family from @grafana/tsconfig still applies). Revisit incrementally.
+    "exactOptionalPropertyTypes": false,
+    "noUncheckedIndexedAccess": false,
+    "noPropertyAccessFromIndexSignature": false
+  }
+}

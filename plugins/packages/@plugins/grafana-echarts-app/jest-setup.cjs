@@ -1,0 +1,80 @@
+// Jest setup for the ECharts canvas-snapshot suites. Ported from the source
+// plugin's jest-setup.js (see plugins/docs/tooling-migration.md fallback path).
+// The generic DOM shims live in the shared vitest.setup.ts for the Vitest
+// suites; this file replicates them plus the canvas-specific pieces that only
+// the Jest canvas suites need.
+const { TextEncoder, TextDecoder } = require('node:util');
+
+Object.assign(global, { TextDecoder, TextEncoder });
+
+// jsdom does not implement matchMedia.
+// https://jestjs.io/docs/manual-mocks#mocking-methods-which-are-not-implemented-in-jsdom
+Object.defineProperty(global, 'matchMedia', {
+  writable: true,
+  value: (query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(), // deprecated
+    removeListener: jest.fn(), // deprecated
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  }),
+});
+
+// jsdom has no layout engine, so `clientWidth`/`clientHeight` are always 0.
+// ECharts' `init()` reads only those two props to size the container and, when
+// they're 0, both warns ("Can't get DOM width or height...") and performs its
+// first paint at 0x0. Derive them from the element's inline pixel size (the
+// Panel sets `style.width/height` on its chart container) so charts initialize
+// at the intended size. zrender's own getSize() already falls back to
+// `style.width`, keeping the two paths consistent.
+for (const dimension of ['Width', 'Height']) {
+  Object.defineProperty(HTMLElement.prototype, `client${dimension}`, {
+    configurable: true,
+    get() {
+      return parseInt(this.style[dimension.toLowerCase()], 10) || 0;
+    },
+  });
+}
+
+// jsdom ships no ResizeObserver, so `@grafana/ui`'s `VizLayout` (via react-use's
+// `useMeasure`) measures its legend as 0x0 and then refuses to render its
+// measure-gated children (the chart). Provide a minimal synchronous
+// ResizeObserver that reports the element's inline-style-derived client size,
+// falling back to a small non-zero box so the legend measures a sensible size
+// and the chart mounts.
+const FALLBACK_MEASURE_WIDTH = 240;
+const FALLBACK_MEASURE_HEIGHT = 40;
+
+global.ResizeObserver = class ResizeObserver {
+  constructor(callback) {
+    this.callback = callback;
+  }
+
+  observe(element) {
+    const width = element.clientWidth || FALLBACK_MEASURE_WIDTH;
+    const height = element.clientHeight || FALLBACK_MEASURE_HEIGHT;
+    this.callback([
+      {
+        target: element,
+        contentRect: { x: 0, y: 0, top: 0, left: 0, right: width, bottom: height, width, height },
+      },
+    ]);
+  }
+
+  unobserve() {}
+  disconnect() {}
+};
+
+// jest-canvas-mock installs a recording 2D canvas context (exposing
+// `__getEvents`), replacing jsdom's unimplemented getContext, so ECharts can
+// actually draw in tests and the canvas snapshot matcher can compare draw calls.
+// https://github.com/hustcc/jest-canvas-mock
+require('jest-canvas-mock');
+
+// Register the `toMatchCanvasSnapshot` matcher for canvas style-regression
+// tests. https://github.com/grafana/jest-canvas-mock-compare
+const { matchers } = require('jest-canvas-mock-compare');
+expect.extend(matchers);

@@ -1,0 +1,26 @@
+{
+	"$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
+	"type": "panel",
+	"name": "ECharts Cartesian",
+	"id": "grafana-echartscartesian-panel",
+	"suggestions": true,
+	"info": {
+		"keywords": ["panel", "echarts", "cartesian", "time series", "bar", "line"],
+		"description": "Cartesian ECharts panel (line, bar, scatter) on a time/value grid.",
+		"author": {
+			"name": "Grafana"
+		},
+		"logos": {
+			"small": "img/logo.svg",
+			"large": "img/logo.svg"
+		},
+		"links": [],
+		"screenshots": [],
+		"version": "%VERSION%",
+		"updated": "%TODAY%"
+	},
+	"dependencies": {
+		"grafanaDependency": ">=13.0.0",
+		"plugins": []
+	}
+}

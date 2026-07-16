@@ -52,5 +52,10 @@
   "packageManager": "pnpm@10.28.2",
   "engines": {
     "node": ">=22.18.0"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "jest-canvas-mock@2.5.2": "patches/jest-canvas-mock@2.5.2.patch"
+    }
   }
 }

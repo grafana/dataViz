@@ -15,7 +15,6 @@
 			"!**/.github-workflows-reference",
 			"!**/dist",
 			"!**/deps",
-			"!**/lib",
 			"!**/.cache",
 			"!**/coverage",
 			"!**/*.d.ts",
@@ -105,5 +104,42 @@
 			"semicolons": "always",
 			"arrowParentheses": "always"
 		}
-	}
+	},
+	"overrides": [
+		{
+			"includes": ["packages/@plugins/grafana-echarts-app/**"],
+			"javascript": {
+				"globals": ["jest"]
+			},
+			"linter": {
+				"rules": {
+					"a11y": {
+						"noSvgWithoutTitle": "off"
+					},
+					"complexity": {
+						"noExcessiveCognitiveComplexity": "off"
+					},
+					"correctness": {
+						"useHookAtTopLevel": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": [
+				"packages/@plugins/grafana-echarts-app/**/*.test.ts",
+				"packages/@plugins/grafana-echarts-app/**/*.test.tsx"
+			],
+			"linter": {
+				"rules": {
+					"performance": {
+						"useTopLevelRegex": "off"
+					},
+					"security": {
+						"noSecrets": "off"
+					}
+				}
+			}
+		}
+	]
 }
