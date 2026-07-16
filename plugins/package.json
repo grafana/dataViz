@@ -8,6 +8,7 @@
     "@biomejs/biome": "2.5.3",
     "@grafana/tsconfig": "2.0.1",
     "@swc/core": "1.15.0",
+    "@types/webpack-bundle-analyzer": "4.7.0",
     "@vitejs/plugin-react": "5.1.0",
     "copy-webpack-plugin": "11.0.0",
     "eslint-webpack-plugin": "5.0.3",
@@ -22,6 +23,7 @@
     "vite-tsconfig-paths": "5.1.4",
     "vitest": "2.1.9",
     "webpack": "5.104.1",
+    "webpack-bundle-analyzer": "5.3.0",
     "webpack-cli": "5.1.4",
     "webpack-livereload-plugin": "3.0.2",
     "webpack-merge": "5.10.0",
@@ -30,6 +32,7 @@
   },
   "scripts": {
     "build": "turbo build",
+    "build:analyze": "turbo build:analyze",
     "build:dev": "turbo build:dev",
     "build-types": "turbo build-types",
     "type-check": "turbo type-check",

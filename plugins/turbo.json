@@ -5,6 +5,10 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
+    "build:analyze": {
+      "cache": false,
+      "outputs": ["dist/**"]
+    },
     "build:dev": {},
     "test": {
       "inputs": ["src/**/*.tsx", "src/**/*.ts"]

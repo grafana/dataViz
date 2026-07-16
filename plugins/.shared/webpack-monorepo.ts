@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import webpack, { type Configuration, type RuleSetRule } from 'webpack';
+import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import { merge } from 'webpack-merge';
 import grafanaConfig, { type Env } from '../.config/webpack/webpack.config.ts';
 
@@ -156,6 +157,19 @@ export async function monorepoConfig(env: Env): Promise<Configuration> {
 				'@shared/core': path.resolve(process.cwd(), '../../@shared/core/src'),
 			},
 		},
+		plugins: [
+			// Enabled via `--env analyze` (see each package's `build:analyze` script).
+			// Static reports avoid port collisions when Turbo runs every package at once.
+			...(env.analyze
+				? [
+						new BundleAnalyzerPlugin({
+							analyzerMode: 'static',
+							openAnalyzer: true,
+							reportFilename: 'bundle-report.html',
+						}),
+					]
+				: []),
+		],
 	});
 }
 

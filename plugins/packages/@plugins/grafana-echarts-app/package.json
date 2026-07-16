@@ -6,6 +6,7 @@
   "description": "ECharts app plugin bundling nested ECharts panel plugins",
   "scripts": {
     "build": "webpack -c ./webpack.config.ts --env production --disable-interpret",
+    "build:analyze": "webpack -c ./webpack.config.ts --env production --env analyze --disable-interpret",
     "build:dev": "webpack -c ./webpack.config.ts --env development --disable-interpret",
     "dev": "webpack -w -c ./webpack.config.ts --env development --disable-interpret",
     "lint": "biome lint src",
