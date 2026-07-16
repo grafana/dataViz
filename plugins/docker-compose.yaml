@@ -16,7 +16,11 @@ services:
       - workspace-node-modules:/app/workspace/node_modules/
       - workspace-pnpm-store:/root/.local/share/pnpm/store
     working_dir: /app/workspace
-    command: sh -c "pnpm build && node scripts/aggregate-plugins.mjs --target /app/plugins-dist"
+    # The node_modules volume persists across runs and shadows the image's
+    # build-time install, so re-run install here to sync it with the current
+    # lockfile (e.g. after a plugin adds a dependency). It's a no-op when the
+    # volume is already up to date.
+    command: sh -c "pnpm install --frozen-lockfile && pnpm build && node scripts/aggregate-plugins.mjs --target /app/plugins-dist"
 
   plugin:
     build:
@@ -35,7 +39,9 @@ services:
       - workspace-pnpm-store:/root/.local/share/pnpm/store
     working_dir: /app/workspace
     # Watch + re-aggregate in the background while webpack rebuilds every plugin.
-    command: sh -c "node scripts/aggregate-plugins.mjs --target /app/plugins-dist --watch & pnpm dev"
+    # Sync the persistent node_modules volume with the current lockfile first
+    # (see plugin-precache) so newly added dependencies are available.
+    command: sh -c "pnpm install --frozen-lockfile && (node scripts/aggregate-plugins.mjs --target /app/plugins-dist --watch & pnpm dev)"
     healthcheck:
       # Report healthy only once every plugin's frontend build artifacts have
       # been aggregated, so consumers know all plugins are loadable by Grafana.
