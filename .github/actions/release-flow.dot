@@ -4,8 +4,10 @@
 //   dot -Tsvg release-flow.dot -o release-flow.svg && dot -Tpng release-flow.dot -o release-flow.png
 digraph release_flow {
   graph [rankdir=TB, bgcolor="transparent", fontname="Helvetica", fontsize=12, nodesep=0.4, ranksep=0.5, compound=true];
-  node  [fontname="Helvetica", fontsize=11, shape=box, style="rounded,filled", fillcolor="#ffffff"];
-  edge  [fontname="Helvetica", fontsize=10];
+  // Mid-gray lines and edge labels read on both light and dark page backgrounds;
+  // node text stays dark on the filled boxes.
+  node  [fontname="Helvetica", fontsize=11, shape=box, style="rounded,filled", fillcolor="#ffffff", color="#8b949e", fontcolor="#1f2328"];
+  edge  [fontname="Helvetica", fontsize=10, color="#8b949e", fontcolor="#8b949e"];
 
   // People and their actions
   node [shape=box, style="rounded,filled", fillcolor="#fff4cc"];
