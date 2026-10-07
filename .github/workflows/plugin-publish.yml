@@ -1,0 +1,47 @@
+# Publishes grafana-relations-panel to the dev plugin catalog, by hand.
+#
+# grafana/plugin-ci-workflows' cd.yml does all of it: it builds, tests, signs
+# and validates the plugin from its plugin directory, uploads the zip to GCS
+# and publishes it with the catalog's publish token. It runs four scripts
+# there (lint, typecheck, test:ci, build), which the relations package.json
+# passes on to the echarts package. Catalog only: nothing is deployed to
+# Grafana Cloud instances. Tags and GitHub releases stay in release-please.yml.
+#
+# Publishing from main uses the version in plugin.json; any other ref publishes
+# <version>+<commit>. The catalog accepts each version once, so publishing main
+# again without a version bump fails as a conflict.
+name: Publish plugin
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch or commit to publish (anything but main gets a +<commit> version suffix)
+        default: main
+
+permissions: {}
+
+jobs:
+  publish:
+    name: Publish grafana-relations-panel to dev
+    # The permissions cd.yml declares at its top level, which a caller must
+    # grant in full (as grafana-canvas-panel does). contents: write is for its
+    # GitHub release job, turned off below. A manual run needs write access to
+    # this repo already, so the token gives no one more than they have.
+    permissions:
+      contents: write
+      pull-requests: read
+      id-token: write # Vault (signing and publish tokens), GCS and IAP logins
+      attestations: write # provenance attestation for the zip
+    uses: grafana/plugin-ci-workflows/.github/workflows/cd.yml@ef2d5f15ea47259e126ed6ea0b63ee3e4c0a73a5 # ci-cd-workflows/v11.3.0
+    with:
+      branch: ${{ inputs.branch }}
+      plugin-directory: plugins/packages/@plugins/grafana-echarts/src/modules/relations
+      environment: dev
+      trigger-argo: false
+      disable-github-release: true
+      disable-docs-publishing: true
+      attestation: true
+      # Root CI runs this repo's e2e suites; cd.yml's Playwright setup assumes
+      # a single-plugin repo.
+      run-playwright: false

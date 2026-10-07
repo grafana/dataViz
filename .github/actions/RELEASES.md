@@ -5,8 +5,8 @@ prerequisites at the end of this file before its first real run. Only `grafana-r
 configured so far.
 
 A release is a **GitHub release** with the signed plugin zip attached. Releasing does **not** publish to the
-grafana.com catalog; that stays a separate, later step. The first plugin to release this way is
-`grafana-relations-panel`.
+grafana.com catalog; publishing to the **dev** catalog is a separate, manual step (see
+[Publishing to dev](#publishing-to-dev)). The first plugin to release this way is `grafana-relations-panel`.
 
 ## How a release happens
 
@@ -64,6 +64,22 @@ as `cd.yml`'s GitHub release job does; it keeps release-please's notes and the d
 **Adding a plugin:** a package entry in `release-please-config.json` (`release-type: node`, `component` = the
 plugin id), its current version in `.release-please-manifest.json`, and a `CHANGELOG.md` next to its
 `package.json`.
+
+## Publishing to dev
+
+`plugin-publish.yml` publishes `grafana-relations-panel` to the **dev** plugin catalog when run by hand
+(**Actions → Publish plugin → Run workflow**). It calls `grafana/plugin-ci-workflows`' `cd.yml`, as
+`grafana-canvas-panel` does: `cd.yml` builds, tests, signs and validates the plugin, uploads the zip to GCS
+and publishes it. It deploys nothing to Grafana Cloud instances, and creates no tag or GitHub release.
+
+- **From `main`** the catalog version is the one in `plugin.json`. Any other ref publishes
+  `<version>+<commit>`, so a branch can be tried in dev before it merges. The catalog takes each version
+  once: publishing `main` again without a version bump fails as a conflict.
+- **`cd.yml` builds from a plugin directory** by running `lint`, `typecheck`, `test:ci` and `build` there and
+  reading `dist/`. For relations that directory is `src/modules/relations`, whose `package.json` scripts pass
+  the work to the echarts package, and whose `build` copies the standalone build into `dist/` there. It also
+  carries the `packageManager` and `.nvmrc` that `cd.yml` reads, synced to the workspace root. The app build
+  leaves that `dist/` and `package.json` out.
 
 ## Design rules
 

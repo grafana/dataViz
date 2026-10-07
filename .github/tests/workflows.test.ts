@@ -148,12 +148,18 @@ function steps(jobLines: string[]): string[][] {
 // scripts, and no reusable-workflow calls. They may only read artifacts that
 // a read-only job produced, and check out pinned third-party code.
 describe('write tokens never run PR code', () => {
+	const trustedReusable = /^ {4}uses: grafana\/plugin-ci-workflows\/\.github\/workflows\/cd\.yml@[0-9a-f]{40} # /;
 	const runsPrCode = /\b(pnpm|npm|npx|yarn|node)\b|\.github\/(scripts|actions)\//;
 
 	for (const file of workflows) {
 		for (const job of jobs(file).filter(canWrite)) {
 			test(`${file}: ${job.name}`, () => {
-				assert.ok(!job.lines.some((line) => /^ {4}uses:/.test(line)), 'calls a reusable workflow');
+				// One exception: plugin-ci-workflows' cd.yml, pinned. It declares
+				// contents: write at its top level, so a caller has to grant it,
+				// and it only runs on manual dispatch here (plugin-publish.yml).
+				const callsReusable = job.lines.some((line) => /^ {4}uses:/.test(line));
+				const callsPinnedCd = job.lines.some((line) => trustedReusable.test(line));
+				assert.ok(!callsReusable || callsPinnedCd, 'calls a reusable workflow');
 				for (const step of steps(job.lines)) {
 					const text = step.join('\n');
 					// A local action (`$/` or `./`) is code from the PR's own checkout.

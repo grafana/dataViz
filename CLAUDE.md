@@ -138,7 +138,10 @@ Differences worth knowing:
   `src/modules/relations/plugin.json` (`build:relations` publishes it standalone as
   `grafana-relations-panel`). The standalone panel is versioned on its own: its `%VERSION%` comes from
   `src/modules/relations/package.json` (not a workspace package; release-please bumps it) and it ships
-  `src/modules/relations/CHANGELOG.md`. The app keeps the package's own `package.json` and CHANGELOG. Both use the reserved link names from `plugin-metadata.md`. The other
+  `src/modules/relations/CHANGELOG.md`. The app keeps the package's own `package.json` and CHANGELOG.
+  That `package.json` is also the plugin directory `plugin-publish.yml` hands to plugin-ci-workflows'
+  `cd.yml`: its `lint`/`typecheck`/`test:ci`/`build` scripts delegate to the echarts package, and its
+  `packageManager` and the `.nvmrc` beside it must stay synced to the workspace root, like clock-panel's. Both use the reserved link names from `plugin-metadata.md`. The other
   `src/modules/*/plugin.json` ship only inside the app.
 - **CI builds two plugins from it.** Its `plugin-ci.json` lists `grafana-relations-panel` (`build:relations`)
   and the app, `grafana-echarts-app` (`build`), so root CI, compatibility and bundle stats cover both. The
