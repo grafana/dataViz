@@ -8,6 +8,11 @@ A release is a **GitHub release** with the signed plugin zip attached. Releasing
 grafana.com catalog; publishing to the **dev** catalog is a separate, manual step (see
 [Publishing to dev](#publishing-to-dev)). The first plugin to release this way is `grafana-relations-panel`.
 
+![How a release and a dev publish run](release-flow.png)
+
+The diagram's source is [release-flow.dot](release-flow.dot) (also rendered as [SVG](release-flow.svg)); the
+command to re-render it is at the top of that file.
+
 ## How a release happens
 
 1. A PR with a conventional title (`feat(relations): …`, `fix(relations): …`) is squash-merged to `main`.

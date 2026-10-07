@@ -1,0 +1,69 @@
+// How grafana-relations-panel is released and published to dev.
+// Source for release-flow.svg and release-flow.png, shown in RELEASES.md.
+// After editing, from this directory:
+//   dot -Tsvg release-flow.dot -o release-flow.svg && dot -Tpng release-flow.dot -o release-flow.png
+digraph release_flow {
+  graph [rankdir=TB, fontname="Helvetica", fontsize=12, nodesep=0.4, ranksep=0.5, compound=true];
+  node  [fontname="Helvetica", fontsize=11, shape=box, style="rounded,filled", fillcolor="#ffffff"];
+  edge  [fontname="Helvetica", fontsize=10];
+
+  // People and their actions
+  node [shape=box, style="rounded,filled", fillcolor="#fff4cc"];
+  dev_pr        [label="PR with a conventional title\nfeat(relations): … / fix(relations): …"];
+  merge_pr      [label="Squash-merge to main"];
+  merge_release [label="Review and merge\nthe release PR"];
+  publish_draft [label="Check the draft,\npublish it"];
+  dispatch      [label="Run Publish plugin\n(Actions, ref = main or a branch)"];
+
+  // GitHub objects
+  node [shape=note, style="filled", fillcolor="#eef3ff"];
+  release_pr [label="Release PR\nchore(main): release grafana-relations-panel x.y.z\nbumps src/modules/relations/package.json,\nits CHANGELOG.md, .release-please-manifest.json"];
+  tag        [label="Tag\ngrafana-relations-panel/vx.y.z"];
+  draft      [label="Draft GitHub release\nnotes from the CHANGELOG"];
+  assets     [label="Release assets\ngrafana-relations-panel-x.y.z.zip\n+ .zip.sha1"];
+  catalog    [label="Dev plugin catalog\n(no Grafana Cloud deploy)", fillcolor="#e8f7e8"];
+
+  // release-please.yml
+  subgraph cluster_release {
+    label="release-please.yml  (push to main, or manual run on main)";
+    style="rounded,dashed"; color="#5470c6"; fontcolor="#5470c6";
+    node [shape=box, style="rounded,filled", fillcolor="#ffffff"];
+
+    rp_job [label="release-please job\ncontents: read, id-token: write\n\n1. GitHub App token (grafana-plugins-platform-bot,\n    GATB grant in deployment_tools)\n2. release-please-action\n3. discover-plugins\n4. release-matrix.sh: released path → build target"];
+    build_job [label="build job  (one per released plugin)\ncontents: read, id-token: write, attestations: write\n\ncheckout tagged commit → setup-workspace\n→ build-target.sh (id + version check)\n→ Vault signing token → plugin-package (sign + zip)\n→ plugin-validator → attest provenance\n→ upload artifact"];
+    attach_job [label="attach job\ncontents: write, no checkout, no repo code\n\ndownload artifact\n→ softprops/action-gh-release"];
+
+    rp_job -> build_job [label="releases matrix\n(only when a release was created)"];
+    build_job -> attach_job [label="artifact"];
+  }
+
+  // plugin-publish.yml
+  subgraph cluster_publish {
+    label="plugin-publish.yml  (manual run only)";
+    style="rounded,dashed"; color="#3ba272"; fontcolor="#3ba272";
+    node [shape=box, style="rounded,filled", fillcolor="#ffffff"];
+
+    cd_call [label="calls plugin-ci-workflows cd.yml (pinned)\nplugin-directory: src/modules/relations\nenvironment: dev, trigger-argo: false,\nno GitHub release, no docs"];
+    cd_ci [label="ci.yml in the relations directory\nlint, typecheck, test:ci, build\n(package.json scripts pass them to echarts;\nbuild copies dist/ there)\n→ sign → validate"];
+    cd_publish [label="upload zip to GCS\n→ publish with the dev gcom token\n(main: x.y.z, other refs: x.y.z+commit)"];
+
+    cd_call -> cd_ci -> cd_publish;
+  }
+
+  // Release flow
+  dev_pr -> merge_pr;
+  merge_pr -> rp_job [label="push to main"];
+  rp_job -> release_pr [label="no release yet:\nopens or updates"];
+  release_pr -> merge_release;
+  merge_release -> rp_job [label="push to main\n(next run)"];
+  rp_job -> tag [label="creates"];
+  rp_job -> draft [label="creates"];
+  attach_job -> assets [label="uploads"];
+  assets -> draft [style=dashed, arrowhead=none];
+  draft -> publish_draft;
+
+  // Dev publish flow
+  dispatch -> cd_call;
+  cd_publish -> catalog;
+  publish_draft -> dispatch [style=dotted, label="optional, after the\nrelease merges to main"];
+}
