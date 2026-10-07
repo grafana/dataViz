@@ -97,7 +97,7 @@ and publishes it. It deploys nothing to Grafana Cloud instances, and creates no 
   read the repo. A separate job holding `contents: write` only downloads that job's artifact and attaches
   it, the same split as the PR-comment jobs in Plugin CI.
 - **The signing token comes from Vault**, the same secret `plugin-ci-workflows` uses
-  (`plugins/sign-plugin-access-policy-token`), never from a repo secret.
+  (`plugins/sign-plugin-access-policy-token`), never from a repo secret. See [Credentials](#credentials).
 - **Release PRs and tags are made with a GitHub App token** (`grafana-plugins-platform-bot`, permission set
   `release-please`, as upstream's action uses), so they trigger CI
   and their commits are signed, which the repo requires on every branch.
@@ -120,11 +120,45 @@ Release automation uses `grafana-plugins-platform-bot` with the `release-please`
 
 The App grant must exist for `grafana/dataViz` on `release-please.yml` in deployment_tools. If the grant is missing or too narrow, token creation or the later release-please PR, tag, release, label or comment operation fails.
 
+## Credentials
+
+Every credential is short-lived and obtained through the job's GitHub OIDC token (`id-token: write`); there are
+no repo secrets. Each login checks different claims of that token, which matters because **dataViz uses
+GitHub's immutable OIDC subject**: its `sub` claim is `repo:grafana@7195757/dataViz@1301820546:…`, not
+`repo:grafana/dataViz:…` (`gh api repos/grafana/dataViz/actions/oidc/customization/sub`).
+
+The numbers in that subject are IDs, not secrets:
+
+| part | meaning | check it with |
+|---|---|---|
+| `repo:` | fixed prefix for a repository subject | |
+| `grafana@7195757` | org name `@` the `grafana` org's numeric ID | `gh api orgs/grafana --jq .id` |
+| `dataViz@1301820546` | repo name `@` dataViz's numeric ID | `gh api repos/grafana/dataViz --jq .id` |
+| `:…` | the rest, filled in per run, e.g. `ref:refs/heads/main` for a push to `main` | |
+
+GitHub uses this format for repositories created, renamed or transferred after July 15, 2026
+([immutable subject claims](https://docs.github.com/en/actions/reference/security/oidc#immutable-subject-claims)).
+Names can be reused: a later repository with the same name would get the same `repo:grafana/dataViz:…`
+subject, while IDs are never reused, so a binding on the IDs trusts only this repository. The GATB grant's
+`oidc_subject` is `repo:grafana@7195757/dataViz@1301820546:*`; the trailing `*` does not widen it beyond the
+grant, because the same role also requires `workflow_ref` (the workflow file on `main`) and `event_name`.
+
+| credential | used by | obtained through | granted in | OIDC claims checked |
+|---|---|---|---|---|
+| GitHub App token, `grafana-plugins-platform-bot`, permission set `release-please` (contents, pull-requests, issues write) | `release-please.yml`, release-please job: release PRs, tags, draft releases | `grafana/shared-workflows` `create-github-app-token` → GATB, a per-repo Vault role | deployment_tools `terraform/repositories/dataViz/github-app-configs/config.yaml` | `sub` (the file's `oidc_subject`, set to the immutable form), `workflow_ref` (`.github/workflows/release-please.yml` on `main`), `event_name` (`push`, `workflow_dispatch`) |
+| Plugin signing token, `plugins/sign-plugin-access-policy-token` | `release-please.yml` build job (Sign and package); `plugin-publish.yml`, inside `cd.yml`'s CI | `get-vault-secrets` `common_secrets` → the shared `vault-github-actions` Vault role | deployment_tools `terraform/modules/vault_github_actions_auth/vault_secrets.tf`, for every `grafana` repo | `sub` matches `repo:grafana/*` or `repo:grafana@7195757/*` (both forms) |
+| Catalog publish token, `plugins/gcom-publish-token:dev` | `plugin-publish.yml`, inside `cd.yml`'s publish job | same as the signing token | same as the signing token | same as the signing token |
+| Google credentials, service account `github-plugin-ci-workflows` (GCS upload, IAP token for the dev catalog API) | `plugin-publish.yml`, inside `cd.yml` | Google workload identity, provider `github-provider` | deployment_tools `terraform/modules/gcp_workload_identity_pool` and the service account's bindings | `repository_owner` is `grafana`, and attributes such as `repository_id` and `job_workflow_ref`; not `sub` |
+| `GITHUB_TOKEN`, `contents: write` | `release-please.yml` attach job (upload to the draft release) | GitHub | the job's `permissions:` | none |
+
+Only the GitHub App token checks `sub` against a value set for this repo, so it is the only credential the
+immutable subject affects. A token-step failure with `claim "sub" does not match any associated bound claim
+values` means that `oidc_subject` is missing or wrong; `role … could not be found` means the grant is not
+applied yet.
+
 ## Before it can run
 
 - **Squash merge**, with the PR title as the commit message, so each PR is one changelog entry.
-- **A GitHub App grant** for `grafana-plugins-platform-bot` on `release-please.yml`, permission set
-  `release-please` (contents, pull-requests and issues write), in deployment_tools
-  `terraform/repositories/dataViz/github-app-configs/config.yaml`. dataViz has no grants there yet, so no
-  App token works in this repo today.
-- **Vault access** for this repo to the signing token, which other plugin repos already read.
+- **The GitHub App grant** described under [Credentials](#credentials), including the `oidc_subject`
+  override for the immutable subject.
+- **`grafana-plugins-platform-bot` installed on this repo**, or the App token step fails even with the grant.
