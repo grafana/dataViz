@@ -1,7 +1,8 @@
-# Plugin releases (proposed)
+# Plugin releases
 
-**Status: design, not implemented yet.** This describes how plugins in this repo will be released, so the
-design can be reviewed before it is built.
+**Status: implemented, not yet run.** `release-please.yml` runs on pushes to `main`; it needs the
+prerequisites at the end of this file before its first real run. Only `grafana-relations-panel` is
+configured so far.
 
 A release is a **GitHub release** with the signed plugin zip attached. Releasing does **not** publish to the
 grafana.com catalog; that stays a separate, later step. The first plugin to release this way is
@@ -24,8 +25,8 @@ grafana.com catalog; that stays a separate, later step. The first plugin to rele
 merge several, or all of the open ones, to release them together. A plugin with no releasable changes can
 be forced with a `Release-As: x.y.z` footer on a commit that touches its directory.
 
-Only `feat` and `fix` commits (and breaking changes) trigger a release. `chore`, `ci`, `docs` and similar
-appear in no release.
+Only `feat` and `fix` commits (and breaking changes) open a release PR. `chore`, `ci`, `docs` and similar
+open none on their own, but are listed in the next release's notes when they touch the plugin's directory.
 
 ## Versions and tags
 
@@ -50,13 +51,19 @@ into local actions with the same interface plus only what the monorepo needs, so
 
 | local action | from plugin-ci-workflows | adds |
 |---|---|---|
-| `release-please` | `actions/plugins/release-please` | inputs for the GitHub App and config files; passes release-please's outputs through |
-| `plugin-package` | `actions/internal/plugins/package` (sign + zip) | a pinned `@grafana/sign-plugin` version |
-| `plugin-validator` | the validator step in `ci.yml` | packaged as a reusable action |
+| `release-please` | `actions/plugins/release-please` | inputs for the GitHub App and config files; all of release-please's outputs as one JSON output; no checkout |
+| `plugin-package` | `actions/internal/plugins/package` (sign + zip) | universal zip only (no backends here); `@grafana/sign-plugin` pinned |
+| `plugin-validator` | the validator step in `ci.yml` | packaged as an action, with the same image, arguments and default config |
 
-It also reuses this repo's `discover-plugins` (to find the plugin to build), `setup-workspace` and
-`scripts/build-target.sh`. The draft release and its notes come from release-please. Attaching the zip
-follows `cd.yml`'s GitHub release job.
+It also reuses this repo's `discover-plugins`, `setup-workspace` and `scripts/build-target.sh`, which checks
+that the built `plugin.json` carries the tagged version. `scripts/release-matrix.sh` matches each released
+package to its build target: a package's `component` in `release-please-config.json` is its plugin id. The
+draft release and its notes come from release-please. Attaching the zip uses `softprops/action-gh-release`,
+as `cd.yml`'s GitHub release job does; it keeps release-please's notes and the draft state.
+
+**Adding a plugin:** a package entry in `release-please-config.json` (`release-type: node`, `component` = the
+plugin id), its current version in `.release-please-manifest.json`, and a `CHANGELOG.md` next to its
+`package.json`.
 
 ## Design rules
 

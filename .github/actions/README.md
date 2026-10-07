@@ -9,8 +9,7 @@ How every plugin package gets built, checked and tested, and why it is built the
 | `plugin-bundle-stats.yml` | every PR and push to main | Bundle size per plugin, compared against main |
 
 None of them names a plugin. Each asks `discover-plugins` what exists, so a new package gets CI without
-any workflow changes. Releases are designed separately, in [RELEASES.md](RELEASES.md) (proposed, not
-implemented yet).
+any workflow changes. Releases are covered separately, in [RELEASES.md](RELEASES.md).
 
 ## What runs for a package
 
