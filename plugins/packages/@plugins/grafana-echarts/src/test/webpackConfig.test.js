@@ -95,4 +95,25 @@ describe('webpack configuration', () => {
       readFileSpy.mockRestore();
     }
   });
+
+  it('leaves the standalone Relations files out of the app build', async () => {
+    // What the Relations `build` script leaves behind when cd.yml builds the panel from its directory.
+    const relationsDist = path.resolve(process.cwd(), 'src/modules/relations/dist');
+    const leftoverExisted = fs.existsSync(relationsDist);
+    fs.mkdirSync(relationsDist, { recursive: true });
+    fs.writeFileSync(path.join(relationsDist, 'plugin.json'), '{"id":"grafana-relations-panel"}');
+    fs.writeFileSync(path.join(relationsDist, 'module.js'), '');
+    try {
+      const defaultConfig = await config({ production: true });
+      const [copyPlugin] = pluginsNamed(defaultConfig.plugins ?? [], 'CopyPlugin');
+      const jsonPattern = copyPlugin.patterns.find((pattern) => pattern.from === '**/*.json');
+
+      expect(Object.keys(defaultConfig.entry)).not.toContain('modules/relations/dist/module');
+      expect(jsonPattern.globOptions.ignore).toEqual(['modules/relations/package.json', 'modules/relations/dist/**']);
+    } finally {
+      if (!leftoverExisted) {
+        fs.rmSync(relationsDist, { recursive: true, force: true });
+      }
+    }
+  });
 });

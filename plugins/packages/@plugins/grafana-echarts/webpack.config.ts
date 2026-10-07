@@ -11,6 +11,7 @@ import webpack, { type Configuration } from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import VirtualModulesPlugin from 'webpack-virtual-modules';
 
+import { copyFilePatterns } from './/.config/bundler/copyFiles.ts';
 import baseConfig, { type Env } from './/.config/webpack/webpack.config.ts';
 
 type PluginManifest = {
@@ -39,6 +40,29 @@ const standalonePluginKinds = [
   },
   { name: 'VirtualModulesPlugin', matches: (plugin: unknown) => plugin instanceof VirtualModulesPlugin },
 ];
+
+// What the app build leaves out of src/modules/relations: the panel's own
+// package.json (its version source), and dist/, which the relations
+// `build` script writes there when plugin-ci-workflows' cd.yml builds the
+// standalone panel from that directory. The scaffold would otherwise copy
+// both, and bundle dist/module.js as one more nested plugin.
+const relationsStandaloneFiles = ['modules/relations/package.json', 'modules/relations/dist/**'];
+
+const appPlugins = (plugins: NonNullable<Configuration['plugins']>): NonNullable<Configuration['plugins']> => [
+  ...plugins.filter((plugin) => !(plugin instanceof CopyWebpackPlugin)),
+  new CopyWebpackPlugin({
+    patterns: [
+      ...copyFilePatterns.map((pattern) => ({ ...pattern, globOptions: { ignore: relationsStandaloneFiles } })),
+      // Nested manifests reference logos that the scaffold copy step omits.
+      { from: 'modules/*/img/**', to: '[path][name][ext]', noErrorOnMissing: true },
+    ],
+  }),
+];
+
+const appEntries = (entries: Record<string, string>): Record<string, string> => {
+  const relationsDist = path.resolve(process.cwd(), 'src/modules/relations/dist');
+  return Object.fromEntries(Object.entries(entries).filter(([, modulePath]) => !modulePath.startsWith(relationsDist)));
+};
 
 const standaloneCopyPatterns = (manifest: PluginManifest) => {
   const moduleDirectory = 'modules/relations';
@@ -138,6 +162,8 @@ const config = async (env: Env): Promise<Configuration> => {
       publicPath: `public/plugins/${relationsManifest.id}/`,
       uniqueName: relationsManifest.id,
     };
+  } else {
+    base.entry = appEntries(base.entry as Record<string, string>);
   }
 
   // De-duplicate the ECharts runtime across the nested panel entries. Each
@@ -168,15 +194,7 @@ const config = async (env: Env): Promise<Configuration> => {
 
   const configuredPlugins = isRelationsStandalone
     ? replaceStandalonePlugins(base.plugins ?? [], relationsManifest, relationsPackage.version)
-    : [
-        ...(base.plugins ?? []),
-        new CopyWebpackPlugin({
-          patterns: [
-            // Nested manifests reference logos that the scaffold copy step omits.
-            { from: 'modules/*/img/**', to: '[path][name][ext]', noErrorOnMissing: true },
-          ],
-        }),
-      ];
+    : appPlugins(base.plugins ?? []);
 
   base.plugins = [
     ...configuredPlugins,

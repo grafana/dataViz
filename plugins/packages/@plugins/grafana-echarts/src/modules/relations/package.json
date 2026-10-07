@@ -2,5 +2,12 @@
   "name": "grafana-relations-panel",
   "version": "0.0.1",
   "private": true,
-  "description": "Version source for the standalone grafana-relations-panel build (build:relations). Not a workspace package; release-please bumps the version."
+  "description": "The standalone grafana-relations-panel build. Not a workspace package: it carries the panel's version (release-please bumps it) and the scripts plugin-ci-workflows' cd.yml runs in a plugin directory, which delegate to the echarts package.",
+  "packageManager": "pnpm@11.21.0",
+  "scripts": {
+    "lint": "pnpm --dir ../../.. run lint",
+    "typecheck": "pnpm --dir ../../.. run type-check",
+    "test:ci": "pnpm --dir ../../.. run test:ci",
+    "build": "pnpm --dir ../../.. run build:relations && rm -rf dist && cp -R ../../../dist dist"
+  }
 }
