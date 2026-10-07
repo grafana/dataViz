@@ -3,8 +3,9 @@ description: |
   Open or update release PRs, and create the tags and GitHub releases of
   merged ones, with release-please. Adapted from grafana/plugin-ci-workflows
   actions/plugins/release-please. Differences: the GitHub App, its permission
-  set and the config files are inputs (upstream hardcodes
-  grafana-plugins-platform-bot and the repo-root files); release-please's
+  set and the config files are inputs, defaulting to upstream's hardcoded
+  values (grafana-plugins-platform-bot, permission set release-please, the
+  repo-root files); release-please's
   outputs are passed through; and there is no checkout, since release-please
   reads and writes the repo through the API. The caller needs `id-token:
   write`, for the Vault login behind the App token.
@@ -13,11 +14,13 @@ inputs:
   github-app:
     description: GitHub App (its name in Vault) that opens release PRs and creates tags and releases.
     required: false
-    default: grafana-pr-automation
+    default: grafana-plugins-platform-bot
   permission-set:
-    description: The App's permission set in Vault.
+    description: |
+      The App's permission set, granted per repo and workflow in
+      deployment_tools (terraform/repositories/<repo>/github-app-configs).
     required: false
-    default: default
+    default: release-please
   config-file:
     description: release-please config, relative to the repo root.
     required: false

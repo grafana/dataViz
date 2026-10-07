@@ -72,11 +72,15 @@ plugin id), its current version in `.release-please-manifest.json`, and a `CHANG
   it, the same split as the PR-comment jobs in Plugin CI.
 - **The signing token comes from Vault**, the same secret `plugin-ci-workflows` uses
   (`plugins/sign-plugin-access-policy-token`), never from a repo secret.
-- **Release PRs and tags are made with a GitHub App token** (`grafana-pr-automation`), so they trigger CI
+- **Release PRs and tags are made with a GitHub App token** (`grafana-plugins-platform-bot`, permission set
+  `release-please`, as upstream's action uses), so they trigger CI
   and their commits are signed, which the repo requires on every branch.
 
 ## Before it can run
 
 - **Squash merge**, with the PR title as the commit message, so each PR is one changelog entry.
-- **`grafana-pr-automation`** needs contents and pull-request write access on this repo.
+- **A GitHub App grant** for `grafana-plugins-platform-bot` on `release-please.yml`, permission set
+  `release-please` (contents, pull-requests and issues write), in deployment_tools
+  `terraform/repositories/dataViz/github-app-configs/config.yaml`. dataViz has no grants there yet, so no
+  App token works in this repo today.
 - **Vault access** for this repo to the signing token, which other plugin repos already read.
