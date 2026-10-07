@@ -11,6 +11,13 @@ inputs:
   zip:
     description: Path to the packaged plugin zip.
     required: true
+  source-version:
+    description: |
+      Version to put in the copied source's package.json. Needed when the
+      plugin's version does not live in that package.json, e.g. the echarts
+      package building grafana-relations-panel. Empty leaves it as is.
+    required: false
+    default: ''
   validator-version:
     description: grafana/plugin-validator-cli image tag.
     required: false
@@ -24,4 +31,5 @@ runs:
         PLUGIN_DIRECTORY: ${{ inputs.plugin-directory }}
         ZIP: ${{ inputs.zip }}
         VALIDATOR_VERSION: ${{ inputs.validator-version }}
+        SOURCE_VERSION: ${{ inputs.source-version }}
       run: bash "$GITHUB_ACTION_PATH/validate.sh" "$PLUGIN_DIRECTORY" "$ZIP"

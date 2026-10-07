@@ -58,7 +58,7 @@ into local actions with the same interface plus only what the monorepo needs, so
 |---|---|---|
 | `release-please` | `actions/plugins/release-please` | inputs for the GitHub App and config files; all of release-please's outputs as one JSON output; no checkout |
 | `plugin-package` | `actions/internal/plugins/package` (sign + zip) | universal zip only (no backends here); `@grafana/sign-plugin` pinned |
-| `plugin-validator` | the validator step in `ci.yml` | packaged as an action, with the same image, arguments and default config |
+| `plugin-validator` | the validator step in `ci.yml` | packaged as an action, with the same image, arguments and default config; `source-version` for a plugin whose version is not in its source `package.json` (relations) |
 
 It also reuses this repo's `discover-plugins`, `setup-workspace` and `scripts/build-target.sh`, which checks
 that the built `plugin.json` carries the tagged version. `scripts/release-matrix.sh` matches each released
@@ -85,6 +85,9 @@ and publishes it. It deploys nothing to Grafana Cloud instances, and creates no 
   the work to the echarts package, and whose `build` copies the standalone build into `dist/` there. It also
   carries the `packageManager` and `.nvmrc` that `cd.yml` reads, synced to the workspace root. The app build
   leaves that `dist/` and `package.json` out.
+- **`cd.yml`'s plugin validator is off.** It compares the zip with the plugin directory's source, and that
+  directory has only the delegating scripts, so it fails. Releases validate the same build against the echarts
+  source instead.
 
 ## Design rules
 

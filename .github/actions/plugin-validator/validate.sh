@@ -8,7 +8,10 @@
 # copy is only needed under act on macOS), and clamav is skipped the same way.
 #
 # Usage: validate.sh <plugin-source-dir> <zip>
-# Env: VALIDATOR_VERSION (image tag, e.g. v0.49.11).
+# Env: VALIDATOR_VERSION (image tag, e.g. v0.49.11), SOURCE_VERSION (optional:
+# the version to put in the copied source's package.json, for a package whose
+# package.json does not carry this plugin's version, e.g. echarts building
+# grafana-relations-panel, whose version lives in src/modules/relations).
 set -euo pipefail
 
 source_dir="${1:?usage: validate.sh <plugin-source-dir> <zip>}"
@@ -19,6 +22,12 @@ zip="${2:?usage: validate.sh <plugin-source-dir> <zip>}"
 workspace="$(mktemp -d)"
 trap 'rm -rf "$workspace"' EXIT
 tar -C "$source_dir" --exclude=./node_modules -cf - . | tar -C "$workspace" -xf -
+# The validator fails when the source package.json version differs from the
+# zip's plugin.json version.
+if [ -n "${SOURCE_VERSION:-}" ]; then
+	jq --arg version "$SOURCE_VERSION" '.version = $version' "$workspace/package.json" >"$workspace/package.json.new"
+	mv "$workspace/package.json.new" "$workspace/package.json"
+fi
 mkdir -p "$workspace/dist-artifacts"
 cp "$zip" "$workspace/dist-artifacts/"
 cp "$(dirname "$0")/config.yaml" "$workspace/.plugin-validator.yaml"

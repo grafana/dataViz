@@ -111,6 +111,9 @@ jobs:
         with:
           plugin-directory: ${{ matrix.release.dir }}
           zip: release-assets/${{ steps.package.outputs.zip }}
+          # The relations version lives in src/modules/relations, not in the
+          # echarts package.json the validator compares the zip against.
+          source-version: ${{ matrix.release.version }}
 
       - name: Attest provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
@@ -129,6 +132,10 @@ jobs:
   attach:
     name: Attach to ${{ matrix.release.tag }}
     needs: [release-please, build]
+    # Run even when another plugin's build failed: needs waits for the whole
+    # build matrix, so a single failure would otherwise skip every attach.
+    # A release whose own build failed has no artifact, so its download fails.
+    if: ${{ !cancelled() && needs.release-please.result == 'success' && needs.release-please.outputs.releases != '[]' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write # upload assets to the draft release

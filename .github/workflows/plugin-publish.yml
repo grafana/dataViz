@@ -45,3 +45,8 @@ jobs:
       # Root CI runs this repo's e2e suites; cd.yml's Playwright setup assumes
       # a single-plugin repo.
       run-playwright: false
+      # The validator checks the zip against the plugin directory's source, and
+      # src/modules/relations holds only the scripts that delegate to echarts,
+      # so it reports non-standard tooling and a source mismatch. Releases
+      # validate the same build against the echarts source (release-please.yml).
+      run-plugin-validator: false

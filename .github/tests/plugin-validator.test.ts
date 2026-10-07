@@ -8,21 +8,23 @@ import { REPO, bash, tempDir, writeText } from './helpers.ts';
 
 const SCRIPT = join(REPO, '.github/actions/plugin-validator/validate.sh');
 
-// Logs its arguments and the files in the mounted workspace (the -v source),
+// Logs its arguments, the files in the mounted workspace (the -v source) and
+// the version in its package.json,
 // then exits with FAKE_EXIT, as the validator exits non-zero on errors.
 const FAKE_DOCKER = `#!/usr/bin/env bash
 echo "docker $*" >> "$FAKE_LOG"
 while [ "$#" -gt 0 ]; do
-  if [ "$1" = -v ]; then (cd "\${2%%:*}" && find . -type f | sort) >> "$FAKE_LOG"; fi
+  if [ "$1" = -v ]; then (cd "\${2%%:*}" && find . -type f | sort && jq -r '"version " + .version' package.json) >> "$FAKE_LOG"; fi
   shift
 done
 exit "\${FAKE_EXIT:-0}"
 `;
 
-function runValidator(t: TestContext, fakeExit: string) {
+function runValidator(t: TestContext, fakeExit: string, sourceVersion = '') {
 	const workspace = tempDir(t);
 	const source = join(workspace, 'my-panel');
 	writeText(join(source, 'src/module.ts'), 'export {};\n');
+	writeText(join(source, 'package.json'), '{"name":"my-panel","version":"0.0.1"}\n');
 	writeText(join(source, 'node_modules/dep/index.js'), 'module.exports = 1;\n');
 	const zip = join(workspace, 'out/my-panel-1.2.3.zip');
 	writeText(zip, 'zip');
@@ -36,6 +38,7 @@ function runValidator(t: TestContext, fakeExit: string) {
 			FAKE_LOG: dockerLog,
 			FAKE_EXIT: fakeExit,
 			VALIDATOR_VERSION: 'v9.9.9',
+			SOURCE_VERSION: sourceVersion,
 		},
 	});
 	const dockerLines = readFileSync(dockerLog, 'utf8').trim().split('\n');
@@ -53,11 +56,23 @@ describe('actions/plugin-validator/validate.sh', () => {
 			command,
 			/ grafana\/plugin-validator-cli:v9\.9\.9 -ghaOutput -config=\/workspace\/\.plugin-validator\.yaml -sourceCodeUri=file:\/\/\/workspace \/workspace\/dist-artifacts\/my-panel-1\.2\.3\.zip$/
 		);
-		assert.deepEqual(mountedFiles, ['./.plugin-validator.yaml', './dist-artifacts/my-panel-1.2.3.zip', './src/module.ts']);
+		assert.deepEqual(mountedFiles, [
+			'./.plugin-validator.yaml',
+			'./dist-artifacts/my-panel-1.2.3.zip',
+			'./package.json',
+			'./src/module.ts',
+			'version 0.0.1',
+		]);
 	});
 
 	test('fails when the validator reports errors', (t) => {
 		const validated = runValidator(t, '1');
 		assert.equal(validated.status, 1);
+	});
+
+	test('gives the validator a package.json with SOURCE_VERSION', (t) => {
+		const validated = runValidator(t, '0', '1.2.3');
+		assert.equal(validated.status, 0, validated.stderr);
+		assert.equal(validated.dockerLines.at(-1), 'version 1.2.3');
 	});
 });
