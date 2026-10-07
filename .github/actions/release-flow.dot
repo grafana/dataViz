@@ -3,7 +3,7 @@
 // After editing, from this directory:
 //   dot -Tsvg release-flow.dot -o release-flow.svg && dot -Tpng release-flow.dot -o release-flow.png
 digraph release_flow {
-  graph [rankdir=TB, fontname="Helvetica", fontsize=12, nodesep=0.4, ranksep=0.5, compound=true];
+  graph [rankdir=TB, bgcolor="transparent", fontname="Helvetica", fontsize=12, nodesep=0.4, ranksep=0.5, compound=true];
   node  [fontname="Helvetica", fontsize=11, shape=box, style="rounded,filled", fillcolor="#ffffff"];
   edge  [fontname="Helvetica", fontsize=10];
 
