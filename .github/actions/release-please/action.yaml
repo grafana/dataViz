@@ -1,0 +1,68 @@
+name: Release Please
+description: |
+  Open or update release PRs, and create the tags and GitHub releases of
+  merged ones, with release-please. Adapted from grafana/plugin-ci-workflows
+  actions/plugins/release-please. Differences: the GitHub App, its permission
+  set and the config files are inputs (upstream hardcodes
+  grafana-plugins-platform-bot and the repo-root files); release-please's
+  outputs are passed through; and there is no checkout, since release-please
+  reads and writes the repo through the API. The caller needs `id-token:
+  write`, for the Vault login behind the App token.
+
+inputs:
+  github-app:
+    description: GitHub App (its name in Vault) that opens release PRs and creates tags and releases.
+    required: false
+    default: grafana-pr-automation
+  permission-set:
+    description: The App's permission set in Vault.
+    required: false
+    default: default
+  config-file:
+    description: release-please config, relative to the repo root.
+    required: false
+    default: release-please-config.json
+  manifest-file:
+    description: release-please manifest, relative to the repo root.
+    required: false
+    default: .release-please-manifest.json
+  target-branch:
+    description: Branch release PRs target.
+    required: false
+    default: main
+
+outputs:
+  releases-created:
+    description: "'true' when this run created at least one release."
+    value: ${{ steps.release-please.outputs.releases_created }}
+  paths-released:
+    description: JSON array of the package paths released in this run.
+    value: ${{ steps.release-please.outputs.paths_released }}
+  release-outputs:
+    description: |
+      Every output of release-please-action, as one JSON object. Per-package
+      outputs are keyed `<path>--<name>` (tag_name, sha, version, ...), and a
+      composite action cannot declare outputs whose names depend on the config.
+    value: ${{ toJSON(steps.release-please.outputs) }}
+
+runs:
+  using: composite
+  steps:
+    - name: Get GitHub App token
+      id: token
+      uses: grafana/shared-workflows/actions/create-github-app-token@5bbb526b1728ca57fbe1750c4c27ab6ab06171c2 # create-github-app-token/v1.0.0
+      with:
+        github_app: ${{ inputs.github-app }}
+        permission_set: ${{ inputs.permission-set }}
+
+    # An App token, not GITHUB_TOKEN: release PRs and tags made with
+    # GITHUB_TOKEN trigger no workflows, and the App's API commits are signed,
+    # which the Signed Commits ruleset requires on every branch.
+    - name: Run release-please
+      id: release-please
+      uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+      with:
+        token: ${{ steps.token.outputs.token }}
+        config-file: ${{ inputs.config-file }}
+        manifest-file: ${{ inputs.manifest-file }}
+        target-branch: ${{ inputs.target-branch }}

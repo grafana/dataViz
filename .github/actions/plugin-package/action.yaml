@@ -1,0 +1,45 @@
+name: Sign and package a plugin
+description: |
+  Sign a built plugin and package it as <id>-<version>.zip, with .sha1 and
+  .md5 checksums. Adapted from grafana/plugin-ci-workflows
+  actions/internal/plugins/package (universal zip only, signer pinned); see
+  package.sh.
+
+inputs:
+  dist-folder:
+    description: Built plugin folder to sign and zip (holds plugin.json).
+    required: false
+    default: dist
+  output-folder:
+    description: Folder the zip and its checksums are written to.
+    required: true
+  access-policy-token:
+    description: Grafana access policy token that signs the plugin. Empty packages it unsigned, if allow-unsigned is 'true'.
+    required: false
+    default: ''
+  allow-unsigned:
+    description: "'true' to package without a token instead of failing."
+    required: false
+    default: 'false'
+  signature-type:
+    description: Signature type passed to @grafana/sign-plugin.
+    required: false
+    default: grafana
+
+outputs:
+  zip:
+    description: The zip file name, inside output-folder.
+    value: ${{ steps.package.outputs.zip }}
+
+runs:
+  using: composite
+  steps:
+    - id: package
+      shell: bash
+      env:
+        DIST_FOLDER: ${{ inputs.dist-folder }}
+        OUTPUT_FOLDER: ${{ inputs.output-folder }}
+        GRAFANA_ACCESS_POLICY_TOKEN: ${{ inputs.access-policy-token }}
+        ALLOW_UNSIGNED: ${{ inputs.allow-unsigned }}
+        SIGNATURE_TYPE: ${{ inputs.signature-type }}
+      run: bash "$GITHUB_ACTION_PATH/package.sh" "$DIST_FOLDER" "$OUTPUT_FOLDER"

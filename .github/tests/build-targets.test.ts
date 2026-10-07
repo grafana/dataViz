@@ -9,7 +9,8 @@ const SCRIPT = join(SCRIPTS, 'build-targets.sh');
 
 // The fake pnpm logs every call, and on `--filter <pkg> run <script>` writes
 // dist/plugin.json with the id FAKE_BUILT_<script> names (default: the
-// package's own id from FAKE_IDS), or fails when the script is `fail`.
+// package's own id from FAKE_IDS) and version 1.0.0, or fails when the script
+// is `fail`.
 const FAKE_PNPM = `#!/usr/bin/env bash
 echo "pnpm $*" >> "$FAKE_LOG"
 if [ "$1" = --filter ] && [ "$3" = run ]; then
@@ -19,7 +20,7 @@ if [ "$1" = --filter ] && [ "$3" = run ]; then
   dir="$(jq -r --arg p "$pkg" '.[$p].dir' <<<"$FAKE_IDS")"
   id="$(jq -r --arg p "$pkg" --arg s "$script" '.[$p].built[$s] // .[$p].id' <<<"$FAKE_IDS")"
   mkdir -p "$GITHUB_WORKSPACE/$dir/dist"
-  jq -n --arg id "$id" '{id: $id}' > "$GITHUB_WORKSPACE/$dir/dist/plugin.json"
+  jq -n --arg id "$id" '{id: $id, info: {version: "1.0.0"}}' > "$GITHUB_WORKSPACE/$dir/dist/plugin.json"
 fi
 `;
 
@@ -127,5 +128,17 @@ describe('scripts/build-targets.sh', () => {
 		assert.equal(build.status, 1);
 		assert.equal(errors(build.stdout).length, 1);
 		assert.deepEqual(build.pnpmCalls, []);
+	});
+
+	test('build-target.sh checks the built version when VERSION is set', (t) => {
+		const env = { PKG: '@t/clock', SCRIPT: 'build', DIR: 'p/clock', ID: 'clock-panel' };
+		const matching = runWithFakePnpm(t, join(SCRIPTS, 'build-target.sh'), [], { ...env, VERSION: '1.0.0' }, packageIds);
+		assert.equal(matching.status, 0, matching.stdout + matching.stderr);
+
+		const mismatched = runWithFakePnpm(t, join(SCRIPTS, 'build-target.sh'), [], { ...env, VERSION: '2.0.0' }, packageIds);
+		assert.equal(mismatched.status, 1);
+		assert.deepEqual(errors(mismatched.stdout), [
+			"::error file=p/clock/dist/plugin.json::@t/clock script 'build' built clock-panel version '1.0.0', expected '2.0.0'",
+		]);
 	});
 });

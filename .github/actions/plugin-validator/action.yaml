@@ -1,0 +1,27 @@
+name: Validate a plugin
+description: |
+  Run grafana/plugin-validator-cli on a packaged plugin zip and its source;
+  fails on error-level findings. Packaged from the plugin-validator step of
+  grafana/plugin-ci-workflows ci.yml; see validate.sh.
+
+inputs:
+  plugin-directory:
+    description: The plugin's source directory (its package root).
+    required: true
+  zip:
+    description: Path to the packaged plugin zip.
+    required: true
+  validator-version:
+    description: grafana/plugin-validator-cli image tag.
+    required: false
+    default: v0.49.11
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        PLUGIN_DIRECTORY: ${{ inputs.plugin-directory }}
+        ZIP: ${{ inputs.zip }}
+        VALIDATOR_VERSION: ${{ inputs.validator-version }}
+      run: bash "$GITHUB_ACTION_PATH/validate.sh" "$PLUGIN_DIRECTORY" "$ZIP"

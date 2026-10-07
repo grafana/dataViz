@@ -114,9 +114,14 @@ function jobs(file: string): { name: string; lines: string[] }[] {
 	return found;
 }
 
-/** Whether a job's permissions include `pull-requests: write`. */
-function canWriteToPr(job: { lines: string[] }): boolean {
-	return job.lines.some((line) => /^ {6}pull-requests:\s*write/.test(line));
+// The write permissions a job must not hold while running repo or package
+// code: `pull-requests: write` posts on PRs, `contents: write` changes the
+// repo and its releases.
+const writeGrant = /^\s+(pull-requests|contents):\s*write/;
+
+/** Whether a job's permissions include `pull-requests: write` or `contents: write`. */
+function canWrite(job: { lines: string[] }): boolean {
+	return job.lines.some((line) => /^ {6}/.test(line) && writeGrant.test(line));
 }
 
 /** A job's steps, each as the lines from its `- ` to the next one. */
@@ -137,15 +142,16 @@ function steps(jobLines: string[]): string[][] {
 	return found;
 }
 
-// Jobs that can write to the PR must not execute anything the PR controls:
+// Jobs that can write to a PR or to the repo must not execute anything a PR
+// controls:
 // no checkout of this repo, no package-manager or Node commands, no repo
 // scripts, and no reusable-workflow calls. They may only read artifacts that
 // a read-only job produced, and check out pinned third-party code.
-describe('PR write tokens never run PR code', () => {
+describe('write tokens never run PR code', () => {
 	const runsPrCode = /\b(pnpm|npm|npx|yarn|node)\b|\.github\/(scripts|actions)\//;
 
 	for (const file of workflows) {
-		for (const job of jobs(file).filter(canWriteToPr)) {
+		for (const job of jobs(file).filter(canWrite)) {
 			test(`${file}: ${job.name}`, () => {
 				assert.ok(!job.lines.some((line) => /^ {4}uses:/.test(line)), 'calls a reusable workflow');
 				for (const step of steps(job.lines)) {
@@ -165,13 +171,14 @@ describe('PR write tokens never run PR code', () => {
 		}
 	}
 
-	// The checks above only see jobs that jobs() and canWriteToPr() find. If
-	// the line-based parsing ever misses one, that job would go unchecked, so
-	// compare against every `pull-requests: write` line in the raw file.
+	// The checks above only see jobs that jobs() and canWrite() find. If the
+	// line-based parsing ever misses one, that job would go unchecked, so
+	// compare against every write grant in the raw file. (Each job here
+	// grants one of the two, never both.)
 	for (const file of workflows) {
-		test(`${file}: every job with pull-requests: write is checked`, () => {
-			const grants = lines(file).filter((line) => /^\s+pull-requests:\s*write/.test(line)).length;
-			assert.equal(jobs(file).filter(canWriteToPr).length, grants);
+		test(`${file}: every job with a write grant is checked`, () => {
+			const grants = lines(file).filter((line) => writeGrant.test(line)).length;
+			assert.equal(jobs(file).filter(canWrite).length, grants);
 		});
 	}
 });
