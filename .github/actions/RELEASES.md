@@ -109,6 +109,22 @@ no repo secrets. Each login checks different claims of that token, which matters
 GitHub's immutable OIDC subject**: its `sub` claim is `repo:grafana@7195757/dataViz@1301820546:…`, not
 `repo:grafana/dataViz:…` (`gh api repos/grafana/dataViz/actions/oidc/customization/sub`).
 
+The numbers in that subject are IDs, not secrets:
+
+| part | meaning | check it with |
+|---|---|---|
+| `repo:` | fixed prefix for a repository subject | |
+| `grafana@7195757` | org name `@` the `grafana` org's numeric ID | `gh api orgs/grafana --jq .id` |
+| `dataViz@1301820546` | repo name `@` dataViz's numeric ID | `gh api repos/grafana/dataViz --jq .id` |
+| `:…` | the rest, filled in per run, e.g. `ref:refs/heads/main` for a push to `main` | |
+
+GitHub uses this format for repositories created, renamed or transferred after July 15, 2026
+([immutable subject claims](https://docs.github.com/en/actions/reference/security/oidc#immutable-subject-claims)).
+Names can be reused: a later repository with the same name would get the same `repo:grafana/dataViz:…`
+subject, while IDs are never reused, so a binding on the IDs trusts only this repository. The GATB grant's
+`oidc_subject` is `repo:grafana@7195757/dataViz@1301820546:*`; the trailing `*` does not widen it beyond the
+grant, because the same role also requires `workflow_ref` (the workflow file on `main`) and `event_name`.
+
 | credential | used by | obtained through | granted in | OIDC claims checked |
 |---|---|---|---|---|
 | GitHub App token, `grafana-plugins-platform-bot`, permission set `release-please` (contents, pull-requests, issues write) | `release-please.yml`, release-please job: release PRs, tags, draft releases | `grafana/shared-workflows` `create-github-app-token` → GATB, a per-repo Vault role | deployment_tools `terraform/repositories/dataViz/github-app-configs/config.yaml` | `sub` (the file's `oidc_subject`, set to the immutable form), `workflow_ref` (`.github/workflows/release-please.yml` on `main`), `event_name` (`push`, `workflow_dispatch`) |
