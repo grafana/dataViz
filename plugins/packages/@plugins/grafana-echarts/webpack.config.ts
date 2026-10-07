@@ -61,7 +61,7 @@ const standaloneCopyPatterns = (manifest: PluginManifest) => {
     { from: `${moduleDirectory}/plugin.json`, to: 'plugin.json' },
     ...assetPaths.map((assetPath) => ({ from: `${moduleDirectory}/${assetPath}`, to: assetPath })),
     { from: 'README.md', to: '.', force: true },
-    { from: '../CHANGELOG.md', to: '.', force: true },
+    { from: `${moduleDirectory}/CHANGELOG.md`, to: '.', force: true },
     { from: '../LICENSE', to: '.' },
   ];
 };
@@ -124,7 +124,9 @@ const config = async (env: Env): Promise<Configuration> => {
   const isRelationsStandalone = env.production && env.standalone === 'relations';
   const rootManifest = readJson<PluginManifest>(path.resolve(process.cwd(), 'src/plugin.json'));
   const relationsManifest = readJson<PluginManifest>(path.resolve(process.cwd(), 'src/modules/relations/plugin.json'));
-  const packageMetadata = readJson<PackageMetadata>(path.resolve(process.cwd(), 'package.json'));
+  // The standalone panel is released on its own, so its version comes from its
+  // own package.json, not the echarts package's (see .github/actions/RELEASES.md).
+  const relationsPackage = readJson<PackageMetadata>(path.resolve(process.cwd(), 'src/modules/relations/package.json'));
   const activePluginId = isRelationsStandalone ? relationsManifest.id : rootManifest.id;
 
   if (isRelationsStandalone) {
@@ -165,7 +167,7 @@ const config = async (env: Env): Promise<Configuration> => {
   };
 
   const configuredPlugins = isRelationsStandalone
-    ? replaceStandalonePlugins(base.plugins ?? [], relationsManifest, packageMetadata.version)
+    ? replaceStandalonePlugins(base.plugins ?? [], relationsManifest, relationsPackage.version)
     : [
         ...(base.plugins ?? []),
         new CopyWebpackPlugin({

@@ -1,0 +1,6 @@
+{
+  "name": "grafana-relations-panel",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Version source for the standalone grafana-relations-panel build (build:relations). Not a workspace package; release-please bumps the version."
+}
