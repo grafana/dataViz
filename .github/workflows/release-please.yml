@@ -1,0 +1,157 @@
+# Releases plugins with release-please; design in .github/actions/RELEASES.md.
+#
+# Every push to main opens or updates one release PR per plugin with
+# releasable changes. Merging a release PR makes the next run tag it
+# (<plugin-id>/v<version>) and create a draft GitHub release; this workflow
+# then builds, signs, packages and validates that plugin from the tagged
+# commit and attaches the zip. A maintainer publishes the draft. Nothing is
+# published to grafana.com.
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions: {}
+
+# One run at a time, never cancelled: a cancelled run could leave a release
+# created but its build never attached.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: Release PRs and releases
+    # A manual run from another branch would run that branch's copy of this
+    # workflow with the App token.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # checkout, for the local actions and the release-please config
+      id-token: write # Vault login for the GitHub App token
+    outputs:
+      releases: ${{ steps.matrix.outputs.releases }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run release-please
+        id: release-please
+        uses: $/.github/actions/release-please
+
+      - name: Discover build targets
+        id: targets
+        uses: $/.github/actions/discover-plugins
+
+      - name: Match releases to build targets
+        id: matrix
+        env:
+          RELEASE_OUTPUTS: ${{ steps.release-please.outputs.release-outputs }}
+          CONFIG: release-please-config.json
+          TARGETS: ${{ steps.targets.outputs.targets }}
+        run: bash .github/scripts/release-matrix.sh
+
+  build:
+    name: Build ${{ matrix.release.tag }}
+    needs: release-please
+    if: needs.release-please.outputs.releases != '[]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # checkout of the tagged commit
+      id-token: write # Vault login for the signing token, and the provenance attestation
+      attestations: write # provenance attestation for the zip
+    strategy:
+      fail-fast: false
+      matrix:
+        release: ${{ fromJSON(needs.release-please.outputs.releases) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ matrix.release.sha }}
+          persist-credentials: false
+
+      - name: Set up workspace
+        uses: $/.github/actions/setup-workspace
+        with:
+          package: ${{ matrix.release.pkg }}
+
+      # VERSION fails the build if dist/plugin.json is not the tagged version.
+      - name: Build
+        working-directory: plugins
+        env:
+          PKG: ${{ matrix.release.pkg }}
+          SCRIPT: ${{ matrix.release.script }}
+          DIR: ${{ matrix.release.dir }}
+          ID: ${{ matrix.release.id }}
+          VERSION: ${{ matrix.release.version }}
+        run: bash "$GITHUB_WORKSPACE/.github/scripts/build-target.sh"
+
+      # After the build, so no build step runs with the token in reach.
+      - name: Get signing token
+        id: secrets
+        uses: grafana/shared-workflows/actions/get-vault-secrets@2f1ddaf3ce1aa677356243d0dd584be33cfa35e3 # get-vault-secrets/v2.1.0
+        with:
+          common_secrets: |
+            SIGN_PLUGIN_ACCESS_POLICY_TOKEN=plugins/sign-plugin-access-policy-token:token
+
+      - name: Sign and package
+        id: package
+        uses: $/.github/actions/plugin-package
+        with:
+          dist-folder: ${{ matrix.release.dir }}/dist
+          output-folder: release-assets
+          access-policy-token: ${{ fromJSON(steps.secrets.outputs.secrets).SIGN_PLUGIN_ACCESS_POLICY_TOKEN }}
+
+      - name: Validate
+        uses: $/.github/actions/plugin-validator
+        with:
+          plugin-directory: ${{ matrix.release.dir }}
+          zip: release-assets/${{ steps.package.outputs.zip }}
+
+      - name: Attest provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: release-assets/${{ steps.package.outputs.zip }}
+
+      - name: Upload release assets
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: release-${{ matrix.release.id }}
+          path: release-assets/
+          if-no-files-found: error
+
+  # Holds contents: write, so it checks out nothing and runs no repo or
+  # package code: it only uploads what the build job produced.
+  attach:
+    name: Attach to ${{ matrix.release.tag }}
+    needs: [release-please, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # upload assets to the draft release
+    strategy:
+      fail-fast: false
+      matrix:
+        release: ${{ fromJSON(needs.release-please.outputs.releases) }}
+    steps:
+      - name: Download release assets
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: release-${{ matrix.release.id }}
+          path: release-assets
+
+      # As cd.yml's create-github-release job does. The release already
+      # exists, made by release-please, so this keeps its name, notes and
+      # draft state, and only adds the files.
+      - name: Attach to the draft release
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          tag_name: ${{ matrix.release.tag }}
+          draft: true
+          files: |
+            release-assets/*.zip
+            release-assets/*.zip.sha1
+          fail_on_unmatched_files: true

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "778a51643e17a44b8fa154cee782433ea86c174a",
+  "separate-pull-requests": true,
+  "include-component-in-tag": true,
+  "include-v-in-tag": true,
+  "tag-separator": "/",
+  "draft": true,
+  "force-tag-creation": true,
+  "changelog-sections": [
+    { "section": "🎉 Features", "type": "feat" },
+    { "section": "🐛 Bug Fixes", "type": "fix" },
+    { "section": "📝 Documentation", "type": "docs" },
+    { "section": "💄 Styles", "type": "style" },
+    { "section": "♻️ Code Refactoring", "type": "refactor" },
+    { "section": "⚡ Performance Improvements", "type": "perf" },
+    { "section": "✅ Tests", "type": "test" },
+    { "section": "🏗️ Builds", "type": "build" },
+    { "section": "🤖 Continuous Integrations", "type": "ci" },
+    { "section": "🔧 Chores", "type": "chore" },
+    { "section": "⏪ Reverts", "type": "revert" }
+  ],
+  "packages": {
+    "plugins/packages/@plugins/grafana-echarts/src/modules/relations": {
+      "release-type": "node",
+      "component": "grafana-relations-panel",
+      "package-name": "grafana-relations-panel"
+    }
+  }
+}
