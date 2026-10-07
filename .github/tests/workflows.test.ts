@@ -95,6 +95,22 @@ describe('workflows and composite actions', () => {
 	}
 });
 
+/** The events under `on:`, keyed by two-space indentation. */
+function triggers(file: string): string[] {
+	const fileLines = lines(file);
+	const events: string[] = [];
+	for (const line of fileLines.slice(fileLines.indexOf('on:') + 1)) {
+		if (/^\S/.test(line)) {
+			break; // next top-level key
+		}
+		const event = /^ {2}([\w-]+):/.exec(line);
+		if (event) {
+			events.push(event[1]);
+		}
+	}
+	return events;
+}
+
 /** Each job under `jobs:` as { name, lines }, keyed by two-space indentation. */
 function jobs(file: string): { name: string; lines: string[] }[] {
 	const fileLines = lines(file);
@@ -154,12 +170,13 @@ describe('write tokens never run PR code', () => {
 	for (const file of workflows) {
 		for (const job of jobs(file).filter(canWrite)) {
 			test(`${file}: ${job.name}`, () => {
-				// One exception: plugin-ci-workflows' cd.yml, pinned. It declares
-				// contents: write at its top level, so a caller has to grant it,
-				// and it only runs on manual dispatch here (plugin-publish.yml).
+				// One exception: plugin-ci-workflows' cd.yml, pinned, in a workflow
+				// that only runs by hand (plugin-publish.yml). cd.yml declares
+				// contents: write at its top level, so a caller has to grant it.
 				const callsReusable = job.lines.some((line) => /^ {4}uses:/.test(line));
 				const callsPinnedCd = job.lines.some((line) => trustedReusable.test(line));
-				assert.ok(!callsReusable || callsPinnedCd, 'calls a reusable workflow');
+				const manualOnly = triggers(file).join(',') === 'workflow_dispatch';
+				assert.ok(!callsReusable || (callsPinnedCd && manualOnly), 'calls a reusable workflow');
 				for (const step of steps(job.lines)) {
 					const text = step.join('\n');
 					// A local action (`$/` or `./`) is code from the PR's own checkout.

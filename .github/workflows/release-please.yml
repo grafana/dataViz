@@ -39,13 +39,22 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Run release-please
-        id: release-please
-        uses: $/.github/actions/release-please
-
       - name: Discover build targets
         id: targets
         uses: $/.github/actions/discover-plugins
+
+      # Before release-please: a release it creates is never reported again,
+      # so a config mistake found after it would leave that release unbuilt.
+      - name: Check the release-please config
+        env:
+          RELEASE_OUTPUTS: '{}'
+          CONFIG: release-please-config.json
+          TARGETS: ${{ steps.targets.outputs.targets }}
+        run: bash .github/scripts/release-matrix.sh
+
+      - name: Run release-please
+        id: release-please
+        uses: $/.github/actions/release-please
 
       - name: Match releases to build targets
         id: matrix
@@ -90,7 +99,9 @@ jobs:
           VERSION: ${{ matrix.release.version }}
         run: bash "$GITHUB_WORKSPACE/.github/scripts/build-target.sh"
 
-      # After the build, so no build step runs with the token in reach.
+      # Only Sign and package reads this. It is not isolation: the build steps
+      # run in the same job, with the same id-token, and could log in to Vault
+      # themselves. They build the tagged commit of main.
       - name: Get signing token
         id: secrets
         uses: grafana/shared-workflows/actions/get-vault-secrets@2f1ddaf3ce1aa677356243d0dd584be33cfa35e3 # get-vault-secrets/v2.1.0

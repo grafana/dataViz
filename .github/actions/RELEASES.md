@@ -30,8 +30,9 @@ command to re-render it is at the top of that file.
 merge several, or all of the open ones, to release them together. A plugin with no releasable changes can
 be forced with a `Release-As: x.y.z` footer on a commit that touches its directory.
 
-Only `feat` and `fix` commits (and breaking changes) open a release PR. `chore`, `ci`, `docs` and similar
-open none on their own, but are listed in the next release's notes when they touch the plugin's directory.
+Only `feat` and `fix` commits (and breaking changes) open a release PR and appear in its notes. `chore`, `ci`,
+`docs`, `perf` and the other types are hidden in `release-please-config.json`: release-please opens a release
+for any commit whose type has a visible changelog section.
 
 ## Versions and tags
 
@@ -45,8 +46,9 @@ the panel's version. The app keeps the echarts package's `package.json`.
 
 **Shared code caveat:** release-please decides which plugin a change belongs to by the files it touches,
 using the most specific directory. A change only in echarts' shared `src/lib`, which the relations panel
-also compiles, counts toward the app, not relations. When such a change should ship in relations, the PR
-also adds a line to the relations CHANGELOG, or uses a `Release-As:` footer.
+also compiles, counts toward no relations release (and toward nothing at all until the app is configured).
+When such a change should ship in relations, the same PR must also touch `src/modules/relations`, for
+example with a line in its CHANGELOG; a `Release-As:` footer only works on a commit that touches it.
 
 ## What it reuses
 

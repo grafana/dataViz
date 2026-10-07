@@ -12,7 +12,6 @@ const config = {
 	packages: {
 		[relationsPath]: { component: 'grafana-relations-panel' },
 		[clockPath]: { component: 'grafana-clock-panel' },
-		'plugins/packages/@plugins/unnamed': {},
 	},
 };
 const targets = [
@@ -36,9 +35,13 @@ function releaseOutputs(released: Record<string, { tag: string; sha: string; ver
 	return outputs;
 }
 
-function runReleaseMatrix(t: TestContext, outputs: Record<string, string>, buildTargets: unknown[] = targets) {
+function runReleaseMatrix(
+	t: TestContext,
+	outputs: Record<string, string>,
+	{ buildTargets = targets, releaseConfig = config }: { buildTargets?: unknown[]; releaseConfig?: unknown } = {}
+) {
 	const configFile = join(tempDir(t), 'release-please-config.json');
-	writeJson(configFile, config);
+	writeJson(configFile, releaseConfig);
 	const githubOutput = outputFile(t);
 	const matrix = bash(SCRIPT, [], {
 		env: {
@@ -49,7 +52,7 @@ function runReleaseMatrix(t: TestContext, outputs: Record<string, string>, build
 		},
 	});
 	const releases = readOutputs(githubOutput).releases;
-	return { ...matrix, releases: releases === undefined ? undefined : JSON.parse(releases) };
+	return { ...matrix, configFile, releases: releases === undefined ? undefined : JSON.parse(releases) };
 }
 
 describe('scripts/release-matrix.sh', () => {
@@ -90,27 +93,28 @@ describe('scripts/release-matrix.sh', () => {
 		assert.deepEqual(matrix.releases, []);
 	});
 
-	test('fails for a released path with no component', (t) => {
-		const matrix = runReleaseMatrix(
-			t,
-			releaseOutputs({ 'plugins/packages/@plugins/unnamed': { tag: 'v1.0.0', sha: 'abc123', version: '1.0.0' } })
-		);
+	test('fails for a package with no component, even when nothing was released', (t) => {
+		const withUnnamed = { packages: { ...config.packages, 'plugins/packages/@plugins/unnamed': {} } };
+		const matrix = runReleaseMatrix(t, releaseOutputs({}), { releaseConfig: withUnnamed });
 		assert.equal(matrix.status, 1);
-		assert.equal(errors(matrix.stdout).length, 1);
-		assert.match(errors(matrix.stdout)[0], /released 'plugins\/packages\/@plugins\/unnamed', which has no component/);
+		assert.deepEqual(errors(matrix.stdout), [
+			`::error file=${matrix.configFile}::release-please package 'plugins/packages/@plugins/unnamed' has no component (plugin id)`,
+		]);
 		assert.equal(matrix.releases, undefined);
 	});
 
-	test('fails for a component that no package builds', (t) => {
+	test('fails for a component that no package builds, even when nothing was released', (t) => {
 		const withoutClock = targets.filter((target) => target.id !== 'grafana-clock-panel');
-		const matrix = runReleaseMatrix(
-			t,
-			releaseOutputs({ [clockPath]: { tag: 'grafana-clock-panel/v3.3.0', sha: 'abc123', version: '3.3.0' } }),
-			withoutClock
-		);
+		const matrix = runReleaseMatrix(t, releaseOutputs({}), { buildTargets: withoutClock });
 		assert.equal(matrix.status, 1);
 		assert.equal(errors(matrix.stdout).length, 1);
-		assert.match(errors(matrix.stdout)[0], /released 'grafana-clock-panel', but no package builds a plugin with that id/);
+		assert.match(errors(matrix.stdout)[0], /component 'grafana-clock-panel' matches no plugin that a package builds/);
 		assert.equal(matrix.releases, undefined);
+	});
+
+	test('checks the config with no release outputs at all, as the workflow does before release-please', (t) => {
+		const matrix = runReleaseMatrix(t, {});
+		assert.equal(matrix.status, 0, matrix.stderr);
+		assert.deepEqual(matrix.releases, []);
 	});
 });
