@@ -4,8 +4,14 @@
 # and validates the plugin from its plugin directory, uploads the zip to GCS
 # and publishes it with the catalog's publish token. It runs four scripts
 # there (lint, typecheck, test:ci, build), which the relations package.json
-# passes on to the echarts package. Catalog only: nothing is deployed to
-# Grafana Cloud instances. Tags and GitHub releases stay in release-please.yml.
+# passes on to the echarts package. Tags and GitHub releases stay in
+# release-please.yml.
+#
+# Publishing main also deploys: cd.yml triggers the plugins CD Argo Workflow,
+# which bumps the provisioned version in deployment_tools so every stack in
+# that environment gets it. A branch only reaches the catalog, so its
+# <version>+<commit> build can be tried on one stack (a gcom version override)
+# without rolling it out to all of them.
 #
 # Publishing from main uses the version in plugin.json; any other ref publishes
 # <version>+<commit>. The catalog accepts each version once, so publishing main
@@ -51,7 +57,12 @@ jobs:
       branch: ${{ inputs.branch }}
       plugin-directory: plugins/packages/@plugins/grafana-echarts/src/modules/relations
       environment: ${{ inputs.environment }}
-      trigger-argo: false
+      # Argo runs only when both are set: without the deployment type, cd.yml
+      # skips the Argo job and reports nothing.
+      trigger-argo: ${{ inputs.branch == 'main' }}
+      grafana-cloud-deployment-type: provisioned
+      # Defaults: dev and ops deployment_tools PRs auto-merge and auto-approve
+      # once their CI passes. Prod is not an option above.
       disable-github-release: true
       disable-docs-publishing: true
       attestation: true

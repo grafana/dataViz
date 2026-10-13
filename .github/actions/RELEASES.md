@@ -79,7 +79,18 @@ hand (**Actions → Publish plugin → Run workflow**, pick the catalog). Each c
 once, so publishing 0.1.1 to ops after dev is not a conflict. A new plugin needs a stub on grafana.com (prod)
 first; `cd.yml` then creates the dev or ops stub itself. It calls `grafana/plugin-ci-workflows`' `cd.yml`, as
 `grafana-canvas-panel` does: `cd.yml` builds, tests, signs and validates the plugin, uploads the zip to GCS
-and publishes it. It deploys nothing to Grafana Cloud instances, and creates no tag or GitHub release.
+and publishes it. It creates no tag or GitHub release.
+
+- **Publishing `main` deploys to Grafana Cloud.** The plugin is provisioned: every dev and ops stack has it
+  installed by stack-state-service. After the catalog publish, `cd.yml` triggers the plugins CD Argo
+  Workflow (`trigger-argo`, `grafana-cloud-deployment-type: provisioned`), which opens a deployment_tools PR
+  bumping `_catalog_version` in `provisioned-plugins/grafana-relations-panel/<wave>.libsonnet` (`dev` or
+  `staging`, the ops wave). For dev and ops that PR merges by itself once its CI passes, and the stacks
+  restart onto the new version. Notifications go to `#grafana-catalog-ci`, `cd.yml`'s default.
+- **A branch publish only reaches the catalog.** Argo is off for any ref but `main`, so a
+  `<version>+<commit>` build never rolls out to every stack. Try it on one stack with a gcom override,
+  `gcom /instances/<slug>/provisioned-plugins/grafana-relations-panel -d version=<version>`, and remove it
+  with `-d version=''`. Each override restarts the stack.
 
 - **`cd.yml` is pinned to a tag, not a hash**, the one such `uses:` in this repo. `cd.yml` fails a caller
   that pins it to a hash, and the Google workload identity in [Credentials](#credentials) trusts it only at
