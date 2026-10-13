@@ -33,7 +33,13 @@ jobs:
       pull-requests: read
       id-token: write # Vault (signing and publish tokens), GCS and IAP logins
       attestations: write # provenance attestation for the zip
-    uses: grafana/plugin-ci-workflows/.github/workflows/cd.yml@ef2d5f15ea47259e126ed6ea0b63ee3e4c0a73a5 # ci-cd-workflows/v11.3.0
+    # Pinned to a tag, not a commit SHA, unlike every other uses: here. cd.yml
+    # hard-fails when its caller pins it to a hash, and the GCP workload
+    # identity that uploads to GCS and reaches the catalog API trusts cd.yml
+    # only at main or a semver tag (deployment_tools
+    # terraform/modules/gcp_workload_identity_pool/protected-attributes.tf).
+    # ci-cd-workflows/v11.3.0 is commit ef2d5f15ea47259e126ed6ea0b63ee3e4c0a73a5.
+    uses: grafana/plugin-ci-workflows/.github/workflows/cd.yml@ci-cd-workflows/v11.3.0 # zizmor: ignore[unpinned-uses]
     with:
       branch: ${{ inputs.branch }}
       plugin-directory: plugins/packages/@plugins/grafana-echarts/src/modules/relations

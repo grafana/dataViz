@@ -209,6 +209,12 @@ and pin as `uses: <owner>/<repo>@<sha> # <tag>`. Don't use `git/refs/tags/<tag> 
 for an **annotated** tag that returns the tag *object's* SHA, not the commit, and zizmor flags it as an
 impostor commit (this is how `pnpm/action-setup@f520ece…` got pinned; its `v6` commit is `0977fd9…`).
 
+**One exception: `plugin-publish.yml` pins `plugin-ci-workflows`' `cd.yml` to a tag**
+(`@ci-cd-workflows/vX.Y.Z # zizmor: ignore[unpinned-uses]`). `cd.yml` hard-fails a hash-pinned caller, and
+the GCP workload identity it publishes with trusts it only at `main` or a semver tag, so a hash can't work.
+Only that repo's release bot can create or move its tags. `.github/tests/workflows.test.ts` allows exactly
+that line.
+
 Workflows set up pnpm, Node and `pnpm install` through `.github/actions/setup-workspace`, so the
 `pnpm/action-setup` and `actions/setup-node` pins live in one place (i18n workflows aside).
 

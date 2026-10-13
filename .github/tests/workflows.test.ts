@@ -48,6 +48,13 @@ function runScripts(file: string): { line: number; text: string }[] {
 	return scripts;
 }
 
+// The one uses: pinned to a tag: plugin-publish.yml's call to cd.yml. cd.yml
+// fails a caller that pins it to a hash, and the GCP identity it publishes
+// with trusts it only at main or a semver tag. Only plugin-ci-workflows'
+// release bot can create or move its tags (ruleset only-platform-bot-can-tag).
+const taggedCd =
+	/^ {4}uses: grafana\/plugin-ci-workflows\/\.github\/workflows\/cd\.yml@ci-cd-workflows\/v\d+\.\d+\.\d+ # zizmor: ignore\[unpinned-uses\]$/;
+
 // One group per file: the checks for every workflow and composite action,
 // plus the permission checks that only apply to workflows.
 describe('workflows and composite actions', () => {
@@ -65,7 +72,8 @@ describe('workflows and composite actions', () => {
 					const isUses = /^(- )?uses:/.test(line);
 					const isLocal = /uses: (\$|\.)\//.test(line);
 					const isPinned = /uses: [\w.-]+\/[\w./-]+@[0-9a-f]{40} # \S+/.test(line);
-					if (isUses && !isLocal && !isPinned) {
+					const isTaggedCd = file.endsWith('plugin-publish.yml') && taggedCd.test(raw);
+					if (isUses && !isLocal && !isPinned && !isTaggedCd) {
 						bad.push(`line ${i + 1}: ${line}`);
 					}
 				}
@@ -164,13 +172,13 @@ function steps(jobLines: string[]): string[][] {
 // scripts, and no reusable-workflow calls. They may only read artifacts that
 // a read-only job produced, and check out pinned third-party code.
 describe('write tokens never run PR code', () => {
-	const trustedReusable = /^ {4}uses: grafana\/plugin-ci-workflows\/\.github\/workflows\/cd\.yml@[0-9a-f]{40} # /;
+	const trustedReusable = taggedCd;
 	const runsPrCode = /\b(pnpm|npm|npx|yarn|node)\b|\.github\/(scripts|actions)\//;
 
 	for (const file of workflows) {
 		for (const job of jobs(file).filter(canWrite)) {
 			test(`${file}: ${job.name}`, () => {
-				// One exception: plugin-ci-workflows' cd.yml, pinned, in a workflow
+				// One exception: plugin-ci-workflows' cd.yml, tag-pinned, in a workflow
 				// that only runs by hand (plugin-publish.yml). cd.yml declares
 				// contents: write at its top level, so a caller has to grant it.
 				const callsReusable = job.lines.some((line) => /^ {4}uses:/.test(line));

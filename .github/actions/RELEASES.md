@@ -79,6 +79,10 @@ plugin id), its current version in `.release-please-manifest.json`, and a `CHANG
 `grafana-canvas-panel` does: `cd.yml` builds, tests, signs and validates the plugin, uploads the zip to GCS
 and publishes it. It deploys nothing to Grafana Cloud instances, and creates no tag or GitHub release.
 
+- **`cd.yml` is pinned to a tag, not a hash**, the one such `uses:` in this repo. `cd.yml` fails a caller
+  that pins it to a hash, and the Google workload identity in [Credentials](#credentials) trusts it only at
+  `main` or a semver tag. To bump it, change the `ci-cd-workflows/vX.Y.Z` tag and the commit noted above it.
+
 - **From `main`** the catalog version is the one in `plugin.json`. Any other ref publishes
   `<version>+<commit>`, so a branch can be tried in dev before it merges. The catalog takes each version
   once: publishing `main` again without a version bump fails as a conflict.
