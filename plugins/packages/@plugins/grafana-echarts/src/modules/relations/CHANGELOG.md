@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/grafana/dataViz/compare/grafana-relations-panel/v0.1.0...grafana-relations-panel/v0.1.1) (2026-10-13)
+
+
+### 🐛 Bug Fixes
+
+* **relations:** allow Grafana prereleases in grafanaDependency ([#45](https://github.com/grafana/dataViz/issues/45)) ([3566f8e](https://github.com/grafana/dataViz/commit/3566f8ef5a7752f1a0de39ceb1ceb0539f1460c4))
+
 ## [0.1.0](https://github.com/grafana/dataViz/compare/grafana-relations-panel/v0.0.1...grafana-relations-panel/v0.1.0) (2026-10-13)
 
 
