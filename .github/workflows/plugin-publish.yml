@@ -1,4 +1,4 @@
-# Publishes grafana-relations-panel to the dev plugin catalog, by hand.
+# Publishes grafana-relations-panel to the dev or ops plugin catalog, by hand.
 #
 # grafana/plugin-ci-workflows' cd.yml does all of it: it builds, tests, signs
 # and validates the plugin from its plugin directory, uploads the zip to GCS
@@ -18,12 +18,19 @@ on:
       branch:
         description: Branch or commit to publish (anything but main gets a +<commit> version suffix)
         default: main
+      environment:
+        description: Catalog to publish to
+        type: choice
+        options:
+          - dev
+          - ops
+        default: dev
 
 permissions: {}
 
 jobs:
   publish:
-    name: Publish grafana-relations-panel to dev
+    name: Publish grafana-relations-panel to ${{ inputs.environment }}
     # The permissions cd.yml declares at its top level, which a caller must
     # grant in full (as grafana-canvas-panel does). contents: write is for its
     # GitHub release job, turned off below. A manual run needs write access to
@@ -43,7 +50,7 @@ jobs:
     with:
       branch: ${{ inputs.branch }}
       plugin-directory: plugins/packages/@plugins/grafana-echarts/src/modules/relations
-      environment: dev
+      environment: ${{ inputs.environment }}
       trigger-argo: false
       disable-github-release: true
       disable-docs-publishing: true

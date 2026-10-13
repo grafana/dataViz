@@ -5,8 +5,8 @@ prerequisites at the end of this file before its first real run. Only `grafana-r
 configured so far.
 
 A release is a **GitHub release** with the signed plugin zip attached. Releasing does **not** publish to the
-grafana.com catalog; publishing to the **dev** catalog is a separate, manual step (see
-[Publishing to dev](#publishing-to-dev)). The first plugin to release this way is `grafana-relations-panel`.
+grafana.com catalog; publishing to the **dev** or **ops** catalog is a separate, manual step (see
+[Publishing to dev or ops](#publishing-to-dev-or-ops)). The first plugin to release this way is `grafana-relations-panel`.
 
 ![How a release and a dev publish run](release-flow.png)
 
@@ -72,10 +72,12 @@ as `cd.yml`'s GitHub release job does; it keeps release-please's notes and the d
 plugin id), its current version in `.release-please-manifest.json`, and a `CHANGELOG.md` next to its
 `package.json`.
 
-## Publishing to dev
+## Publishing to dev or ops
 
-`plugin-publish.yml` publishes `grafana-relations-panel` to the **dev** plugin catalog when run by hand
-(**Actions → Publish plugin → Run workflow**). It calls `grafana/plugin-ci-workflows`' `cd.yml`, as
+`plugin-publish.yml` publishes `grafana-relations-panel` to the **dev** or **ops** plugin catalog when run by
+hand (**Actions → Publish plugin → Run workflow**, pick the catalog). Each catalog takes the same version
+once, so publishing 0.1.1 to ops after dev is not a conflict. A new plugin needs a stub on grafana.com (prod)
+first; `cd.yml` then creates the dev or ops stub itself. It calls `grafana/plugin-ci-workflows`' `cd.yml`, as
 `grafana-canvas-panel` does: `cd.yml` builds, tests, signs and validates the plugin, uploads the zip to GCS
 and publishes it. It deploys nothing to Grafana Cloud instances, and creates no tag or GitHub release.
 
@@ -134,7 +136,7 @@ grant, because the same role also requires `workflow_ref` (the workflow file on 
 | GitHub App token, `grafana-plugins-platform-bot`, permission set `release-please` (contents, pull-requests, issues write) | `release-please.yml`, release-please job: release PRs, tags, draft releases | `grafana/shared-workflows` `create-github-app-token` → GATB, a per-repo Vault role | deployment_tools `terraform/repositories/dataViz/github-app-configs/config.yaml` | `sub` (the file's `oidc_subject`, set to the immutable form), `workflow_ref` (`.github/workflows/release-please.yml` on `main`), `event_name` (`push`, `workflow_dispatch`) |
 | Plugin signing token, `plugins/sign-plugin-access-policy-token` | `release-please.yml` build job (Sign and package); `plugin-publish.yml`, inside `cd.yml`'s CI | `get-vault-secrets` `common_secrets` → the shared `vault-github-actions` Vault role | deployment_tools `terraform/modules/vault_github_actions_auth/vault_secrets.tf`, for every `grafana` repo | `sub` matches `repo:grafana/*` or `repo:grafana@7195757/*` (both forms) |
 | Catalog publish token, `plugins/gcom-publish-token:dev` | `plugin-publish.yml`, inside `cd.yml`'s publish job | same as the signing token | same as the signing token | same as the signing token |
-| Google credentials, service account `github-plugin-ci-workflows` (GCS upload, IAP token for the dev catalog API) | `plugin-publish.yml`, inside `cd.yml` | Google workload identity, provider `github-provider` | deployment_tools `terraform/modules/gcp_workload_identity_pool` and the service account's bindings | `repository_owner` is `grafana`, and attributes such as `repository_id` and `job_workflow_ref`; not `sub` |
+| Google credentials, service account `github-plugin-ci-workflows` (GCS upload, IAP token for the dev and ops catalog APIs) | `plugin-publish.yml`, inside `cd.yml` | Google workload identity, provider `github-provider` | deployment_tools `terraform/modules/gcp_workload_identity_pool` and the service account's bindings | `repository_owner` is `grafana`, and attributes such as `repository_id` and `job_workflow_ref`; not `sub` |
 | `GITHUB_TOKEN`, `contents: write` | `release-please.yml` attach job (upload to the draft release) | GitHub | the job's `permissions:` | none |
 
 Only the GitHub App token checks `sub` against a value set for this repo, so it is the only credential the
