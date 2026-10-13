@@ -1,6 +1,6 @@
 {
   "name": "grafana-relations-panel",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "description": "The standalone grafana-relations-panel build. Not a workspace package: it carries the panel's version (release-please bumps it) and the scripts plugin-ci-workflows' cd.yml runs in a plugin directory, which delegate to the echarts package.",
   "packageManager": "pnpm@11.21.0",

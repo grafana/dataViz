@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.0](https://github.com/grafana/dataViz/compare/grafana-relations-panel/v0.0.1...grafana-relations-panel/v0.1.0) (2026-10-13)
+
+
+### 🎉 Features
+
+* **relations:** release the panel with release-please ([#22](https://github.com/grafana/dataViz/issues/22)) ([54d4d11](https://github.com/grafana/dataViz/commit/54d4d11e5298263c16d0b94cc7b14396b840eb42))
+
 ## 0.0.1
 
 - The panel adds graph, Sankey, and chord visualizations for connected data.
