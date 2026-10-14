@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/grafana/dataViz/compare/grafana-relations-panel/v0.1.1...grafana-relations-panel/v0.1.2) (2026-10-14)
+
+
+### 🐛 Bug Fixes
+
+* **relations:** load README images from the plugin, not the internal repo
+
 ## [0.1.1](https://github.com/grafana/dataViz/compare/grafana-relations-panel/v0.1.0...grafana-relations-panel/v0.1.1) (2026-10-13)
 
 
