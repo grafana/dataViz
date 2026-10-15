@@ -18,7 +18,9 @@ any workflow changes. Releases are covered separately, in [RELEASES.md](RELEASES
   build that quietly produced the wrong plugin fails.
 - **Compatibility:** levitate checks the plugin's `module.ts` against the latest `@grafana/*` packages.
 - **Validate:** the same `plugin-validator` a release runs, on an unsigned zip of the build, in the
-  compatibility job. Config: `.github/actions/plugin-validator/config.yaml`.
+  compatibility job, with the version check off (a PR keeps the published version). Only for the plugin ids
+  listed on the step in `plugin-ci.yml` (now `grafana-relations-panel`); add one when it starts releasing.
+  Config: `.github/actions/plugin-validator/config.yaml`.
 - **e2e:** Playwright against every Grafana version the plugin's `grafanaDependency` allows, plus a
   nightly run that never blocks. Only for packages with both an `e2e` script and a `playwright.config.ts`.
 - **Bundle size:** a PR comment per plugin with the size change against main.

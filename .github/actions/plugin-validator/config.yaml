@@ -1,6 +1,6 @@
 # The default plugin-validator config of grafana/plugin-ci-workflows ci.yml
 # (DEFAULT_PLUGIN_VALIDATOR_CONFIG): turns off analyzers that do not apply to
-# Grafana Labs plugins.
+# Grafana Labs plugins. Keep `analyzers` the last key: validate.sh appends to it.
 global:
   enabled: true
 
