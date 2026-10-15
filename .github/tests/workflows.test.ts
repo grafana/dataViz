@@ -49,9 +49,8 @@ function runScripts(file: string): { line: number; text: string }[] {
 }
 
 // The one uses: pinned to a tag: the call to cd.yml in plugin-publish.yml and
-// release-please.yml. cd.yml
-// fails a caller that pins it to a hash, and the GCP identity it publishes
-// with trusts it only at main or a semver tag. Only plugin-ci-workflows'
+// release-please.yml. cd.yml fails a caller that pins it to a hash, and the
+// GCP identity it publishes with trusts it only at main or a semver tag. Only plugin-ci-workflows'
 // release bot can create or move its tags (ruleset only-platform-bot-can-tag).
 const taggedCd =
 	/^ {4}uses: grafana\/plugin-ci-workflows\/\.github\/workflows\/cd\.yml@ci-cd-workflows\/v\d+\.\d+\.\d+ # zizmor: ignore\[unpinned-uses\]$/;
@@ -122,6 +121,21 @@ function triggers(file: string): string[] {
 	return events;
 }
 
+/** Whether `on: push:` is exactly `branches: [main]`: no other branch, and no tags or paths filter. */
+function pushesOnlyMain(file: string): boolean {
+	const fileLines = lines(file);
+	const body: string[] = [];
+	for (const line of fileLines.slice(fileLines.indexOf('  push:') + 1)) {
+		if (/^ {0,2}\S/.test(line)) {
+			break; // next event, or next top-level key
+		}
+		if (line.trim() !== '' && !line.trim().startsWith('#')) {
+			body.push(line.trim());
+		}
+	}
+	return body.join(',') === 'branches:,- main';
+}
+
 /** Each job under `jobs:` as { name, lines }, keyed by two-space indentation. */
 function jobs(file: string): { name: string; lines: string[] }[] {
 	const fileLines = lines(file);
@@ -182,13 +196,15 @@ describe('write tokens never run PR code', () => {
 		for (const job of jobs(file).filter(canWrite)) {
 			test(`${file}: ${job.name}`, () => {
 				// One exception: plugin-ci-workflows' cd.yml, tag-pinned, in a workflow
-				// that runs only by hand or on a push (plugin-publish.yml,
-				// release-please.yml), never on a PR. cd.yml declares contents: write
-				// at its top level, so a caller has to grant it.
+				// that runs only by hand or on a push to main (plugin-publish.yml,
+				// release-please.yml), never on a PR or another branch. cd.yml declares
+				// contents: write at its top level, so a caller has to grant it.
 				const callsReusable = job.lines.some((line) => /^ {4}uses:/.test(line));
 				const callsPinnedCd = job.lines.some((line) => trustedReusable.test(line));
-				const noPrTrigger = triggers(file).every((event) => event === 'workflow_dispatch' || event === 'push');
-				assert.ok(!callsReusable || (callsPinnedCd && noPrTrigger), 'calls a reusable workflow');
+				const trustedTriggers = triggers(file).every(
+					(event) => event === 'workflow_dispatch' || (event === 'push' && pushesOnlyMain(file)),
+				);
+				assert.ok(!callsReusable || (callsPinnedCd && trustedTriggers), 'calls a reusable workflow');
 				for (const step of steps(job.lines)) {
 					const text = step.join('\n');
 					// A local action (`$/` or `./`) is code from the PR's own checkout.
