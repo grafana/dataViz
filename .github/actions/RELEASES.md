@@ -4,9 +4,10 @@
 prerequisites at the end of this file before its first real run. Only `grafana-relations-panel` is
 configured so far.
 
-A release is a **GitHub release** with the signed plugin zip attached. Releasing does **not** publish to the
-grafana.com catalog; publishing to the **dev** or **ops** catalog is a separate, manual step (see
-[Publishing to dev or ops](#publishing-to-dev-or-ops)). The first plugin to release this way is `grafana-relations-panel`.
+A release is a **GitHub release** with the signed plugin zip attached. A `grafana-relations-panel` release is
+also **published to the dev and ops catalogs and deployed** to every dev and ops stack, by the `publish` job of
+the same run (see [Publishing to dev or ops](#publishing-to-dev-or-ops)). Merging the release PR is the only
+approval. Prod is never published automatically. The first plugin to release this way is `grafana-relations-panel`.
 
 ![How a release and a dev publish run](release-flow.png)
 
@@ -24,7 +25,9 @@ command to re-render it is at the top of that file.
 4. The same workflow builds the plugin from the tag, signs it, packages
    `grafana-relations-panel-0.2.0.zip` with checksums, validates it, attests its provenance, and attaches the
    files to the draft.
-5. A maintainer checks the draft and publishes it.
+5. After the build passes, the `publish` job calls `cd.yml` with the release tag: it publishes the version to the
+   dev and ops catalogs and triggers Argo, whose deployment_tools PRs auto-merge (see below).
+6. A maintainer checks the draft and publishes it. This no longer gates the deploy.
 
 **One plugin or all of them:** every plugin gets its own release PR. Merge one to release that plugin;
 merge several, or all of the open ones, to release them together. A plugin with no releasable changes can
@@ -73,6 +76,11 @@ plugin id), its current version in `.release-please-manifest.json`, and a `CHANG
 `package.json`.
 
 ## Publishing to dev or ops
+
+Every release does this for dev and ops automatically (`release-please.yml`, `publish` job). It passes the tag
+as `cd.yml`'s `branch` with a `release-reference-regex` matching it, so `cd.yml` publishes the exact tagged
+commit with no `+<commit>` suffix, even if `main` has moved on. If that job fails, re-run it from the Actions
+run; don't re-publish `main` by hand while the catalog already has that version.
 
 `plugin-publish.yml` publishes `grafana-relations-panel` to the **dev** or **ops** plugin catalog when run by
 hand (**Actions → Publish plugin → Run workflow**, pick the catalog). Each catalog takes the same version

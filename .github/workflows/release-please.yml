@@ -4,8 +4,9 @@
 # releasable changes. Merging a release PR makes the next run tag it
 # (<plugin-id>/v<version>) and create a draft GitHub release; this workflow
 # then builds, signs, packages and validates that plugin from the tagged
-# commit and attaches the zip. A maintainer publishes the draft. Nothing is
-# published to grafana.com.
+# commit and attaches the zip. A maintainer publishes the draft. A
+# grafana-relations-panel release is also published to the dev and ops
+# catalogs and deployed to every dev and ops stack (publish job).
 name: Release Please
 
 on:
@@ -34,6 +35,8 @@ jobs:
       id-token: write # Vault login for the GitHub App token
     outputs:
       releases: ${{ steps.matrix.outputs.releases }}
+      # Empty unless this run released grafana-relations-panel.
+      relations-tag: ${{ fromJSON(steps.release-please.outputs.release-outputs || '{}')['plugins/packages/@plugins/grafana-echarts/src/modules/relations--tag_name'] }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -173,3 +176,42 @@ jobs:
             release-assets/*.zip
             release-assets/*.zip.sha1
           fail_on_unmatched_files: true
+
+  # Same cd.yml call as plugin-publish.yml, from the release tag instead of
+  # main: release-reference-regex makes the tag a release reference, so cd.yml
+  # publishes the plugin.json version with no +<commit> suffix, and the
+  # commit is the tagged one even if main has moved on. trigger-argo then
+  # bumps the provisioned version in deployment_tools for dev and ops (staging
+  # wave); those PRs auto-merge once their CI passes, so merging the release
+  # PR is the only approval. It waits for build, so a release that fails to
+  # build, sign or validate is not published. cd.yml builds and signs again
+  # from the same commit; the catalog gets its zip, the GitHub release ours.
+  publish:
+    name: Publish ${{ needs.release-please.outputs.relations-tag }} to dev and ops
+    needs: [release-please, build]
+    if: needs.release-please.outputs.relations-tag != ''
+    # The permissions cd.yml declares at its top level, which a caller must
+    # grant in full. contents: write is for its GitHub release job, turned
+    # off below. This job runs only on a push to main (release-please's if).
+    permissions:
+      contents: write
+      pull-requests: read
+      id-token: write # Vault (signing and publish tokens), GCS and IAP logins
+      attestations: write # provenance attestation for the zip
+    # Tag-pinned, not hash-pinned: see plugin-publish.yml.
+    # ci-cd-workflows/v11.3.0 is commit ef2d5f15ea47259e126ed6ea0b63ee3e4c0a73a5.
+    uses: grafana/plugin-ci-workflows/.github/workflows/cd.yml@ci-cd-workflows/v11.3.0 # zizmor: ignore[unpinned-uses]
+    with:
+      branch: ${{ needs.release-please.outputs.relations-tag }}
+      release-reference-regex: ^grafana-relations-panel/v\d+\.\d+\.\d+$
+      plugin-directory: plugins/packages/@plugins/grafana-echarts/src/modules/relations
+      environment: dev,ops
+      trigger-argo: true
+      grafana-cloud-deployment-type: provisioned
+      disable-github-release: true
+      disable-docs-publishing: true
+      attestation: true
+      # Same reasons as plugin-publish.yml: root CI runs e2e, and the
+      # validator cannot check the delegating plugin directory.
+      run-playwright: false
+      run-plugin-validator: false

@@ -48,12 +48,15 @@ function runScripts(file: string): { line: number; text: string }[] {
 	return scripts;
 }
 
-// The one uses: pinned to a tag: plugin-publish.yml's call to cd.yml. cd.yml
+// The one uses: pinned to a tag: the call to cd.yml in plugin-publish.yml and
+// release-please.yml. cd.yml
 // fails a caller that pins it to a hash, and the GCP identity it publishes
 // with trusts it only at main or a semver tag. Only plugin-ci-workflows'
 // release bot can create or move its tags (ruleset only-platform-bot-can-tag).
 const taggedCd =
 	/^ {4}uses: grafana\/plugin-ci-workflows\/\.github\/workflows\/cd\.yml@ci-cd-workflows\/v\d+\.\d+\.\d+ # zizmor: ignore\[unpinned-uses\]$/;
+
+const cdCallers = ['plugin-publish.yml', 'release-please.yml'];
 
 // One group per file: the checks for every workflow and composite action,
 // plus the permission checks that only apply to workflows.
@@ -72,7 +75,7 @@ describe('workflows and composite actions', () => {
 					const isUses = /^(- )?uses:/.test(line);
 					const isLocal = /uses: (\$|\.)\//.test(line);
 					const isPinned = /uses: [\w.-]+\/[\w./-]+@[0-9a-f]{40} # \S+/.test(line);
-					const isTaggedCd = file.endsWith('plugin-publish.yml') && taggedCd.test(raw);
+					const isTaggedCd = cdCallers.some((name) => file.endsWith(name)) && taggedCd.test(raw);
 					if (isUses && !isLocal && !isPinned && !isTaggedCd) {
 						bad.push(`line ${i + 1}: ${line}`);
 					}
@@ -179,12 +182,13 @@ describe('write tokens never run PR code', () => {
 		for (const job of jobs(file).filter(canWrite)) {
 			test(`${file}: ${job.name}`, () => {
 				// One exception: plugin-ci-workflows' cd.yml, tag-pinned, in a workflow
-				// that only runs by hand (plugin-publish.yml). cd.yml declares
-				// contents: write at its top level, so a caller has to grant it.
+				// that runs only by hand or on a push (plugin-publish.yml,
+				// release-please.yml), never on a PR. cd.yml declares contents: write
+				// at its top level, so a caller has to grant it.
 				const callsReusable = job.lines.some((line) => /^ {4}uses:/.test(line));
 				const callsPinnedCd = job.lines.some((line) => trustedReusable.test(line));
-				const manualOnly = triggers(file).join(',') === 'workflow_dispatch';
-				assert.ok(!callsReusable || (callsPinnedCd && manualOnly), 'calls a reusable workflow');
+				const noPrTrigger = triggers(file).every((event) => event === 'workflow_dispatch' || event === 'push');
+				assert.ok(!callsReusable || (callsPinnedCd && noPrTrigger), 'calls a reusable workflow');
 				for (const step of steps(job.lines)) {
 					const text = step.join('\n');
 					// A local action (`$/` or `./`) is code from the PR's own checkout.
