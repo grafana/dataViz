@@ -6,7 +6,7 @@
   "id": "grafana-relations-panel",
   "info": {
     "keywords": ["panel", "echarts", "graph", "node graph", "relations", "service map", "sankey", "chord"],
-    "description": "Display service maps, flows, and other connected data as interactive graphs, Sankey diagrams, or chord diagrams.",
+    "description": "Display service maps, flows, and other connected data as interactive graphs, Sankey diagrams, or chord diagrams. Each numeric field is one edge, identified by source/target labels or a name like A-->B, and its value weights the edge; an optional nodes frame adds node values. See the Chart type option for the full data contract.",
     "author": {
       "name": "Grafana"
     },

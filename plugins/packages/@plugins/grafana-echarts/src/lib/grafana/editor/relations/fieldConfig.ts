@@ -1,6 +1,7 @@
 import { type FieldConfigEditorBuilder, type SelectableValue } from '@grafana/data';
 import { commonOptionsBuilder } from '@grafana/ui';
 
+import { describeOption } from 'lib/grafana/editor/common/describeOption';
 import { addRelationsFilterConfig } from 'lib/grafana/editor/relations/filters';
 
 import { type EChartsRelationsFieldConfig, type RelationsLineType } from 'editor/relations/types';
@@ -80,4 +81,5 @@ export function addRelationsCustomConfig(builder: FieldConfigEditorBuilder<EChar
 
   // Marks are fields, so standard visibility overrides apply directly.
   commonOptionsBuilder.addHideFrom(builder);
+  describeOption(builder, 'hideFrom', 'Hide this node or edge from the chart, legend, or tooltip');
 }
