@@ -47,8 +47,8 @@ initPluginTranslations(__PLUGIN_ID__);
  * Full contract: docs/relations-data-sources.md and data-plane/graph-wide.md.
  */
 const CHART_TYPE_DESCRIPTION =
-  'Graph for service maps, Sankey for weighted flow without cycles, chord for dense pairwise traffic. ' +
-  'Each numeric field is one edge between its source and target labels';
+  'Graph for service maps, Sankey for weighted flow without cycles (up to 100 nodes and 12 levels), ' +
+  'chord for dense pairwise traffic. Each numeric field is one edge between its endpoint labels';
 
 /** Shared legend and tooltip builders register these without descriptions. */
 const LEGEND_AND_TOOLTIP_DESCRIPTIONS: Record<string, string> = {

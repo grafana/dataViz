@@ -34,7 +34,8 @@ describe('Relations plugin module', () => {
   it('describes every panel option when built without data', async () => {
     const plugin = await loadPlugin();
     const builder = new PanelOptionsEditorBuilder<PanelOptions>();
-    plugin.getPanelOptionsSupplier()(builder, { data: [] });
+    // Assistant's call: panelCatalog.ts in grafana-assistant-app.
+    plugin.getPanelOptionsSupplier()(builder, { data: [], options: plugin.defaults as PanelOptions });
     const undescribed = builder
       .getItems()
       .filter((item) => !item.description?.trim())
