@@ -54,6 +54,8 @@ jobs:
             .github/scripts/levitate-report.sh
             .github/scripts/levitate-verdict.sh
             .github/scripts/levitate-comment.sh
+            .github/actions/plugin-package/
+            .github/actions/plugin-validator/
 
   compatibility:
     name: compatibility (${{ matrix.target.id }})
@@ -128,6 +130,33 @@ jobs:
           name: levitate-${{ matrix.target.id }}
           path: levitate-report/
           retention-days: 5
+
+      # The same validator a release runs (release-please.yml), so a finding
+      # fails the PR instead of the tagged release. Last, so a failure here
+      # still leaves the levitate report above for compatibility-report. Unsigned:
+      # the signature analyzer reports that as a warning only.
+      - name: Package unsigned
+        id: package
+        uses: $/.github/actions/plugin-package
+        with:
+          dist-folder: ${{ matrix.target.dir }}/dist
+          output-folder: validator-assets
+          allow-unsigned: 'true'
+
+      # source-version from the build itself: relations takes its version from
+      # src/modules/relations, not the package.json the validator compares with.
+      - name: Read built version
+        id: version
+        env:
+          DIR: ${{ matrix.target.dir }}
+        run: echo "version=$(jq -r '.info.version' "$DIR/dist/plugin.json")" >>"$GITHUB_OUTPUT"
+
+      - name: Validate
+        uses: $/.github/actions/plugin-validator
+        with:
+          plugin-directory: ${{ matrix.target.dir }}
+          zip: validator-assets/${{ steps.package.outputs.zip }}
+          source-version: ${{ steps.version.outputs.version }}
 
   # Posts (or, once clean, removes) each target's levitate comment. Holds the
   # PR write token, so it checks out nothing and runs no PR code: it only

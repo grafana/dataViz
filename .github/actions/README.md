@@ -5,7 +5,7 @@ How every plugin package gets built, checked and tested, and why it is built the
 | workflow | runs on | does |
 |---|---|---|
 | `ci.yml` | every PR and push to main | Format, lint, type-check and unit tests for all packages, then builds each plugin the packages publish |
-| `plugin-ci.yml` | every PR and push to main | Grafana API compatibility (levitate) per plugin, and Playwright e2e per package |
+| `plugin-ci.yml` | every PR and push to main | Grafana API compatibility (levitate) and the plugin validator per plugin, and Playwright e2e per package |
 | `plugin-bundle-stats.yml` | every PR and push to main | Bundle size per plugin, compared against main |
 
 None of them names a plugin. Each asks `discover-plugins` what exists, so a new package gets CI without
@@ -17,6 +17,8 @@ any workflow changes. Releases are covered separately, in [RELEASES.md](RELEASES
   the `build` script. After each build, CI checks that `dist/plugin.json` has the expected plugin id, so a
   build that quietly produced the wrong plugin fails.
 - **Compatibility:** levitate checks the plugin's `module.ts` against the latest `@grafana/*` packages.
+- **Validate:** the same `plugin-validator` a release runs, on an unsigned zip of the build, in the
+  compatibility job. Config: `.github/actions/plugin-validator/config.yaml`.
 - **e2e:** Playwright against every Grafana version the plugin's `grafanaDependency` allows, plus a
   nightly run that never blocks. Only for packages with both an `e2e` script and a `playwright.config.ts`.
 - **Bundle size:** a PR comment per plugin with the size change against main.
@@ -57,6 +59,8 @@ two plugins, the relations panel and the app, and its e2e Grafana listens on 302
   script without a Playwright config (or the reverse).
 - **Build** fails when a target's script built a different plugin than declared, or wrote no
   `dist/plugin.json`.
+- **Validate** fails on any error-level validator finding, the same ones that would fail the release.
+  Being unsigned is only a warning.
 - **Compatibility** doesn't fail. levitate flags any type change in an export the plugin uses, and most of
   those don't break anything at run time. A hit shows as a warning plus a PR comment with the details; the
   e2e jobs show whether it really breaks. A later clean run for that plugin removes the comment; if a later
