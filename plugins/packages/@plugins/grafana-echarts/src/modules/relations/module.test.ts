@@ -1,7 +1,7 @@
 import { PanelOptionsEditorBuilder, standardEditorsRegistry } from '@grafana/data';
+import { initPluginTranslations } from '@grafana/i18n';
 
 import { type PanelOptions } from 'types';
-import { initPluginTranslations } from '@grafana/i18n';
 
 jest.mock('@grafana/i18n', () => ({
   initPluginTranslations: jest.fn(),

@@ -43,18 +43,12 @@ declare const __PLUGIN_ID__: string;
 initPluginTranslations(__PLUGIN_ID__);
 
 /**
- * Grafana Assistant reads only option strings, so this also carries the data contract.
+ * Users see this under the radio, and Grafana Assistant reads it as the panel's data hint, so keep it short.
  * Full contract: docs/relations-data-sources.md and data-plane/graph-wide.md.
  */
 const CHART_TYPE_DESCRIPTION =
-  'Graph: topology and service maps. Sankey: weighted acyclic flow, up to 100 nodes and 12 levels. ' +
-  'Chord: dense or cyclic pairwise traffic within the chord node budget. ' +
-  'Data: each numeric field is one edge, with endpoint labels source/target (or client/server, src/dst, from/to) ' +
-  'or a field name "A-->B"; the field value weights the edge. An optional nodes frame has numeric fields named ' +
-  'after endpoints; missing nodes are derived. Prometheus: one series per edge with a unique legend such as ' +
-  '{{client}}-->{{server}}. Row frames (Tempo and X-Ray service graphs, Node graph source/target/id tables) ' +
-  'convert automatically only when the grafana.panelPluginTransformations feature toggle is on (Grafana 13.3); ' +
-  'otherwise they render empty, so send wide data';
+  'Graph for service maps, Sankey for weighted flow without cycles, chord for dense pairwise traffic. ' +
+  'Each numeric field is one edge between its source and target labels';
 
 /** Shared legend and tooltip builders register these without descriptions. */
 const LEGEND_AND_TOOLTIP_DESCRIPTIONS: Record<string, string> = {
