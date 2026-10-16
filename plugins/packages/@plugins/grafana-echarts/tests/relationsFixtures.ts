@@ -2,7 +2,7 @@ import { type DashboardPage, expect, test as base } from '@grafana/plugin-e2e';
 import type { Locator, Page } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 
-import { PERSIST_WAIT_MS, SYSTEM_TRANSFORMATIONS_FLAG } from './relationsConstants';
+import { PERSIST_WAIT_MS } from './relationsConstants';
 import type {
   CopyArgs,
   DashboardJson,
@@ -238,34 +238,6 @@ export async function expectSankeyDragPersists(
 
   await page.reload();
   await waitForNodes(panelCanvas(page, copy.panelId), nodesAfterReload);
-}
-
-/**
- * True when the host can run panel-registered transformations: it has the API and the flag is on.
- * The API comes from grafana/grafana#129992. `System.import` gives the host's own `@grafana/data`.
- */
-export async function hostRunsSystemTransformations(
-  page: Page,
-  getBooleanOpenFeatureFlag: (flag: string) => Promise<boolean>
-): Promise<{ runs: boolean; reason: string }> {
-  const hasApi = await page.evaluate(async () => {
-    const system: unknown = Reflect.get(window, 'System');
-    if (typeof system !== 'object' || system === null) {
-      return false;
-    }
-    const data: unknown = await Reflect.get(system, 'import').call(system, '@grafana/data');
-    const panelPlugin: unknown =
-      typeof data === 'object' && data !== null ? Reflect.get(data, 'PanelPlugin') : undefined;
-    return typeof panelPlugin === 'function' && typeof panelPlugin.prototype.setSystemTransformations === 'function';
-  });
-  if (!hasApi) {
-    return { runs: false, reason: 'the host has no PanelPlugin.setSystemTransformations (grafana/grafana#129992)' };
-  }
-  const flagOn = await getBooleanOpenFeatureFlag(SYSTEM_TRANSFORMATIONS_FLAG).catch(() => false);
-  if (!flagOn) {
-    return { runs: false, reason: `the host has the API, but ${SYSTEM_TRANSFORMATIONS_FLAG} is off` };
-  }
-  return { runs: true, reason: '' };
 }
 
 /**

@@ -51,3 +51,9 @@ export const PERSIST_WAIT_MS = 1000;
 
 /** The OpenFeature flag that turns on panel-registered (system) transformations in the host. */
 export const SYSTEM_TRANSFORMATIONS_FLAG = 'grafana.panelPluginTransformations';
+
+/**
+ * The Grafana versions that have `PanelPlugin.setSystemTransformations` (grafana/grafana#132104).
+ * It is on main since 13.3.0-pre. The `-0` lets the range match pre-release builds such as nightly.
+ */
+export const SYSTEM_TRANSFORMATIONS_GRAFANA = '>=13.3.0-0';
