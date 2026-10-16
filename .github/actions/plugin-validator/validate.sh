@@ -11,7 +11,10 @@
 # Env: VALIDATOR_VERSION (image tag, e.g. v0.49.11), SOURCE_VERSION (optional:
 # the version to put in the copied source's package.json, for a package whose
 # package.json does not carry this plugin's version, e.g. echarts building
-# grafana-relations-panel, whose version lives in src/modules/relations).
+# grafana-relations-panel, whose version lives in src/modules/relations),
+# SKIP_VERSION_CHECK (optional: 'true' turns off the version analyzer, which
+# fails any build whose version is not above the one on grafana.com, i.e. every
+# PR that is not a release).
 set -euo pipefail
 
 source_dir="${1:?usage: validate.sh <plugin-source-dir> <zip>}"
@@ -31,6 +34,10 @@ fi
 mkdir -p "$workspace/dist-artifacts"
 cp "$zip" "$workspace/dist-artifacts/"
 cp "$(dirname "$0")/config.yaml" "$workspace/.plugin-validator.yaml"
+# Appends to the `analyzers:` map, so config.yaml must keep it as its last key.
+if [ "${SKIP_VERSION_CHECK:-false}" = true ]; then
+	printf '  version:\n    enabled: false\n' >>"$workspace/.plugin-validator.yaml"
+fi
 
 docker run --rm --pull=always --platform=linux/amd64 \
 	-e SKIP_CLAMAV=1 \

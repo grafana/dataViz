@@ -1,6 +1,6 @@
 # The default plugin-validator config of grafana/plugin-ci-workflows ci.yml
 # (DEFAULT_PLUGIN_VALIDATOR_CONFIG): turns off analyzers that do not apply to
-# Grafana Labs plugins.
+# Grafana Labs plugins. Keep `analyzers` the last key: validate.sh appends to it.
 global:
   enabled: true
 
@@ -13,3 +13,10 @@ analyzers:
     enabled: false
   sponsorshiplink:
     enabled: false
+  # Not in the plugin-ci-workflows default. README images link to
+  # /public/plugins/<id>/img/... on purpose: absolute URLs do not render on
+  # the plugin catalog page. Kept as a warning so new relative links still show.
+  brokenlinks:
+    rules:
+      relative-link:
+        severity: warning

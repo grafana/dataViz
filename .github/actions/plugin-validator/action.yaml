@@ -18,6 +18,12 @@ inputs:
       package building grafana-relations-panel. Empty leaves it as is.
     required: false
     default: ''
+  skip-version-check:
+    description: |
+      'true' turns off the version analyzer, which fails a version that is not
+      above the published one. For PR builds, which keep the released version.
+    required: false
+    default: 'false'
   validator-version:
     description: grafana/plugin-validator-cli image tag.
     required: false
@@ -32,4 +38,5 @@ runs:
         ZIP: ${{ inputs.zip }}
         VALIDATOR_VERSION: ${{ inputs.validator-version }}
         SOURCE_VERSION: ${{ inputs.source-version }}
+        SKIP_VERSION_CHECK: ${{ inputs.skip-version-check }}
       run: bash "$GITHUB_ACTION_PATH/validate.sh" "$PLUGIN_DIRECTORY" "$ZIP"
