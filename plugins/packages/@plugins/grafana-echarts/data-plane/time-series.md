@@ -90,7 +90,7 @@ delegates frame handling to Grafana's `getFieldDisplayValues`). Everything in
 the [categorical model](./categorical.md) — pie's category path, radar, category
 cartesian, [multi-value.md](./multi-value.md), and the matrix heatmap — reads
 only the first frame with a numeric field (`findCategoricalFrame`) and silently
-drops the rest; see `todo/multiple-frames.md`.
+drops the rest; see [#73](https://github.com/grafana/dataViz/issues/73).
 
 Here, frames are iterated in order and each frame resolves **its own** X field,
 so `TimeSeriesMulti` (one frame per series, non-aligned timestamps — the

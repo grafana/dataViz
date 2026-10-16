@@ -78,7 +78,7 @@ The chart draws on a **category** x-axis (one category per rendered row):
 ## Divergences from the data plane spec
 
 - **Single frame only.** Only the first frame with a numeric field is used;
-  additional frames are not merged (see `todo/multiple-frames.md`).
+  additional frames are not merged (see [#73](https://github.com/grafana/dataViz/issues/73)).
 - **Name-convention field mapping.** Candlestick requires `open`/`high`/`low`/
   `close` fields (returns `null` if any is missing). Boxplot has no Grafana-native
   convention, so it uses `min`/`q1`/`median`/`q3`/`max` names or otherwise the

@@ -138,7 +138,7 @@ A relations baseline averages about 110 lines for a four-node fixture. The three
 
 If a claim is a string or number, use a drawn-primitive assertion in an integration test. Keep canvas baselines for geometry. `src/test/suiteShape.test.ts` makes sure that canvas suites contain snapshot assertions only.
 
-Each `stroke`, `fill`, and `clip` event also stores its path in `props.path`. Removing that copy can reduce snapshot bytes by 30 percent. The comparison viewer still uses that property, so this change needs upstream work. See [the snapshot path task](../todo/canvas-snapshot-props-path.md).
+Each `stroke`, `fill`, and `clip` event also stores its path in `props.path`. Removing that copy can reduce snapshot bytes by 30 percent. The comparison viewer still uses that property, so this change needs upstream work. See [#76](https://github.com/grafana/dataViz/issues/76).
 
 ## Test locations
 
