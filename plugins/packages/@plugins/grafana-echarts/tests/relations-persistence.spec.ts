@@ -1,4 +1,12 @@
 import {
+  fixedAndDraggable,
+  GRAPH_EDGES_ONLY,
+  GRAPH_REMEMBER_VIEW,
+  PERSIST_WAIT_MS,
+  SANKEY,
+  SYSTEM_TRANSFORMATIONS_FLAG,
+} from './relationsConstants';
+import {
   countUnsavedChanges,
   dragBy,
   emptyPointInRing,
@@ -6,18 +14,12 @@ import {
   expectGraphDragPersists,
   expectSankeyDragPersists,
   findNodes,
-  fixedAndDraggable,
-  GRAPH_EDGES_ONLY,
-  GRAPH_REMEMBER_VIEW,
   overrideRows,
   panelButton,
   panelCanvas,
-  PERSIST_WAIT_MS,
   positionOverrides,
   rightmostNode,
-  SANKEY,
   saveDashboard,
-  SYSTEM_TRANSFORMATIONS_FLAG,
   test,
   waitForNodes,
 } from './relationsFixtures';
@@ -48,7 +50,7 @@ test.describe('relations persistence', () => {
   });
 
   test('sankey drag, save and reload keeps only the dragged node', async ({ page, copyPanel, gotoDashboardPage }) => {
-    await expectSankeyDragPersists({ page, copyPanel, gotoDashboardPage }, SANKEY);
+    await expectSankeyDragPersists({ page, copyPanel, gotoDashboardPage }, SANKEY, SANKEY.nodes);
   });
 
   test('remember view on saves the zoom and the centre', async ({ page, copyPanel, gotoDashboardPage }) => {

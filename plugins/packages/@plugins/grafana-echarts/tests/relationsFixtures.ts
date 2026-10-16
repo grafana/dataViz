@@ -2,109 +2,16 @@ import { type DashboardPage, expect, test as base } from '@grafana/plugin-e2e';
 import type { Locator, Page } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 
-/** One override rule of a panel's field config. */
-export interface OverrideJson {
-  matcher: { id: string; options?: unknown };
-  properties: Array<{ id: string; value?: unknown }>;
-}
-
-/** One panel of a dashboard JSON. Only the keys that the tests read are typed. */
-export interface PanelJson {
-  id: number;
-  options?: Record<string, unknown>;
-  fieldConfig?: { defaults?: Record<string, unknown>; overrides?: OverrideJson[] };
-  targets?: Array<Record<string, unknown>>;
-  [key: string]: unknown;
-}
-
-interface DashboardJson {
-  title?: string;
-  version?: number;
-  panels?: PanelJson[];
-  [key: string]: unknown;
-}
-
-export interface CopyArgs {
-  /** File name relative to `provisioning/dashboards/`. */
-  fileName: string;
-  /** Id of the panel to copy. The copy contains only this panel. */
-  panelId: number;
-  /** Changes the copied panel before the save, for an option that the provisioned panel does not set. */
-  change?: (panel: PanelJson) => void;
-}
-
-/** A panel to copy, and the number of nodes that it draws. */
-export interface PanelFixture extends CopyArgs {
-  nodes: number;
-}
-
-/** Set the fixed layout and turn on drag. Drag is an Advanced option, so the Advanced editor mode is also set. */
-export function fixedAndDraggable(panel: PanelJson): void {
-  panel.options = { ...panel.options, relationsLayout: 'none', relationsDraggable: true, editorMode: 'advanced' };
-}
-
-/** Graph, node frame and edge frame (wide), drag and remember view on. */
-export const GRAPH_REMEMBER_VIEW: PanelFixture = { fileName: 'relations/fixed-layout.json', panelId: 6, nodes: 4 };
-
-/** Graph, one wide edge frame and no node frame. Zoom and pan are on, remember view is off. */
-export const GRAPH_EDGES_ONLY: PanelFixture = {
-  fileName: 'relations/fixed-layout.json',
-  panelId: 2,
-  nodes: 4,
-  change: (panel) => {
-    panel.options = { ...panel.options, relationsZoom: true, relationsPan: true };
-  },
-};
-
-/** Sankey with drag on. */
-export const SANKEY: PanelFixture = { fileName: 'relations/all-options.json', panelId: 33, nodes: 5 };
-
-/** Row-based Node Graph frames (a nodes frame and an edges frame). Only a system transformation converts them. */
-export const LEGACY_NODES_AND_EDGES: PanelFixture = {
-  fileName: 'relations/node-graph-testdata.json',
-  panelId: 6,
-  nodes: 17,
-  change: fixedAndDraggable,
-};
-
-/** A row-based Node Graph edges frame, and no nodes frame. */
-export const LEGACY_EDGES_ONLY: PanelFixture = {
-  fileName: 'relations/node-graph-testdata.json',
-  panelId: 9,
-  nodes: 8,
-  change: fixedAndDraggable,
-};
-
-/** The row-based Node Graph frames, drawn as a sankey. */
-export const LEGACY_SANKEY: PanelFixture = {
-  ...LEGACY_NODES_AND_EDGES,
-  change: (panel) => {
-    fixedAndDraggable(panel);
-    panel.options = { ...panel.options, seriesType: 'sankey' };
-  },
-};
-
-/** A saved dashboard copy that a test can change, save and reload. */
-export interface SavedCopy {
-  uid: string;
-  panelId: string;
-  /** Reads the panel back from the saved dashboard JSON, not from the page. */
-  readSavedPanel: () => Promise<PanelJson>;
-  /** The version of the saved dashboard. A save through the UI increments it. */
-  readSavedVersion: () => Promise<number>;
-}
-
-/** The centre of one node, in page pixels. */
-export interface NodePoint {
-  x: number;
-  y: number;
-}
-
-/** Wait after a drag or a roam. The panel writes after `PERSIST_DEBOUNCE_MS` (400 ms) in useRelationsPersistence.ts. */
-export const PERSIST_WAIT_MS = 1000;
-
-/** The OpenFeature flag that turns on panel-registered (system) transformations in the host. */
-export const SYSTEM_TRANSFORMATIONS_FLAG = 'grafana.panelPluginTransformations';
+import { PERSIST_WAIT_MS, SYSTEM_TRANSFORMATIONS_FLAG } from './relationsConstants';
+import type {
+  CopyArgs,
+  DashboardJson,
+  NodePoint,
+  PanelFixture,
+  PanelJson,
+  SavedCopy,
+  ScenarioArgs,
+} from './relationsTypes';
 
 /** Find a panel by its key. The `Panel header` element holds no canvas. */
 export function panelCanvas(page: Page, panelId: string): Locator {
@@ -272,13 +179,6 @@ export function rightmostNode(nodes: NodePoint[]): NodePoint {
   return nodes.reduce((right, node) => (node.x > right.x ? node : right));
 }
 
-/** The test arguments that the scenarios use. */
-export interface ScenarioArgs {
-  page: Page;
-  copyPanel: (args: CopyArgs) => Promise<SavedCopy>;
-  gotoDashboardPage: (args: { uid: string }) => Promise<DashboardPage>;
-}
-
 /**
  * Drag one graph node, save, and reload. The saved JSON must have one position override per
  * drawn node. The fixtures give no coordinates, so the panel seeds every node on one ring. Thus
@@ -311,10 +211,13 @@ export async function expectGraphDragPersists(
 /**
  * Drag one sankey node, save, and reload. Only the dragged node gets an override. Its
  * `custom.fixedX` and `custom.fixedY` hold the `localX` and `localY` fraction of the drag.
+ * After the reload, the panel must draw `nodesAfterReload` nodes. This number can be less than
+ * `fixture.nodes`: if the dragged node touches the node below it, the two make one blob of ink.
  */
 export async function expectSankeyDragPersists(
   { page, copyPanel, gotoDashboardPage }: ScenarioArgs,
-  fixture: PanelFixture
+  fixture: PanelFixture,
+  nodesAfterReload: number
 ): Promise<void> {
   const copy = await copyPanel(fixture);
   const dashboard = await gotoDashboardPage({ uid: copy.uid });
@@ -333,12 +236,8 @@ export async function expectSankeyDragPersists(
     expect(Number(value)).toBeLessThanOrEqual(1);
   }
 
-  // Do not count the nodes after the reload. The dragged node can touch the node below it, and
-  // then the two nodes make one blob of ink.
   await page.reload();
-  const canvas = panelCanvas(page, copy.panelId);
-  await expect(canvas).toBeVisible();
-  await expect.poll(async () => (await findNodes(canvas)).length, { timeout: 15_000 }).toBeGreaterThan(0);
+  await waitForNodes(panelCanvas(page, copy.panelId), nodesAfterReload);
 }
 
 /**

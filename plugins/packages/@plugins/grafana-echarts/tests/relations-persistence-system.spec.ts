@@ -1,14 +1,16 @@
 import {
-  expectGraphDragPersists,
-  expectSankeyDragPersists,
   GRAPH_EDGES_ONLY,
   GRAPH_REMEMBER_VIEW,
-  hostRunsSystemTransformations,
   LEGACY_EDGES_ONLY,
   LEGACY_NODES_AND_EDGES,
   LEGACY_SANKEY,
   SANKEY,
   SYSTEM_TRANSFORMATIONS_FLAG,
+} from './relationsConstants';
+import {
+  expectGraphDragPersists,
+  expectSankeyDragPersists,
+  hostRunsSystemTransformations,
   test,
 } from './relationsFixtures';
 
@@ -39,12 +41,13 @@ test.describe('relations persistence with system transformations', () => {
     });
   }
 
-  for (const [name, fixture] of [
-    ['wide frames', SANKEY],
-    ['row-based Node Graph frames', LEGACY_SANKEY],
+  // On the row-based frames, the dragged node touches the node below it, so the reload draws one blob less.
+  for (const [name, fixture, nodesAfterReload] of [
+    ['wide frames', SANKEY, SANKEY.nodes],
+    ['row-based Node Graph frames', LEGACY_SANKEY, LEGACY_SANKEY.nodes - 1],
   ] as const) {
     test(`sankey drag, save and reload on ${name}`, async ({ page, copyPanel, gotoDashboardPage }) => {
-      await expectSankeyDragPersists({ page, copyPanel, gotoDashboardPage }, fixture);
+      await expectSankeyDragPersists({ page, copyPanel, gotoDashboardPage }, fixture, nodesAfterReload);
     });
   }
 });
