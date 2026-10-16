@@ -2,10 +2,24 @@ import { type DashboardPage, expect, test as base } from '@grafana/plugin-e2e';
 import type { Locator, Page } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 
-import { PERSIST_WAIT_MS } from './relationsConstants';
+import {
+  COPY_GRID_POS,
+  COPY_UID_SUFFIX_LENGTH,
+  DRAG_STEPS,
+  GRAPH_DRAG,
+  MOUSE_PARK,
+  NODE_INK,
+  NODE_POLL_TIMEOUT_MS,
+  PERSIST_WAIT_MS,
+  RING_EMPTY_OFFSET,
+  SANKEY_DRAG,
+  SEED_RADIUS_TOLERANCE,
+} from './relationsConstants';
 import type {
   CopyArgs,
   DashboardJson,
+  DragVector,
+  InkThresholds,
   NodePoint,
   PanelFixture,
   PanelJson,
@@ -24,13 +38,15 @@ export function panelButton(page: Page, panelId: string, name: string): Locator 
 }
 
 /**
- * Find the nodes by their ink. A node is a filled mark, so its centre has a fully opaque
- * 7 x 7 px core. Edges, ribbons and label glyphs are thinner or translucent and have none.
+ * Find the nodes by their ink. A node is a filled mark, so its centre has a fully opaque core
+ * (`NODE_INK`). Edges, ribbons and label glyphs are thinner or translucent and have none.
  * The page cannot get the ECharts instance, so the canvas pixels are the only source.
  */
 export async function findNodes(canvas: Locator): Promise<NodePoint[]> {
-  return canvas.evaluate((element: HTMLCanvasElement) => {
-    const radius = 3;
+  return canvas.evaluate((element: HTMLCanvasElement, { coreRadiusPx: radius, opaqueAlpha }: InkThresholds) => {
+    // RGBA: four bytes per pixel, and alpha is the last byte.
+    const bytesPerPixel = 4;
+    const alphaByte = 3;
     const { width, height } = element;
     const context = element.getContext('2d');
     if (context === null) {
@@ -43,7 +59,7 @@ export async function findNodes(canvas: Locator): Promise<NodePoint[]> {
         let opaque = true;
         for (let dy = -radius; dy <= radius && opaque; dy++) {
           for (let dx = -radius; dx <= radius && opaque; dx++) {
-            opaque = alpha[((y + dy) * width + x + dx) * 4 + 3] >= 250;
+            opaque = alpha[((y + dy) * width + x + dx) * bytesPerPixel + alphaByte] >= opaqueAlpha;
           }
         }
         core[y * width + x] = opaque ? 1 : 0;
@@ -79,29 +95,29 @@ export async function findNodes(canvas: Locator): Promise<NodePoint[]> {
       nodes.push({ x: rect.x + (sumX / count) * scale, y: rect.y + (sumY / count) * scale });
     }
     return nodes;
-  });
+  }, NODE_INK);
 }
 
 /** Wait until the panel draws `count` nodes, then return them. */
 export async function waitForNodes(canvas: Locator, count: number): Promise<NodePoint[]> {
   await expect(canvas).toBeVisible();
-  await expect.poll(async () => (await findNodes(canvas)).length, { timeout: 15_000 }).toBe(count);
+  await expect.poll(async () => (await findNodes(canvas)).length, { timeout: NODE_POLL_TIMEOUT_MS }).toBe(count);
   return findNodes(canvas);
 }
 
 /**
- * Press, move in ten steps, and release. ECharts needs the steps to start a drag or a pan.
+ * Press, move in `DRAG_STEPS` steps, and release. ECharts needs the steps to start a drag or a pan.
  * Then move the mouse off the panel. Otherwise the hover tooltip stays open, and on Grafana 13.3
  * it covers the Save button.
  */
-export async function dragBy(page: Page, from: NodePoint, dx: number, dy: number): Promise<void> {
+export async function dragBy(page: Page, from: NodePoint, { dx, dy }: DragVector): Promise<void> {
   await page.mouse.move(from.x, from.y);
   await page.mouse.down();
-  for (let step = 1; step <= 10; step++) {
-    await page.mouse.move(from.x + (dx * step) / 10, from.y + (dy * step) / 10);
+  for (let step = 1; step <= DRAG_STEPS; step++) {
+    await page.mouse.move(from.x + (dx * step) / DRAG_STEPS, from.y + (dy * step) / DRAG_STEPS);
   }
   await page.mouse.up();
-  await page.mouse.move(0, 0);
+  await page.mouse.move(MOUSE_PARK.x, MOUSE_PARK.y);
   await page.waitForTimeout(PERSIST_WAIT_MS);
 }
 
@@ -163,15 +179,15 @@ export function overrideRows(page: Page): Locator {
 
 /**
  * A point inside a ring of four nodes that no node or edge covers. The fixtures draw a node at
- * each quarter turn, with edges along the sides and the diameters, so a point 0.3 radius left of
- * the centre and 0.2 radius below it is clear. ECharts pans only inside the bounding box of the
+ * each quarter turn, with edges along the sides and the diameters, so the point at
+ * `RING_EMPTY_OFFSET` from the centre is clear. ECharts pans only inside the bounding box of the
  * nodes, so a pan must start there.
  */
 export function emptyPointInRing(nodes: NodePoint[]): NodePoint {
   const x = nodes.reduce((sum, node) => sum + node.x, 0) / nodes.length;
   const y = nodes.reduce((sum, node) => sum + node.y, 0) / nodes.length;
   const radius = Math.max(...nodes.map((node) => Math.hypot(node.x - x, node.y - y)));
-  return { x: x - 0.3 * radius, y: y + 0.2 * radius };
+  return { x: x + RING_EMPTY_OFFSET.x * radius, y: y + RING_EMPTY_OFFSET.y * radius };
 }
 
 /** The node at the right edge of the ring. Its drag moves it away from every other node. */
@@ -193,14 +209,14 @@ export async function expectGraphDragPersists(
   const nodes = await waitForNodes(panelCanvas(page, copy.panelId), fixture.nodes);
   expect(positionOverrides(await copy.readSavedPanel()).size).toBe(0);
 
-  await dragBy(page, rightmostNode(nodes), -120, 80);
+  await dragBy(page, rightmostNode(nodes), GRAPH_DRAG);
   await saveDashboard(dashboard, copy);
 
   const positions = positionOverrides(await copy.readSavedPanel());
   expect(positions.size).toBe(fixture.nodes);
   const distances = [...positions.values()].map(({ x, y }) => Math.hypot(Number(x), Number(y)));
   const seedRadius = [...distances].sort((a, b) => a - b)[Math.floor(distances.length / 2)];
-  const moved = distances.filter((distance) => Math.abs(distance - seedRadius) > 1e-6 * seedRadius);
+  const moved = distances.filter((distance) => Math.abs(distance - seedRadius) > SEED_RADIUS_TOLERANCE * seedRadius);
   expect(moved, `distances from the centre: ${distances.join(', ')}`).toHaveLength(1);
 
   await page.reload();
@@ -225,7 +241,7 @@ export async function expectSankeyDragPersists(
 
   // The leftmost node is a source column node, with room below it in the panel.
   const leftmost = nodes.reduce((left, node) => (node.x < left.x ? node : left));
-  await dragBy(page, leftmost, 0, 60);
+  await dragBy(page, leftmost, SANKEY_DRAG);
   await saveDashboard(dashboard, copy);
 
   const positions = [...positionOverrides(await copy.readSavedPanel()).values()];
@@ -266,10 +282,10 @@ export const test = base.extend<{ copyPanel: (args: CopyArgs) => Promise<SavedCo
       }
 
       const copy = structuredClone(panel);
-      copy.gridPos = { x: 0, y: 0, w: 24, h: 16 };
+      copy.gridPos = { ...COPY_GRID_POS };
       change?.(copy);
 
-      const uid = `e2e-${randomUUID().slice(0, 8)}`;
+      const uid = `e2e-${randomUUID().slice(0, COPY_UID_SUFFIX_LENGTH)}`;
       const { id: _id, version: _version, ...rest } = source;
       const dashboard = { ...rest, uid, title: `${source.title ?? fileName} (e2e ${uid})`, panels: [copy] };
       const response = await page.request.post('/api/dashboards/db', { data: { dashboard, overwrite: false } });

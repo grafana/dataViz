@@ -1,10 +1,14 @@
 import {
-  fixedAndDraggable,
   GRAPH_EDGES_ONLY,
   GRAPH_REMEMBER_VIEW,
+  LARGE_GRAPH,
+  LARGE_GRAPH_DRAG,
+  PAN_DRAG,
   PERSIST_WAIT_MS,
   SANKEY,
   SYSTEM_TRANSFORMATIONS_FLAG,
+  TEST_VIEWPORT,
+  UNZOOMED,
 } from './relationsConstants';
 import {
   countUnsavedChanges,
@@ -28,7 +32,7 @@ import {
 // wide frames itself, and finds the position of a node that has no field by its name.
 // relations-persistence-system.spec.ts runs the same drags with the flag on.
 test.use({
-  viewport: { width: 1600, height: 1200 },
+  viewport: TEST_VIEWPORT,
   openFeature: { flags: { [SYSTEM_TRANSFORMATIONS_FLAG]: false } },
 });
 
@@ -62,11 +66,11 @@ test.describe('relations persistence', () => {
     // keeps every node on the canvas after the pan, so the reload can count them.
     await panelButton(page, copy.panelId, 'Zoom out').click();
     await page.waitForTimeout(PERSIST_WAIT_MS);
-    await dragBy(page, emptyPointInRing(nodes), 60, 40);
+    await dragBy(page, emptyPointInRing(nodes), PAN_DRAG);
     await saveDashboard(dashboard, copy);
 
     const { options } = await copy.readSavedPanel();
-    expect(options?.relationsViewZoom).toBeLessThan(1);
+    expect(options?.relationsViewZoom).toBeLessThan(UNZOOMED);
     const center = options?.relationsViewCenter;
     expect(Array.isArray(center) && center.length === 2 && center.every(Number.isFinite), `center: ${center}`).toBe(
       true
@@ -86,7 +90,7 @@ test.describe('relations persistence', () => {
 
     await panelButton(page, copy.panelId, 'Zoom out').click();
     await page.waitForTimeout(PERSIST_WAIT_MS);
-    await dragBy(page, emptyPointInRing(before), 60, 40);
+    await dragBy(page, emptyPointInRing(before), PAN_DRAG);
 
     // Without this check, the test also passes when the zoom and the pan do nothing.
     const after = await findNodes(canvas);
@@ -130,38 +134,27 @@ test.describe('relations persistence', () => {
     expect(JSON.stringify(saved.fieldConfig)).not.toMatch(/custom\.fixed[XY]/);
   });
 
-  test('a drag on a 50-node graph writes one override per node', async ({
+  test(`a drag on a ${LARGE_GRAPH.nodes}-node graph writes one override per node`, async ({
     page,
     copyPanel,
     gotoDashboardPage,
     gotoPanelEditPage,
   }, testInfo) => {
-    const nodeCount = 50;
-    const copy = await copyPanel({
-      fileName: 'relations/performance-limits.json',
-      panelId: 5,
-      change: (panel) => {
-        const target = panel.targets?.[0];
-        if (target !== undefined) {
-          target.nodes = { ...(target.nodes as object), count: nodeCount };
-        }
-        fixedAndDraggable(panel);
-      },
-    });
+    const copy = await copyPanel(LARGE_GRAPH);
     const dashboard = await gotoDashboardPage({ uid: copy.uid });
-    const nodes = await waitForNodes(panelCanvas(page, copy.panelId), nodeCount);
+    const nodes = await waitForNodes(panelCanvas(page, copy.panelId), LARGE_GRAPH.nodes);
 
-    await dragBy(page, rightmostNode(nodes), -60, 40);
+    await dragBy(page, rightmostNode(nodes), LARGE_GRAPH_DRAG);
     await saveDashboard(dashboard, copy);
-    expect(positionOverrides(await copy.readSavedPanel()).size).toBe(nodeCount);
+    expect(positionOverrides(await copy.readSavedPanel()).size).toBe(LARGE_GRAPH.nodes);
 
     // A finding, not a gate: record how the Overrides list copes with one rule per node.
     const start = Date.now();
     await gotoPanelEditPage({ dashboard: { uid: copy.uid }, id: copy.panelId });
-    await expect(overrideRows(page)).toHaveCount(nodeCount);
+    await expect(overrideRows(page)).toHaveCount(LARGE_GRAPH.nodes);
     testInfo.annotations.push({
       type: 'finding',
-      description: `The Overrides list showed ${nodeCount} rules ${Date.now() - start} ms after the panel editor opened.`,
+      description: `The Overrides list showed ${LARGE_GRAPH.nodes} rules ${Date.now() - start} ms after the panel editor opened.`,
     });
   });
 });

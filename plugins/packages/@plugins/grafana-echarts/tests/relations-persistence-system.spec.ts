@@ -6,9 +6,11 @@ import {
   LEGACY_EDGES_ONLY,
   LEGACY_NODES_AND_EDGES,
   LEGACY_SANKEY,
+  LEGACY_SANKEY_NODES_AFTER_DRAG,
   SANKEY,
   SYSTEM_TRANSFORMATIONS_FLAG,
   SYSTEM_TRANSFORMATIONS_GRAFANA,
+  TEST_VIEWPORT,
 } from './relationsConstants';
 import { expectGraphDragPersists, expectSankeyDragPersists, test } from './relationsFixtures';
 
@@ -17,7 +19,7 @@ import { expectGraphDragPersists, expectSankeyDragPersists, test } from './relat
 // response, before the field overrides apply. The flag is forced on in the browser, so the
 // tests run on every Grafana version that has the API. relations-persistence.spec.ts forces it off.
 test.use({
-  viewport: { width: 1600, height: 1200 },
+  viewport: TEST_VIEWPORT,
   openFeature: { flags: { [SYSTEM_TRANSFORMATIONS_FLAG]: true } },
 });
 
@@ -38,10 +40,9 @@ test.describe('relations persistence with system transformations', () => {
     });
   }
 
-  // On the row-based frames, the dragged node touches the node below it, so the reload draws one blob less.
   for (const [name, fixture, nodesAfterReload] of [
     ['wide frames', SANKEY, SANKEY.nodes],
-    ['row-based Node Graph frames', LEGACY_SANKEY, LEGACY_SANKEY.nodes - 1],
+    ['row-based Node Graph frames', LEGACY_SANKEY, LEGACY_SANKEY_NODES_AFTER_DRAG],
   ] as const) {
     test(`sankey drag, save and reload on ${name}`, async ({ page, copyPanel, gotoDashboardPage }) => {
       await expectSankeyDragPersists({ page, copyPanel, gotoDashboardPage }, fixture, nodesAfterReload);

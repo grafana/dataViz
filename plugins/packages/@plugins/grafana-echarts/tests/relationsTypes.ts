@@ -53,6 +53,18 @@ export interface NodePoint {
   y: number;
 }
 
+/** A mouse movement, in page pixels. */
+export interface DragVector {
+  dx: number;
+  dy: number;
+}
+
+/** The thresholds that `findNodes` sends into the page. */
+export interface InkThresholds {
+  coreRadiusPx: number;
+  opaqueAlpha: number;
+}
+
 /** The test arguments that the scenarios use. */
 export interface ScenarioArgs {
   page: Page;
