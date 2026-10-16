@@ -592,6 +592,124 @@
         }
       ],
       "transformations": []
+    },
+    {
+      "id": 8,
+      "type": "grafana-relations-panel",
+      "title": "Edges and node stats — ranged series, no transformations",
+      "description": "Query A is the Route A edge query. Query B returns one ranged series for each server, with the failed-request ratio as its value. Its legend `{{server}}` gives each series the name of a node.\n\nThe panel converts the edge series and the node series, so the Transform tab stays empty. The node series keep their `server` label, which the ad hoc filters use. The time slider reads edges and nodes at the same timestamp.\n\nCompare with \"Edges and node stats — two queries, two filtered chains\", which needs four transformations.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "lgtm-prometheus"
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 60
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "percentunit",
+          "decimals": 3,
+          "filterable": true,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.01
+              },
+              {
+                "color": "red",
+                "value": 0.05
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/-->/"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "reqps"
+              },
+              {
+                "id": "decimals",
+                "value": 3
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "palette-classic"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "editorMode": "advanced",
+        "seriesType": "graph",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single"
+        },
+        "relationsLayout": "circular",
+        "relationsNodeSize": 18,
+        "relationsShowNodeLabels": true,
+        "relationsEdgeArrows": true,
+        "relationsCurveness": 0.12,
+        "relationsFocusAdjacency": true,
+        "relationsTimeSlider": true,
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "lgtm-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum by (client, server) (\n  rate(traces_service_graph_request_total{client!=\"\", server!=\"\"}[$__rate_interval])\n)",
+          "format": "time_series",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{client}}-->{{server}}"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "lgtm-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "(\n    sum by (server) (rate(traces_service_graph_request_failed_total[$__rate_interval]))\n  or\n    sum by (server) (rate(traces_service_graph_request_total[$__rate_interval])) * 0\n)\n/ sum by (server) (rate(traces_service_graph_request_total[$__rate_interval]))",
+          "format": "time_series",
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{server}}"
+        }
+      ]
     }
   ],
   "refresh": "1m",

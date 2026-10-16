@@ -1693,6 +1693,253 @@
           "options": {}
         }
       ]
+    },
+    {
+      "id": 15,
+      "type": "grafana-relations-panel",
+      "title": "Service dependency map \u2014 graph, no transformations",
+      "description": "The same queries as \"Service dependency map \u2014 graph\", with an empty Transform tab. Query A returns one series for each edge, with `client` and `server` labels. Query B returns one series for each server node. Each node series has a name that is an edge endpoint. The panel converts both queries, so node overrides and node values work without transformations.",
+      "datasource": {
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 0,
+        "y": 84
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "percentunit",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.01
+              },
+              {
+                "color": "red",
+                "value": 0.05
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/-->/"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "reqps"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "palette-classic"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "gateway-->catalogue"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Traces: gateway \u2192 catalogue",
+                    "url": "/explore?left=%7B%22datasource%22%3A%22gdev-tempo%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%2C%22queryType%22%3A%22traceql%22%2C%22query%22%3A%22%7B%20span.client%20%3D%20%5C%22gateway%5C%22%20%26%26%20span.server%20%3D%20%5C%22catalogue%5C%22%20%7D%22%7D%5D%7D",
+                    "targetBlank": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "seriesType": "graph",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single"
+        },
+        "editorMode": "advanced",
+        "relationsLayout": "force",
+        "relationsEdgeArrows": true,
+        "relationsFocusAdjacency": true,
+        "relationsRepulsion": 260,
+        "relationsEdgeLength": 120,
+        "relationsNodeSize": 18,
+        "relationsLinkColor": "gradient",
+        "reduceOptions": {
+          "calcs": ["mean", "max"]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-testdata-datasource"
+          },
+          "scenarioId": "predictable_csv_wave",
+          "csvWave": [
+            {
+              "timeStep": 300,
+              "valuesCSV": "1480,1520,1495,1560",
+              "labels": "client=frontend, server=gateway",
+              "name": "frontend-->gateway"
+            },
+            {
+              "timeStep": 300,
+              "valuesCSV": "610,640,625,655",
+              "labels": "client=gateway, server=auth",
+              "name": "gateway-->auth"
+            },
+            {
+              "timeStep": 300,
+              "valuesCSV": "820,865,840,890",
+              "labels": "client=gateway, server=catalogue",
+              "name": "gateway-->catalogue"
+            },
+            {
+              "timeStep": 300,
+              "valuesCSV": "410,395,430,445",
+              "labels": "client=gateway, server=cart",
+              "name": "gateway-->cart"
+            },
+            {
+              "timeStep": 300,
+              "valuesCSV": "180,175,192,205",
+              "labels": "client=gateway, server=checkout",
+              "name": "gateway-->checkout"
+            },
+            {
+              "timeStep": 300,
+              "valuesCSV": "300,312,296,325",
+              "labels": "client=auth, server=postgres",
+              "name": "auth-->postgres"
+            },
+            {
+              "timeStep": 300,
+              "valuesCSV": "760,790,775,815",
+              "labels": "client=catalogue, server=postgres",
+              "name": "catalogue-->postgres"
+            },
+            {
+              "timeStep": 300,
+              "valuesCSV": "1220,1180,1265,1310",
+              "labels": "client=cart, server=redis",
+              "name": "cart-->redis"
+            },
+            {
+              "timeStep": 300,
+              "valuesCSV": "165,158,174,188",
+              "labels": "client=checkout, server=payments",
+              "name": "checkout-->payments"
+            },
+            {
+              "timeStep": 300,
+              "valuesCSV": "120,131,126,140",
+              "labels": "client=checkout, server=postgres",
+              "name": "checkout-->postgres"
+            },
+            {
+              "timeStep": 300,
+              "valuesCSV": "44,51,47,58",
+              "labels": "client=payments, server=gateway",
+              "name": "payments-->gateway"
+            }
+          ]
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "grafana-testdata-datasource"
+          },
+          "scenarioId": "predictable_csv_wave",
+          "csvWave": [
+            {
+              "timeStep": 300,
+              "valuesCSV": "0.001,0.002,0.002,0.003",
+              "labels": "server=frontend",
+              "name": "frontend"
+            },
+            {
+              "timeStep": 300,
+              "valuesCSV": "0.003,0.004,0.004,0.005",
+              "labels": "server=gateway",
+              "name": "gateway"
+            },
+            {
+              "timeStep": 300,
+              "valuesCSV": "0.028,0.031,0.030,0.034",
+              "labels": "server=auth",
+              "name": "auth"
+            },
+            {
+              "timeStep": 300,
+              "valuesCSV": "0.007,0.008,0.009,0.008",
+              "labels": "server=catalogue",
+              "name": "catalogue"
+            },
+            {
+              "timeStep": 300,
+              "valuesCSV": "0.011,0.012,0.014,0.013",
+              "labels": "server=cart",
+              "name": "cart"
+            },
+            {
+              "timeStep": 300,
+              "valuesCSV": "0.000,0.000,0.001,0.000",
+              "labels": "server=redis",
+              "name": "redis"
+            },
+            {
+              "timeStep": 300,
+              "valuesCSV": "0.058,0.061,0.064,0.060",
+              "labels": "server=postgres",
+              "name": "postgres"
+            },
+            {
+              "timeStep": 300,
+              "valuesCSV": "0.088,0.092,0.090,0.095",
+              "labels": "server=checkout",
+              "name": "checkout"
+            },
+            {
+              "timeStep": 300,
+              "valuesCSV": "0.044,0.047,0.049,0.046",
+              "labels": "server=payments",
+              "name": "payments"
+            }
+          ]
+        }
+      ],
+      "transformations": []
     }
   ],
   "refresh": "",

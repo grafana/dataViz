@@ -6,6 +6,7 @@ node_modules/
 # Build outputs
 dist/
 lib/
+!**/src/lib/
 deps/
 .cache/
 *.tsbuildinfo

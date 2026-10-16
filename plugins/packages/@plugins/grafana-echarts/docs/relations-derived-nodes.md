@@ -26,7 +26,7 @@ A derived node has no measured value. The panel does not use its link count as a
 
 `deriveNodes.ts` runs before Grafana applies field overrides. It adds a numeric field for each missing endpoint.
 
-The pre-pass runs after the long or row converter. It also runs on data that is already wide.
+The pre-pass runs after the long or row converter. It also runs on data that is already wide. When the long converter makes a nodes frame from node series, the pre-pass adds the missing nodes to that frame.
 
 It follows these rules:
 

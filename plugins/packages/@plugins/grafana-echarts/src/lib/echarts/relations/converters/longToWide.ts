@@ -17,6 +17,7 @@ import {
   edgeId,
   edgeLabels,
   edgesWideFrame,
+  nodesWideFrame,
   numberAt,
   uniqueId,
   withEndpointLabelsMeta,
@@ -88,6 +89,23 @@ function wireId(frame: DataFrame, value: Field): string | undefined {
   }
   const name = frame.name;
   return name != null && name !== '' && name !== formatLabels(value.labels ?? {}) ? name : undefined;
+}
+
+/**
+ * True when a frame is one node stat of a long graph response: a long series that is not an
+ * edge, whose wire id names an endpoint of the converted edges. The endpoint match keeps an
+ * unrelated series in the same response out of the nodes frame.
+ */
+function isLongNodeFrame(frame: DataFrame, endpoints: ReadonlySet<string>): boolean {
+  if (frame.meta?.type === GRAPH_EDGES_WIDE || frame.meta?.type === GRAPH_NODES_WIDE || !rowField(frame)) {
+    return false;
+  }
+  const value = seriesValueField(frame);
+  if (!value || isLongEdgesFrame(frame)) {
+    return false;
+  }
+  const id = wireId(frame, value);
+  return id != null && endpoints.has(id);
 }
 
 /** The endpoints a series' wire id carries, when it is an edge id rather than a name. */
@@ -214,21 +232,16 @@ function warnIfWideLookalike(marks: Mark[], ids: string[]): void {
   );
 }
 
-/** One numeric field per series, on a shared row dimension. */
-function pivot(series: DataFrame[]): DataFrame {
-  const rows = joinedRows(series);
-  const first = series[0];
-  // Keep the time-field name, but discard stale display configuration.
-  const fields: RelationsFamilyField[] = [
-    {
-      name: rowField(first)?.name ?? TIME_SERIES_TIME_FIELD_NAME,
-      type: FieldType.time,
-      config: {},
-      values: rows,
-    },
-  ];
+/** The row field of a pivoted frame. Keep the time-field name, but discard stale display configuration. */
+function rowsField(first: DataFrame, rows: number[]): RelationsFamilyField {
+  return { name: rowField(first)?.name ?? TIME_SERIES_TIME_FIELD_NAME, type: FieldType.time, config: {}, values: rows };
+}
 
-  const marks = marksOf(series);
+/** One numeric field per edge series, on the shared row dimension. */
+function pivot(series: DataFrame[], marks: Mark[], rows: number[]): DataFrame {
+  const first = series[0];
+  const fields: RelationsFamilyField[] = [rowsField(first, rows)];
+
   const contested = contestedIds(marks.map((mark) => mark.base));
   const taken = new Set<string>();
   const ids: string[] = [];
@@ -262,20 +275,68 @@ function pivot(series: DataFrame[]): DataFrame {
   );
 }
 
-/** Pivot a long graph response into one wide edges frame. */
+/** One numeric field per node series, named by its wire id, on the shared row dimension. */
+function pivotNodes(series: DataFrame[], rows: number[]): DataFrame {
+  const first = series[0];
+  const fields: RelationsFamilyField[] = [rowsField(first, rows)];
+
+  const values = series.flatMap((frame) => {
+    const time = rowField(frame);
+    const value = seriesValueField(frame);
+    const id = value ? wireId(frame, value) : undefined;
+    // `isLongNodeFrame` guarantees these values.
+    return time && value && id != null ? [{ time, value, id }] : [];
+  });
+  const contested = contestedIds(values.map(({ id }) => id));
+  const taken = new Set<string>();
+  for (const { time, value, id: base } of values) {
+    const labels = value.labels ?? {};
+    const id = uniqueId(taken, base, labels, contested.has(base));
+    taken.add(id);
+    fields.push({
+      name: id,
+      type: FieldType.number,
+      // Keep the original labels, so ad hoc filters use the label names of the query.
+      labels: { ...labels },
+      config: { ...value.config },
+      values: valuesOnRows(rows, time, value),
+    });
+  }
+
+  debug(`Note: relations pivoted ${values.length} long node series into one graph-nodes-wide frame.`, LOG_LEVELS.info, {
+    nodes: fields.slice(1).map((field) => field.name),
+    refId: first.refId,
+  });
+  return nodesWideFrame({ refId: first.refId, ...(first.meta ? { meta: first.meta } : {}) }, fields);
+}
+
+/** Pivot a long graph response into one wide edges frame, and its node series into one wide nodes frame. */
 export function longToWide(frames: DataFrame[]): DataFrame[] {
   const series = longEdgeSeries(frames);
   if (series.length === 0) {
     return frames;
   }
 
-  const pivoted = pivot(series);
+  const marks = marksOf(series);
+  const endpoints = new Set(marks.flatMap(({ endpoints }) => [endpoints.source, endpoints.target]));
   const claimed = new Set(series);
+  const nodeSeries = frames.filter((frame) => !claimed.has(frame) && isLongNodeFrame(frame, endpoints));
+  // Edges and nodes share one row dimension, so the time slider reads both at the same stop.
+  const rows = joinedRows([...series, ...nodeSeries]);
+
+  const pivoted = new Map<DataFrame, DataFrame>([[series[0], pivot(series, marks, rows)]]);
+  if (nodeSeries.length > 0) {
+    pivoted.set(nodeSeries[0], pivotNodes(nodeSeries, rows));
+  }
+  for (const frame of nodeSeries) {
+    claimed.add(frame);
+  }
   return frames.flatMap((frame) => {
     if (!claimed.has(frame)) {
       return [frame];
     }
-    return frame === series[0] ? [pivoted] : [];
+    const out = pivoted.get(frame);
+    return out ? [out] : [];
   });
 }
 

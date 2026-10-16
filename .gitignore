@@ -1,6 +1,7 @@
 .idea
 .pnpm-store/
 .DS_Store
+**/.claude/plans/
 
 # Generated at CI run time by the i18n Crowdin workflows. The upstream
 # crowdin-upload/crowdin-download composites hardcode `config: 'crowdin.yml'`

@@ -81,6 +81,25 @@ The optional join below combines the frames on time:
 
 If one panel has separate edge and node queries, filter one join by each `refId`.
 
+#### Edges and node stats
+
+A node query can also be a time-series query, with one series for each node.
+
+```promql
+sum by (server) (rate(traces_service_graph_request_failed_total[$__range]))
+/ sum by (server) (rate(traces_service_graph_request_total[$__range]))
+```
+
+Set the legend to the node name, for example `{{server}}`. The panel converts a node series when these conditions are true:
+
+- The same response has edge series.
+- The series has no endpoint label pair.
+- Its legend or frame name is an endpoint of an edge.
+
+The panel puts the node series into one nodes frame, on the same timestamps as the edges. The Transform tab can stay empty. Each node keeps its labels, so ad hoc filters use the label names of the query.
+
+The panel does not convert a node series that has no legend, or a legend that is not an endpoint. It also does not convert node series when the edges come from an instant table. For those queries, use Rows to fields on the node query.
+
 For other endpoint labels, copy them to `source` and `target`. Keep the original labels so tooltip filters use labels that the data source accepts.
 
 Replace `…` with the PromQL expression that returns the edge values.

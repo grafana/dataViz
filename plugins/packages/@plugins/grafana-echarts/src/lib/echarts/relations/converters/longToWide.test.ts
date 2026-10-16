@@ -485,6 +485,90 @@ describe('longToWide — detection', () => {
   });
 });
 
+describe('longToWide — node series', () => {
+  /** A node stat with `legendFormat: {{node}}`: no endpoint labels, the legend as its id. */
+  const nodeStat = (node: string, values: Array<number | null>, times?: number[]): DataFrame =>
+    series({ node, job: 'api' }, values, { config: { displayNameFromDS: node }, ...(times ? { times } : {}) });
+
+  it('gives one edges frame and one nodes frame for edges and node series in one response', () => {
+    const out = longToWide([...edges(), nodeStat('a', [1, 2]), nodeStat('b', [3, 4])]);
+
+    expect(out.map((frame) => frame.meta?.type)).toEqual([GRAPH_EDGES_WIDE, GRAPH_NODES_WIDE]);
+    expect(out[1].fields.map((field) => field.name)).toEqual(['Time', 'a', 'b']);
+    expect(out[1].fields[1].values).toEqual([1, 2]);
+  });
+
+  it('does not convert node series alone', () => {
+    const frames = [nodeStat('a', [1]), nodeStat('b', [2])];
+
+    expect(isLongGraphFrames(frames)).toBe(false);
+    expect(longToWide(frames)).toBe(frames);
+  });
+
+  it('does not convert node series next to a graph-wide edges frame', () => {
+    const wide = longToWide(edges());
+    const node = nodeStat('a', [1, 2]);
+    const frames = [...wide, node];
+
+    expect(isLongGraphFrames(frames)).toBe(false);
+    expect(longToWide(frames)).toBe(frames);
+  });
+
+  it('skips a node series with no wire id', () => {
+    const unnamed = series({ node: 'a' }, [1, 2]);
+    const out = longToWide([...edges(), unnamed]);
+
+    expect(out).toHaveLength(2);
+    expect(out[1]).toBe(unnamed);
+  });
+
+  it('skips a series whose wire id is not an endpoint of the edges', () => {
+    const unrelated = nodeStat('cpu', [1, 2]);
+    const out = longToWide([...edges(), unrelated]);
+
+    expect(out).toHaveLength(2);
+    expect(out[1]).toBe(unrelated);
+  });
+
+  it('keeps the labels of a converted node, so ad hoc filters use the label names of the query', () => {
+    const [, nodes] = longToWide([...edges(), nodeStat('a', [1, 2])]);
+
+    expect(nodes.fields[1].labels).toEqual({ node: 'a', job: 'api' });
+  });
+
+  it('keeps the field config of a converted node', () => {
+    const [, nodes] = longToWide([...edges(), nodeStat('a', [1, 2])]);
+
+    expect(nodes.fields[1].config.displayNameFromDS).toBe('a');
+  });
+
+  it('makes a series with an edge id and no endpoint labels an edge, not a node', () => {
+    const edgeById = series({ job: 'api' }, [5, 6], { config: { displayNameFromDS: 'a-->c' } });
+    const out = longToWide([series({ source: 'a', target: 'b' }, [1, 2]), edgeById]);
+
+    expect(out).toHaveLength(1);
+    expect(out[0].meta?.type).toBe(GRAPH_EDGES_WIDE);
+    expect(out[0].fields.map((field) => field.name)).toEqual(['Time', 'a-->b', 'a-->c']);
+  });
+
+  it('puts edges and nodes on the same joined rows', () => {
+    const out = longToWide([series({ source: 'a', target: 'b' }, [1], { times: [T0] }), nodeStat('a', [7], [T1])]);
+
+    expect(out.map((frame) => frame.fields[0].values)).toEqual([
+      [T0, T1],
+      [T0, T1],
+    ]);
+    expect(out[0].fields[1].values).toEqual([1, null]);
+    expect(out[1].fields[1].values).toEqual([null, 7]);
+  });
+
+  it('reaches the model with the node id from the wire', () => {
+    const graph = graphData(frameToRelationsGraph(longToWide([...edges(), nodeStat('a', [1, 2])]), createTheme()));
+
+    expect(graph.nodes.find((node) => node.id === 'a')?.name).toBe('a');
+  });
+});
+
 describe('longToWide — pass-through', () => {
   it('returns the same array when there is nothing to pivot', () => {
     const frames = [
