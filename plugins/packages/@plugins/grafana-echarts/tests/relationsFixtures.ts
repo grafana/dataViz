@@ -207,9 +207,9 @@ export function rightmostNode(nodes: NodePoint[]): NodePoint {
 }
 
 /**
- * Drag one graph node, save, and reload. The saved JSON must have one position override per
- * drawn node. The fixtures give no coordinates, so the panel seeds every node on one ring. Thus
- * all nodes but the dragged one stay at one distance from the centre.
+ * Drag one graph node and save. The saved JSON must have one position override per drawn node.
+ * The fixtures give no coordinates, so the panel seeds every node on one ring. Thus all nodes
+ * but the dragged one stay at one distance from the centre.
  */
 export async function expectGraphDragPersists(
   { page, copyPanel, gotoDashboardPage }: ScenarioArgs,
@@ -230,10 +230,13 @@ export async function expectGraphDragPersists(
   const seedRadius = [...distances].sort((a, b) => a - b)[Math.floor(distances.length / 2)];
   const moved = distances.filter((distance) => Math.abs(distance - seedRadius) > SEED_RADIUS_TOLERANCE * seedRadius);
   expect(moved, `distances from the centre: ${distances.join(', ')}`).toHaveLength(1);
-
-  await page.reload();
-  await waitForNodes(panelCanvas(page, copy.panelId), fixture.nodes);
   return { copy, dashboard };
+}
+
+/** Reload the page. The panel must draw `nodes` nodes from the saved dashboard. */
+export async function expectDrawsAfterReload(page: Page, copy: SavedCopy, nodes: number): Promise<void> {
+  await page.reload();
+  await waitForNodes(panelCanvas(page, copy.panelId), nodes);
 }
 
 /**

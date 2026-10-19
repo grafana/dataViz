@@ -25,6 +25,7 @@ import {
   dragBy,
   emptyPointInRing,
   expect,
+  expectDrawsAfterReload,
   expectGraphDragPersists,
   expectPanelDraws,
   expectSankeyDragPersists,
@@ -65,7 +66,8 @@ test.describe('relations persistence', () => {
   });
 
   test('graph drag, save and reload on an edges-only response', async ({ page, copyPanel, gotoDashboardPage }) => {
-    await expectGraphDragPersists({ page, copyPanel, gotoDashboardPage }, GRAPH_EDGES_ONLY);
+    const { copy } = await expectGraphDragPersists({ page, copyPanel, gotoDashboardPage }, GRAPH_EDGES_ONLY);
+    await expectDrawsAfterReload(page, copy, GRAPH_EDGES_ONLY.nodes);
   });
 
   test('sankey drag, save and reload keeps only the dragged node', async ({ page, copyPanel, gotoDashboardPage }) => {
@@ -116,9 +118,6 @@ test.describe('relations persistence', () => {
 
     expect(await countUnsavedChanges(dashboard)).toBe(changesBefore);
 
-    page.on('dialog', (dialog) => dialog.accept());
-    await page.reload();
-    await waitForNodes(canvas, GRAPH_EDGES_ONLY.nodes);
     const saved = await copy.readSavedPanel();
     expect(saved.options).not.toHaveProperty('relationsViewZoom');
     expect(saved.options).not.toHaveProperty('relationsViewCenter');

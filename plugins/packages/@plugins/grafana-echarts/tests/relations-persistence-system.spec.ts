@@ -14,7 +14,13 @@ import {
   TEST_VIEWPORT,
   TRANSFORMED_PANELS,
 } from './relationsConstants';
-import { expectGraphDragPersists, expectPanelDraws, expectSankeyDragPersists, test } from './relationsFixtures';
+import {
+  expectDrawsAfterReload,
+  expectGraphDragPersists,
+  expectPanelDraws,
+  expectSankeyDragPersists,
+  test,
+} from './relationsFixtures';
 
 // The system-transformations path: the host runs the transformations that the plugin registers.
 // They convert row-based Node Graph frames and add a field for each node of an edges-only
@@ -38,7 +44,8 @@ test.describe('relations persistence with system transformations', () => {
     ['a row-based edges-only response', LEGACY_EDGES_ONLY],
   ] as const) {
     test(`graph drag, save and reload on ${name}`, async ({ page, copyPanel, gotoDashboardPage }) => {
-      await expectGraphDragPersists({ page, copyPanel, gotoDashboardPage }, fixture);
+      const { copy } = await expectGraphDragPersists({ page, copyPanel, gotoDashboardPage }, fixture);
+      await expectDrawsAfterReload(page, copy, fixture.nodes);
     });
   }
 
