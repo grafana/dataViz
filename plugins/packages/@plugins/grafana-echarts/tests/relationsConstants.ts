@@ -142,8 +142,8 @@ export const TOOLTIP_LINK_ONLY: PanelFixture = {
 export const FILTER_FOR_BUTTON = 'Filter on this value';
 export const FILTER_OUT_BUTTON = 'Filter out this value';
 
-/** Wait after a drag or a roam. The panel writes after `PERSIST_DEBOUNCE_MS` (400 ms) in useRelationsPersistence.ts. */
-export const PERSIST_WAIT_MS = 1000;
+/** The debounce of a sankey drag or a roam write. Same value as `PERSIST_DEBOUNCE_MS` in useRelationsPersistence.ts. */
+export const PERSIST_DEBOUNCE_MS = 400;
 
 /** The OpenFeature flag that turns on panel-registered (system) transformations in the host. */
 export const SYSTEM_TRANSFORMATIONS_FLAG = 'grafana.panelPluginTransformations';

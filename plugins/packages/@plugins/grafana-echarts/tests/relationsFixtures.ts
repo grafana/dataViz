@@ -10,7 +10,7 @@ import {
   MOUSE_PARK,
   NODE_INK,
   NODE_POLL_TIMEOUT_MS,
-  PERSIST_WAIT_MS,
+  PERSIST_DEBOUNCE_MS,
   RING_EMPTY_OFFSET,
   SANKEY_DRAG,
   SEED_RADIUS_TOLERANCE,
@@ -113,7 +113,7 @@ export async function waitForNodes(canvas: Locator, count: number): Promise<Node
 /**
  * Press, move in `DRAG_STEPS` steps, and release. ECharts needs the steps to start a drag or a pan.
  * Then move the mouse off the panel. Otherwise the hover tooltip stays open, and on Grafana 13.3
- * it covers the Save button.
+ * it covers the Save button. Then fire the debounced write: see `flushPersist`.
  */
 export async function dragBy(page: Page, from: NodePoint, { dx, dy }: DragVector): Promise<void> {
   await page.mouse.move(from.x, from.y);
@@ -123,7 +123,16 @@ export async function dragBy(page: Page, from: NodePoint, { dx, dy }: DragVector
   }
   await page.mouse.up();
   await page.mouse.move(MOUSE_PARK.x, MOUSE_PARK.y);
-  await page.waitForTimeout(PERSIST_WAIT_MS);
+  await flushPersist(page);
+}
+
+/**
+ * Fire the debounced persistence write now. A sankey drag and a roam write after `PERSIST_DEBOUNCE_MS`.
+ * The page clock is installed by the `page` fixture, so this moves page time forward and does not wait.
+ * Clock API: https://playwright.dev/docs/clock
+ */
+export async function flushPersist(page: Page): Promise<void> {
+  await page.clock.fastForward(PERSIST_DEBOUNCE_MS);
 }
 
 /**
@@ -295,6 +304,11 @@ export async function expectPanelDraws(
  * Dashboard HTTP API: https://grafana.com/docs/grafana/latest/developers/http_api/dashboard/
  */
 export const test = base.extend<{ copyPanel: (args: CopyArgs) => Promise<SavedCopy> }>({
+  // Install the clock before the first navigation, so that `flushPersist` controls the panel timers.
+  page: async ({ page }, use) => {
+    await page.clock.install();
+    await use(page);
+  },
   copyPanel: async ({ readProvisionedDashboard, page }, use) => {
     const created: string[] = [];
 

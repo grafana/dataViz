@@ -6,7 +6,6 @@ import {
   MATRIX_AFTER_CONVERSION,
   MISSING_EDGES_MESSAGE,
   PAN_DRAG,
-  PERSIST_WAIT_MS,
   SANKEY,
   SYSTEM_TRANSFORMATIONS_FLAG,
   TEST_VIEWPORT,
@@ -22,6 +21,7 @@ import {
 import {
   countUnsavedChanges,
   enterEditMode,
+  flushPersist,
   dragBy,
   emptyPointInRing,
   expect,
@@ -80,7 +80,7 @@ test.describe('relations persistence', () => {
     // The mouse wheel does not zoom (roam is 'move' only), so the zoom uses the button. A zoom out
     // keeps every node on the canvas after the pan, so the reload can count them.
     await panelButton(page, copy.panelId, 'Zoom out').click();
-    await page.waitForTimeout(PERSIST_WAIT_MS);
+    await flushPersist(page);
     await dragBy(page, emptyPointInRing(nodes), PAN_DRAG);
     await enterEditMode(dashboard);
     await saveDashboard(dashboard, copy);
@@ -106,7 +106,7 @@ test.describe('relations persistence', () => {
     const versionBefore = await copy.readSavedVersion();
 
     await panelButton(page, copy.panelId, 'Zoom out').click();
-    await page.waitForTimeout(PERSIST_WAIT_MS);
+    await flushPersist(page);
     await dragBy(page, emptyPointInRing(before), PAN_DRAG);
 
     // Without this check, the test also passes when the zoom and the pan do nothing.
