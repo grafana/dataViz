@@ -54,6 +54,7 @@ export async function findNodes(canvas: Locator): Promise<NodePoint[]> {
     const { width, height } = element;
     const context = element.getContext('2d');
     if (context === null) {
+      // @todo if there's no canvas we probably want to throw an error instead of returning empty nodes?
       return [];
     }
     const alpha = context.getImageData(0, 0, width, height).data;
@@ -126,24 +127,21 @@ export async function dragBy(page: Page, from: NodePoint, { dx, dy }: DragVector
 }
 
 /**
- * Enter edit mode if the dashboard is not in it already. The Save button shows only in edit mode.
- * Do not test the edit button instead: "Exit edit" has the same test id, and a click on it leaves edit mode.
+ * Enter edit mode from view mode. The Save button shows only in edit mode.
+ * Call it only in view mode: in edit mode the button with this test id is "Exit edit", and a click leaves edit mode.
  */
-async function enterEditMode(dashboard: DashboardPage): Promise<void> {
-  const { editButton, saveButton } = dashboard.ctx.selectors.components.NavToolbar.editDashboard;
-  if (!(await dashboard.getByGrafanaSelector(saveButton).isVisible())) {
-    await dashboard.getByGrafanaSelector(editButton).click();
-  }
+export async function enterEditMode(dashboard: DashboardPage): Promise<void> {
+  const { editButton } = dashboard.ctx.selectors.components.NavToolbar.editDashboard;
+  await dashboard.getByGrafanaSelector(editButton).click();
 }
 
 /**
- * Read the number on the "Changes" tab of the save drawer.
+ * Read the number on the "Changes" tab of the save drawer. The dashboard must be in edit mode.
  * The scene adds default options that the saved copy does not store, so the number is not zero
  * for an unchanged dashboard. Compare it with a count from the same page instead.
  */
 export async function countUnsavedChanges(dashboard: DashboardPage): Promise<number> {
   const { selectors } = dashboard.ctx;
-  await enterEditMode(dashboard);
   await dashboard.getByGrafanaSelector(selectors.components.NavToolbar.editDashboard.saveButton).click();
   const tab = dashboard.ctx.page.getByRole('dialog').getByRole('tab', { name: /Changes/ });
   const count = Number((await tab.innerText()).replace(/\D/g, ''));
@@ -151,11 +149,10 @@ export async function countUnsavedChanges(dashboard: DashboardPage): Promise<num
   return count;
 }
 
-/** Save the dashboard through the UI, and wait until the saved version changes. */
+/** Save the dashboard through the UI, and wait until the saved version changes. The dashboard must be in edit mode. */
 export async function saveDashboard(dashboard: DashboardPage, copy: SavedCopy): Promise<void> {
   const { selectors } = dashboard.ctx;
   const before = await copy.readSavedVersion();
-  await enterEditMode(dashboard);
   await dashboard.getByGrafanaSelector(selectors.components.NavToolbar.editDashboard.saveButton).click();
   await dashboard.getByGrafanaSelector(selectors.components.Drawer.DashboardSaveDrawer.saveButton).click();
   await expect.poll(() => copy.readSavedVersion()).toBeGreaterThan(before);
@@ -167,6 +164,7 @@ export function positionOverrides(panel: PanelJson): Map<string, { x: unknown; y
   for (const override of panel.fieldConfig?.overrides ?? []) {
     const x = override.properties.find((property) => property.id === 'custom.fixedX');
     const y = override.properties.find((property) => property.id === 'custom.fixedY');
+    // @todo remove conditional
     if (override.matcher.id === 'byName' && x !== undefined && y !== undefined) {
       positions.set(String(override.matcher.options), { x: x.value, y: y.value });
     }
@@ -214,6 +212,7 @@ export async function expectGraphDragPersists(
   expect(positionOverrides(await copy.readSavedPanel()).size).toBe(0);
 
   await dragBy(page, rightmostNode(nodes), GRAPH_DRAG);
+  await enterEditMode(dashboard);
   await saveDashboard(dashboard, copy);
 
   const positions = positionOverrides(await copy.readSavedPanel());
@@ -246,6 +245,7 @@ export async function expectSankeyDragPersists(
   // The leftmost node is a source column node, with room below it in the panel.
   const leftmost = nodes.reduce((left, node) => (node.x < left.x ? node : left));
   await dragBy(page, leftmost, SANKEY_DRAG);
+  await enterEditMode(dashboard);
   await saveDashboard(dashboard, copy);
 
   const positions = [...positionOverrides(await copy.readSavedPanel()).values()];

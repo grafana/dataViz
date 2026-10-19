@@ -21,6 +21,7 @@ import {
 } from './relationsConstants';
 import {
   countUnsavedChanges,
+  enterEditMode,
   dragBy,
   emptyPointInRing,
   expect,
@@ -81,6 +82,7 @@ test.describe('relations persistence', () => {
     await panelButton(page, copy.panelId, 'Zoom out').click();
     await page.waitForTimeout(PERSIST_WAIT_MS);
     await dragBy(page, emptyPointInRing(nodes), PAN_DRAG);
+    await enterEditMode(dashboard);
     await saveDashboard(dashboard, copy);
 
     const { options } = await copy.readSavedPanel();
@@ -99,6 +101,7 @@ test.describe('relations persistence', () => {
     const dashboard = await gotoDashboardPage({ uid: copy.uid });
     const canvas = panelCanvas(page, copy.panelId);
     const before = await waitForNodes(canvas, GRAPH_EDGES_ONLY.nodes);
+    await enterEditMode(dashboard);
     const changesBefore = await countUnsavedChanges(dashboard);
     const versionBefore = await copy.readSavedVersion();
 
@@ -159,6 +162,7 @@ test.describe('relations persistence', () => {
     const nodes = await waitForNodes(panelCanvas(page, copy.panelId), LARGE_GRAPH.nodes);
 
     await dragBy(page, rightmostNode(nodes), LARGE_GRAPH_DRAG);
+    await enterEditMode(dashboard);
     await saveDashboard(dashboard, copy);
     expect(positionOverrides(await copy.readSavedPanel()).size).toBe(LARGE_GRAPH.nodes);
 
