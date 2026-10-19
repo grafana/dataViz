@@ -19,6 +19,7 @@
     "format:fix": "prettier --write .",
     "e2e": "playwright test",
     "e2e:debug": "playwright test --debug",
+    "e2e:10x": "playwright test --repeat-each=10 --trace=off --retries=0 --max-failures=1",
     "bench:dataset": "node scripts/bench/dataset-vs-tuples.mjs",
     "bench:dataset-tooltip": "node scripts/bench/dataset-tooltip-probe.mjs",
     "bench:dirty-rect": "node scripts/bench/dirty-rect.mjs",
