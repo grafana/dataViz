@@ -130,10 +130,11 @@ Differences worth knowing:
 - **It keeps its own `.nvmrc` and `packageManager`**, both synced to the workspace root. Same reason as
   clock-panel's `packageManager`: `grafana/plugin-ci-workflows` `ci.yml` reads
   `<plugin-directory>/.nvmrc` for the Node version (falling back to its own default if absent).
-- **Its standalone dev/e2e stack (`pnpm run server` inside the package) defaults to port 3020**, not
+- **Its standalone dev stack (`pnpm run server` inside the package) defaults to port 3020**, not
   upstream's 3001, so it can run alongside the monorepo stack (`pnpm run server` from `plugins/`, on
-  3001). `playwright.config.ts`, `docker-compose.yaml`, `plugin-ci.json` (`e2e.url`) and the `parity.md` live links
-  all assume 3020 — change them together. Its LGTM stack stays on 3010, standalone Relations on 4001.
+  3001). `docker-compose.yaml` and the `parity.md` live links assume 3020 (`playwright.config.ts` defaults to the 4001 relations stack, like CI) — change
+  them together. Its LGTM stack stays on 3010, standalone Relations on 4001. CI e2e uses the standalone
+  Relations stack: `plugin-ci.json` `e2e.url` is 4001, with `e2e.compose` set to `docker-compose-relations.yaml`.
 - **Two `plugin.json`s ship on their own:** `src/plugin.json` (the app) and
   `src/modules/relations/plugin.json` (`build:relations` publishes it standalone as
   `grafana-relations-panel`). The standalone panel is versioned on its own: its `%VERSION%` comes from
@@ -145,7 +146,9 @@ Differences worth knowing:
   `src/modules/*/plugin.json` ship only inside the app.
 - **CI builds two plugins from it.** Its `plugin-ci.json` lists `grafana-relations-panel` (`build:relations`)
   and the app, `grafana-echarts-app` (`build`), so root CI, compatibility and bundle stats cover both. The
-  two build one after another because both write `dist/`. e2e tests the app, built by `build`. Adding another
+  two build one after another because both write `dist/`. e2e tests the plugin that ships, the standalone
+  relations panel (`e2e.target: grafana-relations-panel`), so its Grafana versions come from
+  `src/modules/relations/plugin.json`. Adding another
   standalone module needs a `build:<module>` script **and** webpack support (`--env standalone=<module>`
   currently accepts only `relations`), plus a target entry.
 - **It is not yet in i18n CI, and when it opts in it gets ONE Crowdin project, not one per published

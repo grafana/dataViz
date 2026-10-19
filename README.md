@@ -59,6 +59,7 @@ Default host ports for every Docker stack in the repo. Commands run from the dir
 | `grafana-clock-panel` | standalone | package — `pnpm run server` | Grafana | `3000` | — |
 | `grafana-echarts` | standalone | package — `pnpm run server` | Grafana | `3020` | `GRAFANA_PORT` |
 | `grafana-echarts` | relations build | package — `pnpm run server:relations` | Grafana | `4001` | `GRAFANA_PORT` |
+| `grafana-echarts` | relations build, nightly | package — `pnpm run server:e2e:nightly` | Grafana | `4002` | `GRAFANA_PORT` |
 | `grafana-echarts` | LGTM | package — `pnpm run server:lgtm` | Grafana | `3010` | `GRAFANA_PORT` |
 | | | | Loki | `3100` | `LOKI_PORT` |
 | | | | Tempo HTTP | `3200` | `TEMPO_PORT` |
