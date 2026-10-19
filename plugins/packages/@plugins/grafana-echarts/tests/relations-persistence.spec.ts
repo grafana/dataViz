@@ -3,12 +3,21 @@ import {
   GRAPH_REMEMBER_VIEW,
   LARGE_GRAPH,
   LARGE_GRAPH_DRAG,
+  MATRIX_AFTER_CONVERSION,
+  MISSING_EDGES_MESSAGE,
   PAN_DRAG,
   PERSIST_WAIT_MS,
   SANKEY,
   SYSTEM_TRANSFORMATIONS_FLAG,
   TEST_VIEWPORT,
+  TRANSFORMED_PANELS,
   UNZOOMED,
+  FILTER_FOR_BUTTON,
+  FILTER_OUT_BUTTON,
+  TOOLTIP_ACTIONS,
+  TOOLTIP_LINK,
+  TOOLTIP_LINK_ONLY,
+  TOOLTIP_NODE,
 } from './relationsConstants';
 import {
   countUnsavedChanges,
@@ -16,15 +25,20 @@ import {
   emptyPointInRing,
   expect,
   expectGraphDragPersists,
+  expectPanelDraws,
   expectSankeyDragPersists,
   findNodes,
   overrideRows,
   panelButton,
   panelCanvas,
+  panelContainer,
+  pinTooltip,
   positionOverrides,
   rightmostNode,
   saveDashboard,
   test,
+  topmostNode,
+  urlFilters,
   waitForNodes,
 } from './relationsFixtures';
 
@@ -156,5 +170,69 @@ test.describe('relations persistence', () => {
       type: 'finding',
       description: `The Overrides list showed ${LARGE_GRAPH.nodes} rules ${Date.now() - start} ms after the panel editor opened.`,
     });
+  });
+});
+
+test.describe('relations with dashboard transformations', () => {
+  for (const { name, fixture } of TRANSFORMED_PANELS) {
+    test(`draws after ${name}`, async ({ page, copyPanel, gotoDashboardPage }) => {
+      await expectPanelDraws({ page, copyPanel, gotoDashboardPage }, fixture);
+    });
+  }
+
+  test('grouping to matrix on row-format data shows the missing edges message', async ({
+    page,
+    copyPanel,
+    gotoDashboardPage,
+  }) => {
+    const copy = await copyPanel(MATRIX_AFTER_CONVERSION);
+    await gotoDashboardPage({ uid: copy.uid });
+    await expect(panelContainer(page, copy.panelId)).toContainText(MISSING_EDGES_MESSAGE);
+  });
+});
+
+test.describe('relations tooltip actions', () => {
+  test('filter for adds an equal ad hoc filter for the node', async ({ page, copyPanel, gotoDashboardPage }) => {
+    const copy = await copyPanel(TOOLTIP_ACTIONS);
+    await gotoDashboardPage({ uid: copy.uid });
+    const nodes = await waitForNodes(panelCanvas(page, copy.panelId), GRAPH_REMEMBER_VIEW.nodes);
+    const tooltip = await pinTooltip(page, topmostNode(nodes));
+    await expect(tooltip).toContainText(TOOLTIP_NODE);
+
+    await tooltip.getByRole('button', { name: FILTER_FOR_BUTTON }).click();
+    // The node is only ever an edge target in this fixture, so the filter key is `target`.
+    await expect.poll(() => urlFilters(page)).toEqual([`target|=|${TOOLTIP_NODE}`]);
+  });
+
+  test('filter out adds a not-equal ad hoc filter for the node', async ({ page, copyPanel, gotoDashboardPage }) => {
+    const copy = await copyPanel(TOOLTIP_ACTIONS);
+    await gotoDashboardPage({ uid: copy.uid });
+    const nodes = await waitForNodes(panelCanvas(page, copy.panelId), GRAPH_REMEMBER_VIEW.nodes);
+    const tooltip = await pinTooltip(page, topmostNode(nodes));
+
+    await tooltip.getByRole('button', { name: FILTER_OUT_BUTTON }).click();
+    await expect.poll(() => urlFilters(page)).toEqual([`target|!=|${TOOLTIP_NODE}`]);
+  });
+
+  test('a field that is not filterable offers no ad hoc filter', async ({ page, copyPanel, gotoDashboardPage }) => {
+    const copy = await copyPanel(TOOLTIP_LINK_ONLY);
+    await gotoDashboardPage({ uid: copy.uid });
+    const nodes = await waitForNodes(panelCanvas(page, copy.panelId), GRAPH_REMEMBER_VIEW.nodes);
+    const tooltip = await pinTooltip(page, topmostNode(nodes));
+    // The link shows that the footer rendered, so the missing buttons are not a missing footer.
+    await expect(tooltip.getByRole('link', { name: TOOLTIP_LINK.title })).toBeVisible();
+
+    await expect(tooltip.getByRole('button', { name: FILTER_FOR_BUTTON })).toHaveCount(0);
+    await expect(tooltip.getByRole('button', { name: FILTER_OUT_BUTTON })).toHaveCount(0);
+  });
+
+  test('a data link on the node fills in its field name', async ({ page, copyPanel, gotoDashboardPage }) => {
+    const copy = await copyPanel(TOOLTIP_ACTIONS);
+    await gotoDashboardPage({ uid: copy.uid });
+    const nodes = await waitForNodes(panelCanvas(page, copy.panelId), GRAPH_REMEMBER_VIEW.nodes);
+    const tooltip = await pinTooltip(page, topmostNode(nodes));
+
+    // Read the href, and do not click: the link goes to a page outside Grafana.
+    await expect(tooltip.getByRole('link', { name: TOOLTIP_LINK.title })).toHaveAttribute('href', TOOLTIP_LINK.href);
   });
 });

@@ -28,13 +28,17 @@ import type {
 } from './relationsTypes';
 
 /** Find a panel by its key. The `Panel header` element holds no canvas. */
+export function panelContainer(page: Page, panelId: string): Locator {
+  return page.locator(`[data-viz-panel-key="panel-${panelId}"]`);
+}
+
 export function panelCanvas(page: Page, panelId: string): Locator {
-  return page.locator(`[data-viz-panel-key="panel-${panelId}"] canvas`).first();
+  return panelContainer(page, panelId).locator('canvas').first();
 }
 
 /** Find a button in the panel corner, for example "Zoom in". */
 export function panelButton(page: Page, panelId: string, name: string): Locator {
-  return page.locator(`[data-viz-panel-key="panel-${panelId}"]`).getByRole('button', { name });
+  return panelContainer(page, panelId).getByRole('button', { name });
 }
 
 /**
@@ -254,6 +258,35 @@ export async function expectSankeyDragPersists(
 
   await page.reload();
   await waitForNodes(panelCanvas(page, copy.panelId), nodesAfterReload);
+}
+
+/** The node at the top of the ring. */
+export function topmostNode(nodes: NodePoint[]): NodePoint {
+  return nodes.reduce((top, node) => (node.y < top.y ? node : top));
+}
+
+/** Click a node to pin its tooltip, and return the tooltip. Only a pinned tooltip has the footer. */
+export async function pinTooltip(page: Page, node: NodePoint): Promise<Locator> {
+  await page.mouse.move(node.x, node.y);
+  await page.mouse.click(node.x, node.y);
+  const tooltip = page.locator('[data-echarts-tooltip]').first();
+  await expect(tooltip).toBeVisible();
+  return tooltip;
+}
+
+/** The ad hoc filters in the dashboard URL, as `key|operator|value`. Scenes writes them to `var-Filters`. */
+export function urlFilters(page: Page): string[] {
+  return new URL(page.url()).searchParams.getAll('var-Filters');
+}
+
+/** Open a copy of the panel, and wait until it draws `fixture.nodes` nodes. */
+export async function expectPanelDraws(
+  { page, copyPanel, gotoDashboardPage }: ScenarioArgs,
+  fixture: PanelFixture
+): Promise<void> {
+  const copy = await copyPanel(fixture);
+  await gotoDashboardPage({ uid: copy.uid });
+  await waitForNodes(panelCanvas(page, copy.panelId), fixture.nodes);
 }
 
 /**

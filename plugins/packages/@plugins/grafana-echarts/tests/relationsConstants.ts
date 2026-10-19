@@ -63,6 +63,85 @@ export const LARGE_GRAPH: PanelFixture = {
   },
 };
 
+/**
+ * Panels whose dashboard transformations run after the registered ones. Each one draws the
+ * same graph on both paths. A wrong order of the two chains makes a panel draw nothing.
+ */
+export const TRANSFORMED_PANELS: Array<{ name: string; fixture: PanelFixture }> = [
+  {
+    name: 'organize renames client and server to source and target, then rows to fields',
+    fixture: { fileName: 'relations/observability-sources.json', panelId: 6, nodes: 9 },
+  },
+  {
+    name: 'two joins by field on time series edges',
+    fixture: { fileName: 'relations/observability-sources.json', panelId: 3, nodes: 9 },
+  },
+  {
+    name: 'convert, organize, and rows to fields twice',
+    fixture: { fileName: 'relations/observability-sources.json', panelId: 13, nodes: 8 },
+  },
+  {
+    name: 'one join by field on ranged edges',
+    fixture: { fileName: 'relations/graph-wide.json', panelId: 18, nodes: 4 },
+  },
+  {
+    name: 'convert, then rows to fields',
+    fixture: { fileName: 'relations/presets.json', panelId: 1, nodes: 5 },
+  },
+];
+
+/**
+ * Row-format data with a grouping-to-matrix transformation. A system transformation converts the
+ * rows first, so the matrix transformation finds no columns and the panel draws the converted
+ * edges. Without system transformations, the matrix output has no edges.
+ */
+export const MATRIX_AFTER_CONVERSION: PanelFixture = { fileName: 'relations/graph-wide.json', panelId: 17, nodes: 3 };
+
+export const MISSING_EDGES_MESSAGE = 'Graph data is missing edges.';
+
+// The node that the tooltip tests pin. The seed ring puts it at the top.
+export const TOOLTIP_NODE = 'db';
+
+export const TOOLTIP_LINK = {
+  title: 'Database runbook',
+  url: 'https://example.com/runbook?node=${__field.name}',
+  // The URL after Grafana fills in `${__field.name}`.
+  href: `https://example.com/runbook?node=${TOOLTIP_NODE}`,
+};
+
+/**
+ * `GRAPH_REMEMBER_VIEW` with every field filterable, so the tooltip offers ad hoc filters, and a
+ * data link on `TOOLTIP_NODE`.
+ */
+export const TOOLTIP_ACTIONS: PanelFixture = {
+  ...GRAPH_REMEMBER_VIEW,
+  change: (panel) => {
+    panel.fieldConfig = {
+      ...panel.fieldConfig,
+      defaults: { ...panel.fieldConfig?.defaults, filterable: true },
+      overrides: [
+        {
+          matcher: { id: 'byName', options: TOOLTIP_NODE },
+          properties: [{ id: 'links', value: [{ title: TOOLTIP_LINK.title, url: TOOLTIP_LINK.url }] }],
+        },
+      ],
+    };
+  },
+};
+
+/** `TOOLTIP_ACTIONS` without `filterable`. The footer still shows, for the data link. */
+export const TOOLTIP_LINK_ONLY: PanelFixture = {
+  ...TOOLTIP_ACTIONS,
+  change: (panel) => {
+    TOOLTIP_ACTIONS.change?.(panel);
+    panel.fieldConfig = { ...panel.fieldConfig, defaults: { ...panel.fieldConfig?.defaults, filterable: false } };
+  },
+};
+
+// The labels of the grouped filter buttons in the footer of the pinned tooltip (`VizTooltipFooter`).
+export const FILTER_FOR_BUTTON = 'Filter on this value';
+export const FILTER_OUT_BUTTON = 'Filter out this value';
+
 /** Wait after a drag or a roam. The panel writes after `PERSIST_DEBOUNCE_MS` (400 ms) in useRelationsPersistence.ts. */
 export const PERSIST_WAIT_MS = 1000;
 

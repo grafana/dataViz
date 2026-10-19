@@ -7,12 +7,14 @@ import {
   LEGACY_NODES_AND_EDGES,
   LEGACY_SANKEY,
   LEGACY_SANKEY_NODES_AFTER_DRAG,
+  MATRIX_AFTER_CONVERSION,
   SANKEY,
   SYSTEM_TRANSFORMATIONS_FLAG,
   SYSTEM_TRANSFORMATIONS_GRAFANA,
   TEST_VIEWPORT,
+  TRANSFORMED_PANELS,
 } from './relationsConstants';
-import { expectGraphDragPersists, expectSankeyDragPersists, test } from './relationsFixtures';
+import { expectGraphDragPersists, expectPanelDraws, expectSankeyDragPersists, test } from './relationsFixtures';
 
 // The system-transformations path: the host runs the transformations that the plugin registers.
 // They convert row-based Node Graph frames and add a field for each node of an edges-only
@@ -48,4 +50,18 @@ test.describe('relations persistence with system transformations', () => {
       await expectSankeyDragPersists({ page, copyPanel, gotoDashboardPage }, fixture, nodesAfterReload);
     });
   }
+
+  for (const { name, fixture } of TRANSFORMED_PANELS) {
+    test(`draws after ${name}`, async ({ page, copyPanel, gotoDashboardPage }) => {
+      await expectPanelDraws({ page, copyPanel, gotoDashboardPage }, fixture);
+    });
+  }
+
+  test('grouping to matrix on row-format data draws the converted edges', async ({
+    page,
+    copyPanel,
+    gotoDashboardPage,
+  }) => {
+    await expectPanelDraws({ page, copyPanel, gotoDashboardPage }, MATRIX_AFTER_CONVERSION);
+  });
 });
