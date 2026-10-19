@@ -166,13 +166,21 @@ export async function saveDashboard(dashboard: DashboardPage, copy: SavedCopy): 
   await expect.poll(() => copy.readSavedVersion()).toBeGreaterThan(before);
 }
 
+/** Fail the test when `value` is undefined. The `asserts` return type narrows `value` for the code after the call. */
+function expectDefined<T>(value: T | undefined, message: string): asserts value is T {
+  expect(value, message).toBeDefined();
+}
+
 /**
  * Return the position overrides (`custom.fixedX` and `custom.fixedY`), by node name.
  * The panels under test have no other overrides, so every override must be a byName rule with exactly these two properties.
  */
 export function positionOverrides(panel: PanelJson): Map<string, { x: unknown; y: unknown }> {
+  const { fieldConfig } = panel;
+  expectDefined(fieldConfig, 'the saved panel must have a fieldConfig');
+  expectDefined(fieldConfig.overrides, 'the saved panel must have fieldConfig.overrides');
   return new Map(
-    (panel.fieldConfig?.overrides ?? []).map((override) => {
+    fieldConfig.overrides.map((override) => {
       expect(override.matcher.id).toBe('byName');
       expect(override.properties.map((property) => property.id).sort()).toEqual(['custom.fixedX', 'custom.fixedY']);
       const values = Object.fromEntries(override.properties.map((property) => [property.id, property.value]));

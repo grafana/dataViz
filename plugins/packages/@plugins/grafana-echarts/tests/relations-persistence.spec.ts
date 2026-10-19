@@ -146,7 +146,8 @@ test.describe('relations persistence', () => {
     await saveDashboard(dashboard, copy);
 
     const saved = await copy.readSavedPanel();
-    expect(positionOverrides(saved).size).toBe(0);
+    // Grafana leaves out `overrides` when the list is empty.
+    expect(saved.fieldConfig).not.toHaveProperty('overrides');
     expect(JSON.stringify(saved.fieldConfig)).not.toMatch(/custom\.fixed[XY]/);
   });
 
