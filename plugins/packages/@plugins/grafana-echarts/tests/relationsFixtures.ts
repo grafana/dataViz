@@ -54,8 +54,7 @@ export async function findNodes(canvas: Locator): Promise<NodePoint[]> {
     const { width, height } = element;
     const context = element.getContext('2d');
     if (context === null) {
-      // @todo if there's no canvas we probably want to throw an error instead of returning empty nodes?
-      return [];
+      throw new Error('The panel canvas has no 2d context, so its nodes cannot be read');
     }
     const alpha = context.getImageData(0, 0, width, height).data;
     const core = new Uint8Array(width * height);
@@ -167,18 +166,19 @@ export async function saveDashboard(dashboard: DashboardPage, copy: SavedCopy): 
   await expect.poll(() => copy.readSavedVersion()).toBeGreaterThan(before);
 }
 
-/** Return the position overrides (`custom.fixedX` and `custom.fixedY`), by node name. */
+/**
+ * Return the position overrides (`custom.fixedX` and `custom.fixedY`), by node name.
+ * The panels under test have no other overrides, so every override must be a byName rule with exactly these two properties.
+ */
 export function positionOverrides(panel: PanelJson): Map<string, { x: unknown; y: unknown }> {
-  const positions = new Map<string, { x: unknown; y: unknown }>();
-  for (const override of panel.fieldConfig?.overrides ?? []) {
-    const x = override.properties.find((property) => property.id === 'custom.fixedX');
-    const y = override.properties.find((property) => property.id === 'custom.fixedY');
-    // @todo remove conditional
-    if (override.matcher.id === 'byName' && x !== undefined && y !== undefined) {
-      positions.set(String(override.matcher.options), { x: x.value, y: y.value });
-    }
-  }
-  return positions;
+  return new Map(
+    (panel.fieldConfig?.overrides ?? []).map((override) => {
+      expect(override.matcher.id).toBe('byName');
+      expect(override.properties.map((property) => property.id).sort()).toEqual(['custom.fixedX', 'custom.fixedY']);
+      const values = Object.fromEntries(override.properties.map((property) => [property.id, property.value]));
+      return [String(override.matcher.options), { x: values['custom.fixedX'], y: values['custom.fixedY'] }];
+    })
+  );
 }
 
 /** The rows of the Overrides list in the panel editor. Grafana shows one "Fields with name" editor per byName rule. */
