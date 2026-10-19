@@ -2,16 +2,19 @@
 # Prints the CI view of every plugin package under <root> as one compact JSON
 # object:
 #   {"targets": [{dir, pkg, id, script, plugin_json}],
-#    "e2e":     [{dir, pkg, url, grafana_dependency}]}
+#    "e2e":     [{dir, pkg, url, grafana_dependency, id, script, plugin_json, compose}]}
 #
 # targets: what each package publishes. A package declares them in
 # plugin-ci.json `targets`; without that it has one implicit target, its
 # src/plugin.json id built by its `build` script.
 #
 # e2e: one entry per package (not per target) with both an `e2e` script and a
-# playwright.config.ts. Its suite tests whatever the package's own
-# docker-compose.yaml mounts, i.e. the `build` output. `url` is plugin-ci.json
-# `e2e.url`, default http://127.0.0.1:3000.
+# playwright.config.ts. Its suite tests what the compose file mounts. By default
+# that is docker-compose.yaml with the `build` output, and the Grafana versions
+# come from src/plugin.json. plugin-ci.json `e2e.target` names one of the
+# package's targets to build and take the versions from instead, and
+# `e2e.compose` names the compose file. `id` is that target's id, or empty for
+# the default. `url` is `e2e.url`, default http://127.0.0.1:3000.
 #
 # With <base-sha>, both lists keep only packages with a file changed since
 # that commit, unless a shared file changed, in which case nothing is filtered.
@@ -85,6 +88,15 @@ for pkg_json in "$root"/*/package.json; do
 				error "$manifest" "e2e.url must be an http:// or https:// URL"
 				continue
 			fi
+			if ! jq -e '(.e2e | has("target") | not) or (.e2e.target | type == "string")' <<<"$config" >/dev/null; then
+				error "$manifest" "e2e.target must be the id of one of this package's targets"
+				continue
+			fi
+			# Passed to `docker compose -f` in the package directory: a plain relative path, no `..`.
+			if ! jq -e '(.e2e | has("compose") | not) or (.e2e.compose | type == "string" and test("^[A-Za-z0-9_][A-Za-z0-9._/-]*$") and (test("(^|/)\\.\\.(/|$)") | not))' <<<"$config" >/dev/null; then
+				error "$manifest" "e2e.compose must be a relative path to a compose file in the package, like docker-compose.yaml"
+				continue
+			fi
 		fi
 	fi
 
@@ -153,12 +165,32 @@ for pkg_json in "$root"/*/package.json; do
 	fi
 	if [ "$has_script" = true ] && [ "$has_config" = true ]; then
 		url="$(jq -r --arg d "$default_e2e_url" '.e2e.url // $d' <<<"$config")"
-		range="$(jq -r '.dependencies.grafanaDependency // ""' "$dir/src/plugin.json" 2>/dev/null || true)"
+		compose="$(jq -r '.e2e.compose // "docker-compose.yaml"' <<<"$config")"
+		e2e_script=build
+		e2e_plugin_json=src/plugin.json
+		e2e_target="$(jq -r '.e2e.target // ""' <<<"$config")"
+		if [ -n "$e2e_target" ]; then
+			# Only a target that passed validation above is in $targets.
+			selected="$(jq -c --arg dir "$dir" --arg id "$e2e_target" 'map(select(.dir == $dir and .id == $id)) | first // empty' <<<"$targets")"
+			if [ -z "$selected" ]; then
+				error "$manifest" "e2e.target '$e2e_target' is not one of this package's targets"
+				continue
+			fi
+			e2e_script="$(jq -r '.script' <<<"$selected")"
+			e2e_plugin_json="$(jq -r '.plugin_json' <<<"$selected")"
+		fi
+		# Only a declared compose file is checked: the default keeps the behavior from before e2e.compose.
+		if jq -e '.e2e.compose? // empty' <<<"$config" >/dev/null && [ ! -f "$dir/$compose" ]; then
+			error "$manifest" "e2e.compose '$compose' does not exist"
+			continue
+		fi
+		range="$(jq -r '.dependencies.grafanaDependency // ""' "$dir/$e2e_plugin_json" 2>/dev/null || true)"
 		if [ -z "$range" ]; then
-			error "$dir/src/plugin.json" "has an e2e suite but no dependencies.grafanaDependency to pick Grafana versions from"
+			error "$dir/$e2e_plugin_json" "has an e2e suite but no dependencies.grafanaDependency to pick Grafana versions from"
 		else
 			e2e="$(jq -c --arg dir "$dir" --arg pkg "$pkg" --arg url "$url" --arg range "$range" \
-				'. + [{dir: $dir, pkg: $pkg, url: $url, grafana_dependency: $range}]' <<<"$e2e")"
+				--arg id "$e2e_target" --arg script "$e2e_script" --arg pj "$e2e_plugin_json" --arg compose "$compose" \
+				'. + [{dir: $dir, pkg: $pkg, url: $url, grafana_dependency: $range, id: $id, script: $script, plugin_json: $pj, compose: $compose}]' <<<"$e2e")"
 		fi
 	elif [ "$has_script" = true ]; then
 		error "$pkg_json" "has an e2e script but no playwright.config.ts"

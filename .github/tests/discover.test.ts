@@ -17,6 +17,10 @@ interface E2e {
 	pkg: string;
 	url: string;
 	grafana_dependency: string;
+	id: string;
+	script: string;
+	plugin_json: string;
+	compose: string;
 }
 
 function discover(root: string, args: string[] = [], cwd?: string, env: Record<string, string> = {}): RunResult {
@@ -80,7 +84,16 @@ describe('discover-plugins/discover.sh', () => {
 			mkPkg(root, 'without', { id: 'without-panel' });
 			const { e2e } = ok(discover(root));
 			assert.deepEqual(e2e, [
-				{ dir: join(root, 'with'), pkg: '@t/with', url: 'http://127.0.0.1:3000', grafana_dependency: '>=12.0.0' },
+				{
+					dir: join(root, 'with'),
+					pkg: '@t/with',
+					url: 'http://127.0.0.1:3000',
+					grafana_dependency: '>=12.0.0',
+					id: '',
+					script: 'build',
+					plugin_json: 'src/plugin.json',
+					compose: 'docker-compose.yaml',
+				},
 			]);
 		});
 
@@ -93,6 +106,43 @@ describe('discover-plugins/discover.sh', () => {
 				pluginCi: { e2e: { url: 'http://127.0.0.1:3020' } },
 			});
 			assert.equal(ok(discover(root)).e2e[0].url, 'http://127.0.0.1:3020');
+		});
+
+		test('e2e.target builds that target and takes the Grafana versions from its plugin.json', (t) => {
+			const root = tempDir(t);
+			const dir = mkPkg(root, 'echarts', {
+				id: 'echarts-app',
+				scripts: { build: 'x', 'build:relations': 'x', e2e: 'x' },
+				playwright: true,
+				pluginCi: {
+					targets: [
+						{ id: 'relations-panel', script: 'build:relations', pluginJson: 'src/modules/relations/plugin.json' },
+						{ id: 'echarts-app', script: 'build', pluginJson: 'src/plugin.json' },
+					],
+					e2e: { target: 'relations-panel' },
+				},
+			});
+			writeJson(join(dir, 'src/modules/relations/plugin.json'), {
+				id: 'relations-panel',
+				dependencies: { grafanaDependency: '>=13.2.0-0' },
+			});
+			const [suite] = ok(discover(root)).e2e;
+			assert.deepEqual(
+				[suite.id, suite.script, suite.plugin_json, suite.grafana_dependency],
+				['relations-panel', 'build:relations', 'src/modules/relations/plugin.json', '>=13.2.0-0']
+			);
+		});
+
+		test('e2e.compose selects the compose file', (t) => {
+			const root = tempDir(t);
+			const dir = mkPkg(root, 'p', {
+				id: 'p-panel',
+				scripts: { build: 'x', e2e: 'x' },
+				playwright: true,
+				pluginCi: { e2e: { compose: 'compose/relations.yaml' } },
+			});
+			writeText(join(dir, 'compose/relations.yaml'), 'services: {}\n');
+			assert.equal(ok(discover(root)).e2e[0].compose, 'compose/relations.yaml');
 		});
 	});
 
@@ -107,6 +157,8 @@ describe('discover-plugins/discover.sh', () => {
 			{ name: 'rejects an e2e script without playwright.config.ts', pkg: { id: 'x', scripts: { build: 'x', e2e: 'x' } }, error: 'no playwright.config.ts' },
 			{ name: 'rejects playwright.config.ts without an e2e script', pkg: { id: 'x', playwright: true }, error: 'has no e2e script' },
 			{ name: 'rejects an e2e suite with no grafanaDependency to pick versions from', pkg: { id: 'x', scripts: { build: 'x', e2e: 'x' }, playwright: true, grafanaDependency: '' }, error: 'no dependencies.grafanaDependency' },
+			{ name: 'rejects an e2e.target that is not one of the targets', pkg: { id: 'x', scripts: { build: 'x', e2e: 'x' }, playwright: true, pluginCi: { e2e: { target: 'nope' } } }, error: "e2e.target 'nope' is not one of" },
+			{ name: 'rejects an e2e.compose file that does not exist', pkg: { id: 'x', scripts: { build: 'x', e2e: 'x' }, playwright: true, pluginCi: { e2e: { compose: 'missing.yaml' } } }, error: "e2e.compose 'missing.yaml' does not exist" },
 		];
 
 		for (const { name, pkg, error } of cases) {
@@ -162,6 +214,9 @@ describe('discover-plugins/discover.sh', () => {
 		{ name: 'rejects an e2e block that is not an object', e2e: 'http://127.0.0.1:3020', error: 'e2e must be an object' },
 		{ name: 'rejects an e2e.url that is not a string', e2e: { url: 3020 }, error: 'e2e.url must be an http:// or https:// URL' },
 		{ name: 'rejects an e2e.url that is not an http(s) URL', e2e: { url: '127.0.0.1:3020' }, error: 'e2e.url must be an http:// or https:// URL' },
+		{ name: 'rejects an e2e.target that is not a string', e2e: { target: 1 }, error: 'e2e.target must be the id' },
+		{ name: 'rejects an e2e.compose with ..', e2e: { compose: '../other/docker-compose.yaml' }, error: 'e2e.compose must be a relative path' },
+		{ name: 'rejects an absolute e2e.compose', e2e: { compose: '/etc/compose.yaml' }, error: 'e2e.compose must be a relative path' },
 	];
 	for (const { name, e2e, error } of badE2e) {
 		test(name, (t) => {

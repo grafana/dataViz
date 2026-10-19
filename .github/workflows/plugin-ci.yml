@@ -190,3 +190,6 @@ jobs:
       pkg: ${{ matrix.package.pkg }}
       url: ${{ matrix.package.url }}
       grafana-dependency: ${{ matrix.package.grafana_dependency }}
+      plugin-id: ${{ matrix.package.id }}
+      script: ${{ matrix.package.script }}
+      compose: ${{ matrix.package.compose }}
