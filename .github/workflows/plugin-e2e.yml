@@ -101,20 +101,32 @@ jobs:
     permissions:
       contents: read
     outputs:
-      matrix: ${{ steps.resolve-versions.outputs.matrix }}
+      matrix: ${{ steps.add-nightly.outputs.matrix }}
     steps:
       # e2e-version has no plugin-directory input; left alone it reads
       # src/plugin.json at the repo root, which doesn't exist here.
+      # Its nightly entry is grafana-enterprise@nightly, which is no longer
+      # published, so skip it and add OSS nightly below. limit 5 plus that
+      # entry keeps the action's default of 6 images.
       - name: Resolve Grafana E2E versions
         id: resolve-versions
         uses: grafana/plugin-actions/e2e-version@3ef49643a84470fd25bafeb96701fa0be3be6746 # e2e-version/v3.0.2
         with:
           grafana-dependency: ${{ inputs.grafana-dependency }}
+          skip-grafana-nightly-image: true
+          limit: '5'
+
+      # First in the matrix, where e2e-version puts its own nightly entry.
+      - name: Add OSS nightly
+        id: add-nightly
+        env:
+          MATRIX: ${{ steps.resolve-versions.outputs.matrix }}
+        run: echo "matrix=$(jq -c '[{name: "grafana", version: "nightly"}] + .' <<<"$MATRIX")" >> "$GITHUB_OUTPUT"
 
   playwright-tests:
     needs: [resolve-versions, build]
     timeout-minutes: 15
-    # e2e-version adds a grafana-enterprise@nightly entry to the matrix. The
+    # resolve-versions adds a grafana@nightly (OSS) entry to the matrix. The
     # nightly run is informational: a failure there shows on the job, but does
     # not fail the workflow. Do not make its check required in branch protection,
     # because that overrides this setting.

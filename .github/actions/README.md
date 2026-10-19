@@ -18,9 +18,9 @@ any workflow changes. Releases are covered separately, in [RELEASES.md](RELEASES
   build that quietly produced the wrong plugin fails.
 - **Compatibility:** levitate checks the plugin's `module.ts` against the latest `@grafana/*` packages.
 - **e2e:** Playwright against every Grafana version that the tested plugin's `grafanaDependency` allows,
-  plus a nightly run that never blocks. Only for packages with both an `e2e` script and a
-  `playwright.config.ts`. One suite per package, against one build: the default build, or the target that
-  `e2e.target` names.
+  plus an OSS `grafana:nightly` run that never blocks (`grafana-enterprise:nightly` is no longer
+  published). Only for packages with both an `e2e` script and a `playwright.config.ts`. One suite per
+  package, against one build: the default build, or the target that `e2e.target` names.
 - **Bundle size:** a PR comment per plugin with the size change against main.
 
 `plugin-ci.yml` and `plugin-bundle-stats.yml` only run their jobs for packages the change touches; a
