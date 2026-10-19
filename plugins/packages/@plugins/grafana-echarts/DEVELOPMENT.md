@@ -8,7 +8,7 @@ Two stacks, deliberately independent:
 | ----------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------- |
 | `pnpm run server`             | 3020 | One Grafana container, TestData only.                                                                                      |
 | `pnpm run server:e2e`         | 4001 | Standalone relations panel. What the Playwright e2e suite (and CI) runs against.                                           |
-| `pnpm run server:e2e:nightly` | 4002 | Same, on `grafana-enterprise:nightly` with system transformations on. Run `pnpm e2e:nightly` against it: no skipped tests. |
+| `pnpm run server:e2e:nightly` | 4002 | Same, on OSS `grafana:nightly` with system transformations on. Run `pnpm e2e:nightly` against it: no skipped tests. |
 | `pnpm run server:lgtm`        | 3010 | Grafana + Loki + Tempo + Prometheus + Alloy, instrumenting themselves. See [lgtm/README.md](./lgtm/README.md).             |
 
 Both can run at the same time.

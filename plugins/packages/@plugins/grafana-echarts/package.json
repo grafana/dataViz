@@ -28,7 +28,7 @@
     "server": "COMPOSE_PROJECT_NAME=${GRAFANA_CONTAINER_NAME:-grafana-echarts-panel-${GRAFANA_PORT:-3020}} docker compose up --build",
     "server:relations": "pnpm run build:relations && COMPOSE_PROJECT_NAME=${GRAFANA_CONTAINER_NAME:-grafana-echarts-panel-relations-${GRAFANA_PORT:-4001}} docker compose -f docker-compose-relations.yaml up --build",
     "server:e2e": "pnpm run server:relations",
-    "server:e2e:nightly": "export GRAFANA_VERSION=nightly GRAFANA_PORT=${GRAFANA_PORT:-4002} GF_FEATURE_TOGGLES_ENABLE=panelPluginTransformations && COMPOSE_PROJECT_NAME=grafana-echarts-panel-relations-$GRAFANA_PORT docker compose -f docker-compose-relations.yaml build --pull && pnpm run server:relations",
+    "server:e2e:nightly": "export GRAFANA_IMAGE=grafana GRAFANA_VERSION=nightly GRAFANA_PORT=${GRAFANA_PORT:-4002} GF_FEATURE_TOGGLES_ENABLE=panelPluginTransformations && COMPOSE_PROJECT_NAME=grafana-echarts-panel-relations-$GRAFANA_PORT docker compose -f docker-compose-relations.yaml build --pull && pnpm run server:relations",
     "e2e:nightly": "GRAFANA_PORT=${GRAFANA_PORT:-4002} playwright test",
     "server:lgtm": "pnpm run build && COMPOSE_PROJECT_NAME=${GRAFANA_CONTAINER_NAME:-grafana-echarts-panel-lgtm-${GRAFANA_PORT:-3010}} docker compose -f docker-compose-lgtm.yaml up --build",
     "sign": "sign-plugin"
