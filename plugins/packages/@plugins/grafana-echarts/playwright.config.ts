@@ -27,9 +27,11 @@ export default defineConfig<PluginOptions>({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`.
-     * Use 127.0.0.1 (not localhost): Docker publishes 3020 on IPv4 only, but
+     * Defaults to the standalone relations stack (`pnpm run server:e2e`, port 4001), the same stack CI uses.
+     * GRAFANA_PORT picks another local stack, like the server scripts. GRAFANA_URL overrides both.
+     * Use 127.0.0.1 (not localhost): Docker publishes the port on IPv4 only, but
      * Node resolves `localhost` to IPv6 (::1) first, causing ECONNREFUSED. */
-    baseURL: process.env.GRAFANA_URL || 'http://127.0.0.1:3020',
+    baseURL: process.env.GRAFANA_URL || `http://127.0.0.1:${process.env.GRAFANA_PORT || 4001}`,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: process.env.CI ? 'on-first-retry' : 'on',

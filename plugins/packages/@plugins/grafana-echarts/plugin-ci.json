@@ -12,6 +12,8 @@
     }
   ],
   "e2e": {
-    "url": "http://127.0.0.1:3020"
+    "url": "http://127.0.0.1:4001",
+    "target": "grafana-relations-panel",
+    "compose": "docker-compose-relations.yaml"
   }
 }
