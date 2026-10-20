@@ -4,6 +4,11 @@ import { type EChartsType } from 'lib/echarts/echarts';
 import { applyGeoView, type GeoViewState, readLiveGeoView } from 'lib/echarts/geo/liveView';
 import { buildPanelChartOption } from 'lib/echarts/options/panelOption';
 import {
+  prepareForceStart,
+  readLiveForceLayout,
+  restoreForcePositions,
+} from 'lib/echarts/relations/options/forcePositions';
+import {
   type InteractedRelationsView,
   readLiveRelationsView,
   type RelationsViewState,
@@ -173,6 +178,12 @@ export function useChartOption(
       applyGeoView(option, readLiveGeoView(chart) ?? geoView.view);
     }
 
+    // A new option with the same nodes, for example after a zoom or an option change, keeps the force layout.
+    const forceLayout = readLiveForceLayout(chart);
+    const keepForceLayout = prepareForceStart(option, forceLayout, {
+      isPreview: chartContext.options?.isPreview === true,
+    });
+
     // Tell the tooltip controller the resolved trigger so it hides item tooltips
     // on `mouseout` but keeps axis ("All") tooltips open across the grid.
     current.reportTooltipTrigger(getTooltipTrigger(option));
@@ -184,7 +195,11 @@ export function useChartOption(
     // leave stale components behind. Replacing in place also keeps the instance
     // warm for transitions, unlike a full chart.clear() + setOption reset.
     // https://echarts.apache.org/en/api.html#echartsInstance.setOption
-    chart.setOption(option, { notMerge: true });
+    // `lazyUpdate` delays the layout until the positions are on the new series model.
+    chart.setOption(option, keepForceLayout ? { notMerge: true, lazyUpdate: true } : { notMerge: true });
+    if (keepForceLayout) {
+      restoreForcePositions(chart, forceLayout.positions);
+    }
 
     // `notMerge` recreates the brush component, so arm it after each brush rebuild.
     // Removing the component disposes its controller and releases the pan mutex.

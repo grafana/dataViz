@@ -60,7 +60,7 @@ Canvas tests set these values for stable output:
 | `relationsChordMinAngle`          | `0`           | ■ chord base       | ■ 30             |
 | `relationsChordLinkOpacity`       | `0.2`         | ■ chord base       | · unit test only |
 | `relationsDraggable`              | `false`       | ■ all base renders | n/a              |
-| `relationsRepulsion`              | Automatic     | ·                  | · unit test only |
+| `relationsRepulsion`              | Automatic     | ·                  | · rebuild test   |
 | `relationsEdgeLength`             | Automatic     | ·                  | · unit test only |
 | `relationsGravity`                | Automatic     | ·                  | · unit test only |
 | `relationsLayoutAnimation`        | `false`       | ·                  | ·                |
@@ -115,6 +115,8 @@ A test cannot set a scheme through `fieldConfig.defaults` in this harness. `src/
 Force layout coordinates depend on the random seed and simulation timing. Unit tests pin the automatic limits, fallback dimensions, and explicit values.
 
 `layout.integration.test.tsx` verifies that each static fixture draws every node with finite geometry at 400 by 300 and 640 by 360. ECharts does not constrain force nodes or labels to the plot boundary.
+
+`forcePositions.integration.test.ts` rebuilds a force graph with `notMerge`, as the panel does after an option change. It verifies that each drawn node stays in the same place when the option is the same. It also verifies that a kept layout is drawn as large as a new layout after a repulsion change.
 
 The same integration suite mounts one force graph at 400 by 300. It resizes the graph through 520 by 340, 640 by 420, and 800 by 500. The test observes three transient partial options and one final full option. The full option restores `relationsLayoutAnimation: false`. Each final node symbol has finite geometry.
 
