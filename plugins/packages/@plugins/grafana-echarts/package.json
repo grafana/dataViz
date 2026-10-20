@@ -9,7 +9,7 @@
     "archive:relations": "node scripts/package-relations.mjs",
     "package:relations": "pnpm run build:relations && pnpm run archive:relations",
     "checks": "pnpm run type-check && pnpm run lint && pnpm run format && pnpm run test:ci",
-    "dev": "webpack -w -c ./webpack.config.ts --env development",
+    "dev": "webpack -w -c ./webpack.config.ts --env development --env withRelations",
     "test": "jest --watch --onlyChanged",
     "test:ci": "jest --ci --passWithNoTests --maxWorkers 4",
     "type-check": "tsc --noEmit",
@@ -24,7 +24,7 @@
     "bench:force-resize": "node scripts/bench/force-resize.mjs",
     "bench:relations-refresh": "node scripts/bench/relations-refresh.mjs",
     "server": "COMPOSE_PROJECT_NAME=${GRAFANA_CONTAINER_NAME:-grafana-echarts-panel-${GRAFANA_PORT:-3020}} docker compose up --build",
-    "server:relations": "pnpm run build:relations && COMPOSE_PROJECT_NAME=${GRAFANA_CONTAINER_NAME:-grafana-echarts-panel-relations-${GRAFANA_PORT:-4001}} docker compose -f docker-compose-relations.yaml up --build",
+    "server:relations": "COMPOSE_PROJECT_NAME=${GRAFANA_CONTAINER_NAME:-grafana-echarts-panel-relations-${GRAFANA_PORT:-4001}} docker compose -f docker-compose-relations.yaml up --build",
     "server:lgtm": "pnpm run build && COMPOSE_PROJECT_NAME=${GRAFANA_CONTAINER_NAME:-grafana-echarts-panel-lgtm-${GRAFANA_PORT:-3010}} docker compose -f docker-compose-lgtm.yaml up --build",
     "sign": "sign-plugin"
   },
