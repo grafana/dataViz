@@ -3,15 +3,19 @@
 // https://grafana.com/developers/plugin-tools/how-to-guides/extend-configurations#extend-the-webpack-config
 //
 import CopyWebpackPlugin from 'copy-webpack-plugin';
+import ESLintPlugin from 'eslint-webpack-plugin';
+import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
 import fs from 'fs';
 import path from 'path';
 import ReplaceInFileWebpackPlugin from 'replace-in-file-webpack-plugin';
 import webpack, { type ChunkGraph, type Configuration, type Module } from 'webpack';
+import LiveReloadPlugin from 'webpack-livereload-plugin';
 // https://github.com/webpack-contrib/webpack-bundle-analyzer
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import VirtualModulesPlugin from 'webpack-virtual-modules';
 
 import { copyFilePatterns } from './/.config/bundler/copyFiles.ts';
+import { DIST_DIR } from './/.config/bundler/constants.ts';
 import baseConfig, { type Env } from './/.config/webpack/webpack.config.ts';
 
 type PluginManifest = {
@@ -48,8 +52,17 @@ const standalonePluginKinds = [
 // both, and bundle dist/module.js as one more nested plugin.
 const relationsStandaloneFiles = ['modules/relations/package.json', 'modules/relations/dist/**'];
 
-const appPlugins = (plugins: NonNullable<Configuration['plugins']>): NonNullable<Configuration['plugins']> => [
-  ...plugins.filter((plugin) => !(plugin instanceof CopyWebpackPlugin)),
+const appPlugins = (
+  plugins: NonNullable<Configuration['plugins']>,
+  manifest: PluginManifest,
+  packageVersion: string,
+  distDir: string
+): NonNullable<Configuration['plugins']> => [
+  // The scaffold's ReplaceInFileWebpackPlugin reads only `dist`, so another output directory needs its own.
+  ...plugins.filter(
+    (plugin) =>
+      !(plugin instanceof CopyWebpackPlugin) && !(distDir !== DIST_DIR && plugin instanceof ReplaceInFileWebpackPlugin)
+  ),
   new CopyWebpackPlugin({
     patterns: [
       ...copyFilePatterns.map((pattern) => ({ ...pattern, globOptions: { ignore: relationsStandaloneFiles } })),
@@ -57,7 +70,22 @@ const appPlugins = (plugins: NonNullable<Configuration['plugins']>): NonNullable
       { from: 'modules/*/img/**', to: '[path][name][ext]', noErrorOnMissing: true },
     ],
   }),
+  ...(distDir === DIST_DIR ? [] : [templateVariablesPlugin(manifest, packageVersion, distDir)]),
 ];
+
+// The scaffold's template-variable step, for an output directory other than `dist`.
+const templateVariablesPlugin = (manifest: PluginManifest, packageVersion: string, distDir: string) =>
+  new ReplaceInFileWebpackPlugin([
+    {
+      dir: distDir,
+      test: [/(^|\/)plugin\.json$/, /(^|\/)README\.md$/],
+      rules: [
+        { search: /\%VERSION\%/g, replace: packageVersion },
+        { search: /\%TODAY\%/g, replace: new Date().toISOString().substring(0, 10) },
+        { search: /\%PLUGIN_ID\%/g, replace: manifest.id },
+      ],
+    },
+  ]);
 
 const appEntries = (entries: Record<string, string>): Record<string, string> => {
   const relationsDist = path.resolve(process.cwd(), 'src/modules/relations/dist');
@@ -90,10 +118,15 @@ const standaloneCopyPatterns = (manifest: PluginManifest) => {
   ];
 };
 
+// The scaffold's watch-only plugins. The app build of `pnpm run dev` already runs them,
+// and a second LiveReloadPlugin cannot bind the same port.
+const watchOnlyPlugins = [LiveReloadPlugin, ForkTsCheckerWebpackPlugin, ESLintPlugin];
+
 const replaceStandalonePlugins = (
   plugins: NonNullable<Configuration['plugins']>,
   manifest: PluginManifest,
-  packageVersion: string
+  packageVersion: string,
+  isWatchCompanion: boolean
 ): NonNullable<Configuration['plugins']> => {
   for (const pluginKind of standalonePluginKinds) {
     const count = plugins.filter(pluginKind.matches).length;
@@ -103,7 +136,9 @@ const replaceStandalonePlugins = (
   }
 
   const retainedPlugins = plugins.filter(
-    (plugin) => !standalonePluginKinds.some((pluginKind) => pluginKind.matches(plugin))
+    (plugin) =>
+      !standalonePluginKinds.some((pluginKind) => pluginKind.matches(plugin)) &&
+      !(isWatchCompanion && watchOnlyPlugins.some((pluginType) => plugin instanceof pluginType))
   );
   const virtualPublicPath = new VirtualModulesPlugin({
     'node_modules/grafana-public-path.js': `
@@ -125,17 +160,7 @@ __webpack_public_path__ =
       entryOnly: true,
     }),
     new CopyWebpackPlugin({ patterns: standaloneCopyPatterns(manifest) }),
-    new ReplaceInFileWebpackPlugin([
-      {
-        dir: 'dist',
-        test: [/(^|\/)plugin\.json$/, /(^|\/)README\.md$/],
-        rules: [
-          { search: /\%VERSION\%/g, replace: packageVersion },
-          { search: /\%TODAY\%/g, replace: new Date().toISOString().substring(0, 10) },
-          { search: /\%PLUGIN_ID\%/g, replace: manifest.id },
-        ],
-      },
-    ]),
+    templateVariablesPlugin(manifest, packageVersion, DIST_DIR),
   ];
 };
 
@@ -143,18 +168,25 @@ const ECHARTS_MODULE = /[\\/]node_modules[\\/](\.pnpm[\\/].*[\\/])?(echarts|zren
 /** The `webpackChunkName` of the basemap import in `src/modules/geo/module.tsx`. */
 export const GEO_BASEMAP_CHUNK = 'geo-basemap';
 
-const config = async (env: Env): Promise<Configuration> => {
+// `pnpm run dev` (`--env withRelations`) also watches the standalone relations panel. The panel writes `dist`,
+// as `build:relations` does, so one relations stack serves either build. The app moves to its own directory.
+const APP_DEV_DIST_DIR = 'dist-app';
+
+const pluginConfig = async (env: Env): Promise<Configuration> => {
   if (env.standalone !== undefined && env.standalone !== 'relations') {
     throw new Error(`Unsupported standalone target "${String(env.standalone)}". Supported targets: relations.`);
   }
 
   const base = await baseConfig(env);
-  const isRelationsStandalone = env.production && env.standalone === 'relations';
+  const isRelationsStandalone = env.standalone === 'relations';
+  const isWatchCompanion = isRelationsStandalone && Boolean(env.withRelations);
+  const appDistDir = env.withRelations ? APP_DEV_DIST_DIR : DIST_DIR;
   const rootManifest = readJson<PluginManifest>(path.resolve(process.cwd(), 'src/plugin.json'));
   const relationsManifest = readJson<PluginManifest>(path.resolve(process.cwd(), 'src/modules/relations/plugin.json'));
   // The standalone panel is released on its own, so its version comes from its
   // own package.json, not the echarts package's (see .github/actions/RELEASES.md).
   const relationsPackage = readJson<PackageMetadata>(path.resolve(process.cwd(), 'src/modules/relations/package.json'));
+  const packageVersion = readJson<PackageMetadata>(path.resolve(process.cwd(), 'package.json')).version;
   const activePluginId = isRelationsStandalone ? relationsManifest.id : rootManifest.id;
 
   if (isRelationsStandalone) {
@@ -168,6 +200,7 @@ const config = async (env: Env): Promise<Configuration> => {
     };
   } else {
     base.entry = appEntries(base.entry as Record<string, string>);
+    base.output = { ...base.output, path: path.resolve(process.cwd(), appDistDir) };
   }
 
   // De-duplicate the ECharts runtime across the nested panel entries. Each
@@ -201,8 +234,8 @@ const config = async (env: Env): Promise<Configuration> => {
   };
 
   const configuredPlugins = isRelationsStandalone
-    ? replaceStandalonePlugins(base.plugins ?? [], relationsManifest, relationsPackage.version)
-    : appPlugins(base.plugins ?? []);
+    ? replaceStandalonePlugins(base.plugins ?? [], relationsManifest, relationsPackage.version, isWatchCompanion)
+    : appPlugins(base.plugins ?? [], rootManifest, packageVersion, appDistDir);
 
   base.plugins = [
     ...configuredPlugins,
@@ -215,6 +248,14 @@ const config = async (env: Env): Promise<Configuration> => {
   ];
 
   return base;
+};
+
+// https://webpack.js.org/configuration/configuration-types/#exporting-multiple-configurations
+const config = async (env: Env): Promise<Configuration | Configuration[]> => {
+  if (!env.withRelations || env.standalone !== undefined) {
+    return pluginConfig(env);
+  }
+  return Promise.all([pluginConfig(env), pluginConfig({ ...env, standalone: 'relations' })]);
 };
 
 export default config;
