@@ -15,7 +15,7 @@ import {
 } from 'editor/relations/chord';
 import { RELATIONS_LINK_COLOR_DEFAULT, RELATIONS_SHOW_NODE_LABELS_DEFAULT } from 'editor/relations/constants';
 import { type RelationsSeriesContext } from 'lib/echarts/relations/context';
-import { resolveRelationsFocusAdjacency } from 'lib/echarts/relations/options/emphasis';
+import { getRelationsHoverAnimation, resolveRelationsFocusAdjacency } from 'lib/echarts/relations/options/emphasis';
 import {
   getRelationsLabelLayout,
   getRelationsLabelStyle,
@@ -135,6 +135,7 @@ export function getChordSeries(data: NodeGraphData, ctx: RelationsSeriesContext)
     ...(labelLayout ? { labelLayout } : {}),
     // Always emit this value because the plugin default differs from ECharts.
     emphasis: getChordEmphasis(ctx.options),
+    ...getRelationsHoverAnimation(ctx.options),
     label: getChordLabel(ctx),
     zlevel: ctx.options.zLevel?.series,
     data: toChordNodeItems(data.nodes),

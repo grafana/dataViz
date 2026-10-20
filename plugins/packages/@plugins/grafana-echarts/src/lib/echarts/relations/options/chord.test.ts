@@ -1,3 +1,4 @@
+import { getRelationsHoverAnimation } from 'lib/echarts/relations/options/emphasis';
 import {
   getChordEmphasis,
   getChordLabel,
@@ -216,5 +217,11 @@ describe('getChordSeries', () => {
         { markId: 'e1', source: 'a', target: 'a', value: 3 },
       ]);
     });
+  });
+});
+
+describe('chord hover animation', () => {
+  it('is applied to the series', () => {
+    expect(getChordSeries(data(), ctx())).toMatchObject(getRelationsHoverAnimation(baseOptions()) ?? {});
   });
 });

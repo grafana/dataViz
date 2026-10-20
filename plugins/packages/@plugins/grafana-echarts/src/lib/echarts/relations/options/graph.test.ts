@@ -1,7 +1,11 @@
 import { RELATIONS_NODE_SIZE_DEFAULT } from 'editor/relations/constants';
 import { type RelationsChartContext } from 'lib/echarts/charts/types';
 import { type NodeGraphData } from 'lib/echarts/relations/converters/model';
-import { getGraphEdgeSymbol, getGraphEmphasis } from 'lib/echarts/relations/options/emphasis';
+import {
+  getGraphEdgeSymbol,
+  getGraphEmphasis,
+  getRelationsHoverAnimation,
+} from 'lib/echarts/relations/options/emphasis';
 import { getGraphSeries } from 'lib/echarts/relations/options/graph';
 import { getGraphLinkStyle } from 'lib/echarts/relations/options/linkColor';
 import { getPaletteColorByIndex } from 'lib/echarts/style';
@@ -299,5 +303,11 @@ describe('getGraphSeries — edge colours', () => {
     expect(gradientOf(target)).toBe(getPaletteColorByIndex(1, theme));
     // …and the two differ, which is the whole claim.
     expect(gradientOf(source)).not.toBe(gradientOf(target));
+  });
+});
+
+describe('graph hover animation', () => {
+  it('is applied to the series', () => {
+    expect(getGraphSeries(data(), ctx())).toMatchObject(getRelationsHoverAnimation(baseOptions()) ?? {});
   });
 });

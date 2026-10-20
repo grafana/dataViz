@@ -4,7 +4,11 @@ import { RELATIONS_LINK_COLOR_DEFAULT } from 'editor/relations/constants';
 import { createBaseOptions } from 'lib/echarts/options/base';
 import { type RelationsSeriesContext } from 'lib/echarts/relations/context';
 import { type NodeGraphData } from 'lib/echarts/relations/converters/model';
-import { getGraphEdgeSymbol, getGraphEmphasis } from 'lib/echarts/relations/options/emphasis';
+import {
+  getGraphEdgeSymbol,
+  getGraphEmphasis,
+  getRelationsHoverAnimation,
+} from 'lib/echarts/relations/options/emphasis';
 import { toLinkItems, toNodeItems } from 'lib/echarts/relations/options/items';
 import { getGraphLabel, getRelationsEdgeLabel, getRelationsLabelLayout } from 'lib/echarts/relations/options/labels';
 import {
@@ -65,6 +69,7 @@ export function getGraphSeries(
     force: getGraphForce(data, ctx.options, plotWidth, plotHeight),
     ...(edgeSymbol ? { edgeSymbol } : {}),
     ...(emphasis ? { emphasis } : {}),
+    ...getRelationsHoverAnimation(ctx.options),
     ...(edgeLabel ? { edgeLabel } : {}),
     ...(labelLayout ? { labelLayout } : {}),
     label: getGraphLabel(ctx),

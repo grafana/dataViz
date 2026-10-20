@@ -7,6 +7,7 @@ import {
   getSankeyOrient,
   getSankeySeries,
 } from 'lib/echarts/relations/options/sankey';
+import { getRelationsHoverAnimation } from 'lib/echarts/relations/options/emphasis';
 import {
   linkItems,
   nodeGraph,
@@ -120,6 +121,13 @@ describe('getSankeyEmphasis', () => {
 
   it('omits the key when switched off, which is ECharts own sankey behaviour', () => {
     expect(getSankeyEmphasis(baseOptions({ relationsFocusAdjacency: false }))).toBeUndefined();
+  });
+});
+
+describe('sankey hover animation', () => {
+  it('is applied to the series', () => {
+    const { series } = getSankeySeries(data(), ctx());
+    expect(series).toMatchObject(getRelationsHoverAnimation(baseOptions(), 1) ?? {});
   });
 });
 

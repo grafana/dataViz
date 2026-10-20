@@ -79,7 +79,15 @@ describe('relations graph', () => {
       const { defaultEvents, seriesEvents } = await renderRelations({
         frames: [nodesFrame, edgesFrame],
         options: { relationsShowNodeLabels: false },
-        beforeCapture: (chart) => chart.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: 0 }),
+        beforeCapture: (chart) => {
+          chart.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: 0 });
+          // The hover fades in (`getRelationsHoverAnimation`). Apply the hover state, then jump to its end.
+          chart.resize({ width: chart.getWidth(), height: chart.getHeight() });
+          chart
+            .getZr()
+            .storage.getDisplayList(true, true)
+            .forEach((el) => el.stopAnimation(undefined, true));
+        },
       });
 
       expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
