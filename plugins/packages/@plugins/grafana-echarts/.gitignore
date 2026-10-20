@@ -32,7 +32,7 @@ coverage
 
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 dist/
-dist-relations/
+dist-app/
 artifacts/
 work/
 ci/

@@ -23,7 +23,7 @@ export default defineConfig([
       '**/lib-cov',
       '**/coverage',
       '**/dist/',
-      '**/dist-relations/',
+      '**/dist-app/',
       '**/artifacts/',
       '**/work/',
       '**/ci/',

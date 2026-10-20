@@ -37,7 +37,8 @@ services:
       - ./:/app/workspace
       - workspace-panel-dist:/app/workspace/packages/@plugins/grafana-workspace-panel/dist/
       - clock-panel-dist:/app/workspace/packages/@plugins/grafana-clock-panel/dist/
-      - echarts-app-dist:/app/workspace/packages/@plugins/grafana-echarts/dist/
+      # `pnpm dev` writes the echarts app to dist-app (its dist holds the standalone relations panel).
+      - echarts-app-dist:/app/workspace/packages/@plugins/grafana-echarts/dist-app/
       - workspace-node-modules:/app/workspace/node_modules/
       - workspace-pnpm-store:/root/.local/share/pnpm/store
     working_dir: /app/workspace
@@ -50,8 +51,8 @@ services:
         test -f /app/workspace/packages/@plugins/grafana-workspace-panel/dist/module.js &&
         test -f /app/workspace/packages/@plugins/grafana-clock-panel/dist/plugin.json &&
         test -f /app/workspace/packages/@plugins/grafana-clock-panel/dist/module.js &&
-        test -f /app/workspace/packages/@plugins/grafana-echarts/dist/plugin.json &&
-        test -f /app/workspace/packages/@plugins/grafana-echarts/dist/module.js
+        test -f /app/workspace/packages/@plugins/grafana-echarts/dist-app/plugin.json &&
+        test -f /app/workspace/packages/@plugins/grafana-echarts/dist-app/module.js
       interval: 10s
       timeout: 5s
       retries: 30
