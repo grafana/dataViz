@@ -8,6 +8,7 @@ import {
   readLiveRelationsView,
   type RelationsViewState,
 } from 'lib/echarts/relations/options/view';
+import { applyForceLayoutHoverFade } from 'lib/echarts/relations/forceHoverFade';
 import { restoreTreemapRoot } from 'lib/echarts/treemapDrillDown';
 import { ENABLE_TIME_BRUSH_ACTION } from 'lib/echarts/timeBrush';
 import { getTooltipTrigger } from 'lib/echarts/tooltip/option';
@@ -185,6 +186,7 @@ export function useChartOption(
     // warm for transitions, unlike a full chart.clear() + setOption reset.
     // https://echarts.apache.org/en/api.html#echartsInstance.setOption
     chart.setOption(option, { notMerge: true });
+    applyForceLayoutHoverFade(chart, option);
 
     // `notMerge` recreates the brush component, so arm it after each brush rebuild.
     // Removing the component disposes its controller and releases the pan mutex.
