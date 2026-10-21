@@ -15,13 +15,11 @@ export interface LiveForceLayout {
 }
 
 /**
- * The start friction of a layout in which every node has a position. ECharts stops the layout when the friction
- * decreases below 0.01, not when the nodes are stable, so a full restart moves the nodes again.
+ * The start friction of a layout with the same nodes, links and force settings. Each step then moves no node.
+ * ECharts stops the layout when the friction decreases below 0.01, not when the nodes are stable, so a restart with
+ * the normal friction moves the nodes again.
  * https://echarts.apache.org/en/option.html#series-graph.force.friction
  */
-const WARM_START_FRICTION = 0.012;
-
-/** The start friction of a layout with the same nodes, links and force settings. Each step then moves no node. */
 const FROZEN_FRICTION = 0;
 
 /** The force settings that change the result of a layout. */
@@ -54,21 +52,22 @@ function getGraphSeriesModel(chart: EChartsType): object | undefined {
     : undefined;
 }
 
-/** Read the last force layout of the first series. */
+/**
+ * Read the last force layout of the first series. This reads the series model, not `getOption`, because `getOption`
+ * copies the full option of every chart type on each rebuild.
+ */
 export function readLiveForceLayout(chart: EChartsType): LiveForceLayout {
-  const first = readLiveFirstSeries(chart);
+  const series = getGraphSeriesModel(chart);
+  const option: unknown = series == null ? undefined : Reflect.get(series, 'option');
+  if (typeof option !== 'object' || option === null) {
+    return { positions: new Map() };
+  }
   return {
     positions: readLiveForcePositions(chart),
-    force: first == null ? undefined : Reflect.get(first, 'force'),
-    links: first == null ? undefined : toLinkKeys(Reflect.get(first, 'links')),
+    force: Reflect.get(option, 'force'),
+    // https://echarts.apache.org/en/option.html#series-graph.edges
+    links: toLinkKeys(Reflect.get(option, 'edges') ?? Reflect.get(option, 'links')),
   };
-}
-
-/** The first series of the live option. https://echarts.apache.org/en/api.html#echartsInstance.getOption */
-function readLiveFirstSeries(chart: EChartsType): object | undefined {
-  const series: unknown = chart.isDisposed() ? undefined : chart.getOption()?.series;
-  const first: unknown = Array.isArray(series) ? series[0] : undefined;
-  return typeof first === 'object' && first !== null ? first : undefined;
 }
 
 /** The `source>target` keys of graph links. https://echarts.apache.org/en/option.html#series-graph.links */
@@ -102,9 +101,13 @@ export function readLiveForcePositions(chart: EChartsType): ForcePositions {
 
 /**
  * Prepare a new force graph option to start from the last layout, and tell if it can. If every node has a position
- * and the force settings did not change, the layout starts with a low friction, so the nodes stay where they are. If
- * the links also did not change, the layout starts with no friction, so no node moves. A preview ignores the force
- * settings, because its automatic settings change with the card size and a preview must stay still.
+ * and the links and force settings did not change, the layout starts with no friction, so no node moves. Otherwise
+ * the layout starts from the last positions with the normal friction, so it settles to the new links or settings.
+ * A preview ignores the force settings, because its automatic settings change with the card size and a preview must
+ * stay still.
+ * A draggable graph keeps its friction: ECharts starts a drag from the start friction, so a low friction stops the
+ * linked nodes from following the dragged node.
+ * https://echarts.apache.org/en/option.html#series-graph.draggable
  * The positions are not set as node `x` and `y`: ECharts then fits their extent to the plot, so a change of
  * repulsion, edge length or gravity does not change the drawn size.
  */
@@ -127,9 +130,9 @@ export function prepareForceStart(
     const id = item.id ?? item.name;
     return id != null && positions.has(String(id));
   });
-  if (everyNodePlaced && (isPreview || isSameForce(first.force, force))) {
-    const friction = isSameLinks(toLinkKeys(first.links), links) ? FROZEN_FRICTION : WARM_START_FRICTION;
-    first.force = { ...first.force, friction };
+  const isSameLayout = isSameLinks(toLinkKeys(first.links), links) && (isPreview || isSameForce(first.force, force));
+  if (everyNodePlaced && first.draggable !== true && isSameLayout) {
+    first.force = { ...first.force, friction: FROZEN_FRICTION };
   }
   return true;
 }

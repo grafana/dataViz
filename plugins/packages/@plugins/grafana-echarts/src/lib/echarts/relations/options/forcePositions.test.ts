@@ -23,11 +23,11 @@ describe('prepareForceStart', () => {
     expect(option.series[0].force?.friction).toBe(0);
   });
 
-  it('starts with a low friction when only the links changed', () => {
+  it('keeps the friction when only the links changed, so the layout settles to the new links', () => {
     const option = forceOption(['a', 'b']);
     const changed = new Set(['b>a']);
     expect(prepareForceStart(option, { positions: placed(['a', 'b']), force, links: changed })).toBe(true);
-    expect(option.series[0].force?.friction).toBe(0.012);
+    expect(option.series[0].force?.friction).toBe(0.2);
   });
 
   it('keeps the friction when a node is new', () => {
@@ -41,6 +41,13 @@ describe('prepareForceStart', () => {
     expect(prepareForceStart(option, { positions: placed(['a', 'b']), force: { ...force, repulsion: 999 } })).toBe(
       true
     );
+    expect(option.series[0].force?.friction).toBe(0.2);
+  });
+
+  it('keeps the friction of a draggable graph, so a drag still moves the linked nodes', () => {
+    const option = forceOption(['a', 'b']);
+    option.series[0].draggable = true;
+    expect(prepareForceStart(option, { positions: placed(['a', 'b']), force, links: linkKeys })).toBe(true);
     expect(option.series[0].force?.friction).toBe(0.2);
   });
 
