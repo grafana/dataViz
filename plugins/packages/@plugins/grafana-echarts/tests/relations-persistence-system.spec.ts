@@ -2,13 +2,11 @@ import { satisfies } from '@grafana/plugin-e2e';
 
 import {
   GRAPH_EDGES_ONLY,
-  GRAPH_REMEMBER_VIEW,
   LEGACY_EDGES_ONLY,
   LEGACY_NODES_AND_EDGES,
   LEGACY_SANKEY,
   LEGACY_SANKEY_NODES_AFTER_DRAG,
   MATRIX_AFTER_CONVERSION,
-  SANKEY,
   SYSTEM_TRANSFORMATIONS_FLAG,
   SYSTEM_TRANSFORMATIONS_GRAFANA,
   TEST_VIEWPORT,
@@ -26,6 +24,9 @@ import {
 // They convert row-based Node Graph frames and add a field for each node of an edges-only
 // response, before the field overrides apply. The flag is forced on in the browser, so the
 // tests run on every Grafana version that has the API. relations-persistence.spec.ts forces it off.
+// Only fixtures that a system transformation changes run here: edges-only responses (derived nodes)
+// and row-based Node Graph frames (converted to wide). A wide frame with every node passes through
+// unchanged, so its drags run only in relations-persistence.spec.ts.
 test.use({
   viewport: TEST_VIEWPORT,
   openFeature: { flags: { [SYSTEM_TRANSFORMATIONS_FLAG]: true } },
@@ -38,7 +39,6 @@ test.describe('relations persistence with system transformations', () => {
   );
 
   for (const [name, fixture] of [
-    ['wide frames', GRAPH_REMEMBER_VIEW],
     ['a wide edges-only response', GRAPH_EDGES_ONLY],
     ['row-based Node Graph frames', LEGACY_NODES_AND_EDGES],
     ['a row-based edges-only response', LEGACY_EDGES_ONLY],
@@ -49,14 +49,17 @@ test.describe('relations persistence with system transformations', () => {
     });
   }
 
-  for (const [name, fixture, nodesAfterReload] of [
-    ['wide frames', SANKEY, SANKEY.nodes],
-    ['row-based Node Graph frames', LEGACY_SANKEY, LEGACY_SANKEY_NODES_AFTER_DRAG],
-  ] as const) {
-    test(`sankey drag, save and reload on ${name}`, async ({ page, copyPanel, gotoDashboardPage }) => {
-      await expectSankeyDragPersists({ page, copyPanel, gotoDashboardPage }, fixture, nodesAfterReload);
-    });
-  }
+  test('sankey drag, save and reload on row-based Node Graph frames', async ({
+    page,
+    copyPanel,
+    gotoDashboardPage,
+  }) => {
+    await expectSankeyDragPersists(
+      { page, copyPanel, gotoDashboardPage },
+      LEGACY_SANKEY,
+      LEGACY_SANKEY_NODES_AFTER_DRAG
+    );
+  });
 
   for (const { name, fixture } of TRANSFORMED_PANELS) {
     test(`draws after ${name}`, async ({ page, copyPanel, gotoDashboardPage }) => {

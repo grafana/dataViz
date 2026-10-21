@@ -46,7 +46,7 @@ import {
 
 // The compatibility path: the host runs no panel-registered transformations. The panel reads the
 // wide frames itself, and finds the position of a node that has no field by its name.
-// relations-persistence-system.spec.ts runs the same drags with the flag on.
+// relations-persistence-system.spec.ts runs the drags on the fixtures that the flag changes.
 test.use({
   viewport: TEST_VIEWPORT,
   openFeature: { flags: { [SYSTEM_TRANSFORMATIONS_FLAG]: false } },
