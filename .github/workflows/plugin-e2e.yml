@@ -4,9 +4,10 @@
 # list is per-package matrix output, which can't feed a second matrix within
 # one workflow. Design notes: .github/actions/README.md.
 #
-# The package's own docker-compose.yaml serves Grafana (not the monorepo dev
-# stack in plugins/), with this package's dist/ (built by its `build` script)
-# as the plugin.
+# A compose file of the package serves Grafana (not the monorepo dev stack in
+# plugins/), with this package's dist/ as the plugin. By default that is
+# docker-compose.yaml and the `build` output. plugin-ci.json `e2e.target` and
+# `e2e.compose` select another build target and compose file.
 name: Plugin e2e
 
 on:
@@ -25,9 +26,24 @@ on:
         required: true
         type: string
       grafana-dependency:
-        description: semver range from the package's src/plugin.json.
+        description: semver range from the plugin.json of the tested build.
         required: true
         type: string
+      plugin-id:
+        description: Expected id in dist/plugin.json. Empty skips the check.
+        required: false
+        type: string
+        default: ''
+      script:
+        description: package.json script that builds the tested dist/.
+        required: false
+        type: string
+        default: build
+      compose:
+        description: Package-relative compose file that serves Grafana.
+        required: false
+        type: string
+        default: docker-compose.yaml
 
 permissions: {}
 
@@ -52,13 +68,14 @@ jobs:
         with:
           package: ${{ inputs.pkg }}
 
-      # The package's `build` (what its docker-compose.yaml mounts), not a
-      # build target, so there is no plugin id to check here.
+      # What the compose file mounts. With plugin-id set, build-target.sh also
+      # checks that dist/plugin.json is that plugin.
       - name: Build
         env:
           PKG: ${{ inputs.pkg }}
-          SCRIPT: build
+          SCRIPT: ${{ inputs.script }}
           DIR: ${{ inputs.dir }}
+          ID: ${{ inputs.plugin-id }}
         run: bash "$GITHUB_WORKSPACE/.github/scripts/build-target.sh"
 
       - name: Get plugin metadata
@@ -84,20 +101,32 @@ jobs:
     permissions:
       contents: read
     outputs:
-      matrix: ${{ steps.resolve-versions.outputs.matrix }}
+      matrix: ${{ steps.add-nightly.outputs.matrix }}
     steps:
       # e2e-version has no plugin-directory input; left alone it reads
       # src/plugin.json at the repo root, which doesn't exist here.
+      # Its nightly entry is grafana-enterprise@nightly, which is no longer
+      # published, so skip it and add OSS nightly below. limit 5 plus that
+      # entry keeps the action's default of 6 images.
       - name: Resolve Grafana E2E versions
         id: resolve-versions
         uses: grafana/plugin-actions/e2e-version@3ef49643a84470fd25bafeb96701fa0be3be6746 # e2e-version/v3.0.2
         with:
           grafana-dependency: ${{ inputs.grafana-dependency }}
+          skip-grafana-nightly-image: true
+          limit: '5'
+
+      # First in the matrix, where e2e-version puts its own nightly entry.
+      - name: Add OSS nightly
+        id: add-nightly
+        env:
+          MATRIX: ${{ steps.resolve-versions.outputs.matrix }}
+        run: echo "matrix=$(jq -c '[{name: "grafana", version: "nightly"}] + .' <<<"$MATRIX")" >> "$GITHUB_OUTPUT"
 
   playwright-tests:
     needs: [resolve-versions, build]
     timeout-minutes: 15
-    # e2e-version adds a grafana-enterprise@nightly entry to the matrix. The
+    # resolve-versions adds a grafana@nightly (OSS) entry to the matrix. The
     # nightly run is informational: a failure there shows on the job, but does
     # not fail the workflow. Do not make its check required in branch protection,
     # because that overrides this setting.
@@ -125,11 +154,13 @@ jobs:
           name: ${{ needs.build.outputs.artifact }}
 
       # Before the install: the package's compose stack needs only dist/, so
-      # Grafana boots while pnpm installs.
+      # Grafana boots while pnpm installs. COMPOSE_FILE selects the compose
+      # file for every docker compose call in this job.
       - name: Start Grafana
         env:
           GRAFANA_VERSION: ${{ matrix.GRAFANA_IMAGE.VERSION }}
           GRAFANA_IMAGE: ${{ matrix.GRAFANA_IMAGE.NAME }}
+          COMPOSE_FILE: ${{ inputs.compose }}
         run: |
           docker compose pull
           ANONYMOUS_AUTH_ENABLED=false DEVELOPMENT=false docker compose up -d
@@ -176,8 +207,12 @@ jobs:
 
       - name: Docker logs
         if: ${{ always() && steps.run-tests.outcome == 'failure' }}
+        env:
+          COMPOSE_FILE: ${{ inputs.compose }}
         run: docker compose logs
 
       - name: Stop grafana docker
         if: ${{ always() }}
+        env:
+          COMPOSE_FILE: ${{ inputs.compose }}
         run: docker compose down

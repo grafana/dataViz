@@ -47,4 +47,4 @@ Four fields and three rows, where the [graph-wide format](./graph-wide-proposed.
   return nodes and edges together.
 
 Full reasoning, including the measurements behind the density argument, is in
-[../todo/graph-wide-history.md](../todo/graph-wide-history.md).
+[graph-wide-history.md](./graph-wide-history.md).

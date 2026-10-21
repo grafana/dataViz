@@ -21,7 +21,7 @@ Grafana DOM legend, and the tooltip so all three agree on the same set.
 > `getFieldDisplayValues` (the engine behind core's Stat / Gauge / Pie chart
 > panels), which walks **every** frame. A one-frame-per-series response
 > (Prometheus, the time series "Multi" format) therefore yields one slice per
-> series, and `todo/multiple-frames.md` does not apply here.
+> series, and [#73](https://github.com/grafana/dataViz/issues/73) does not apply here.
 
 ## Grafana data plane equivalent
 

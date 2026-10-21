@@ -1,8 +1,8 @@
 import { type CustomTransformOperator, type DataFrame, type DataTransformerConfig } from '@grafana/data';
 
 /**
- * Registration shim for `PanelPlugin.setDataTransformations`, the panel-registered
- * transformations API proposed in grafana/grafana#129992.
+ * Registration shim for `PanelPlugin.setSystemTransformations`, the panel-registered
+ * transformations API from grafana/grafana#132104.
  *
  * The host splices what a plugin registers here ahead of the user's own transformation list,
  * in the panel's single `SceneDataTransformer`:

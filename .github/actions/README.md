@@ -17,8 +17,10 @@ any workflow changes. Releases are covered separately, in [RELEASES.md](RELEASES
   the `build` script. After each build, CI checks that `dist/plugin.json` has the expected plugin id, so a
   build that quietly produced the wrong plugin fails.
 - **Compatibility:** levitate checks the plugin's `module.ts` against the latest `@grafana/*` packages.
-- **e2e:** Playwright against every Grafana version the plugin's `grafanaDependency` allows, plus a
-  nightly run that never blocks. Only for packages with both an `e2e` script and a `playwright.config.ts`.
+- **e2e:** Playwright against every Grafana version that the tested plugin's `grafanaDependency` allows,
+  plus an OSS `grafana:nightly` run that never blocks (`grafana-enterprise:nightly` is no longer
+  published). Only for packages with both an `e2e` script and a `playwright.config.ts`. One suite per
+  package, against one build: the default build, or the target that `e2e.target` names.
 - **Bundle size:** a PR comment per plugin with the size change against main.
 
 `plugin-ci.yml` and `plugin-bundle-stats.yml` only run their jobs for packages the change touches; a
@@ -33,7 +35,8 @@ it.
 ## `plugin-ci.json`
 
 Optional, at a package root. Only needed when the defaults don't fit. echarts is the example: it publishes
-two plugins, the relations panel and the app, and its e2e Grafana listens on 3020.
+two plugins, the relations panel and the app. Its e2e suite tests the relations panel, which is the plugin
+that ships, served by its own compose file on 4001.
 
 ```json
 {
@@ -41,20 +44,29 @@ two plugins, the relations panel and the app, and its e2e Grafana listens on 302
     { "id": "grafana-relations-panel", "script": "build:relations", "pluginJson": "src/modules/relations/plugin.json" },
     { "id": "grafana-echarts-app", "script": "build", "pluginJson": "src/plugin.json" }
   ],
-  "e2e": { "url": "http://127.0.0.1:3020" }
+  "e2e": {
+    "url": "http://127.0.0.1:4001",
+    "target": "grafana-relations-panel",
+    "compose": "docker-compose-relations.yaml"
+  }
 }
 ```
 
 - `targets` replaces the default. Only listed plugins are built, so to keep the default as well, list it.
   Each target's `script` must write that plugin into `dist/`.
-- `e2e.url` is where the package's own `docker-compose.yaml` serves Grafana. The default is
-  `http://127.0.0.1:3000`.
+- `e2e.url` is where the compose file serves Grafana. The default is `http://127.0.0.1:3000`.
+- `e2e.target` is the id of one of the package's targets. e2e builds it with its `script`, checks the built
+  plugin id, and takes the Grafana versions from its `pluginJson`. The default is the `build` script and
+  `src/plugin.json`, with no id check.
+- `e2e.compose` is the compose file that serves Grafana, relative to the package. It must mount `dist/`.
+  The default is `docker-compose.yaml`.
 
 ## When a check fails
 
 - **Discover plugins** fails with an annotation on the file at fault: a target `script` that isn't in
-  `package.json`, a `pluginJson` whose id doesn't match the target, the same id declared twice, or an `e2e`
-  script without a Playwright config (or the reverse).
+  `package.json`, a `pluginJson` whose id doesn't match the target, the same id declared twice, an `e2e`
+  script without a Playwright config (or the reverse), an `e2e.target` that is not a declared target, or an
+  `e2e.compose` file that does not exist.
 - **Build** fails when a target's script built a different plugin than declared, or wrote no
   `dist/plugin.json`.
 - **Compatibility** doesn't fail. levitate flags any type change in an export the plugin uses, and most of

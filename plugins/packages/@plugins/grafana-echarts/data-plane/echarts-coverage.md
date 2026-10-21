@@ -61,7 +61,7 @@ Verdicts use exactly four buckets:
 | `heatmap`       | `[[xIndex, yIndex, value], ...]` against **two category axes** (see below)                  | `NumericWide` pivoted to a category x category matrix               | works today                                 | Enabled — [heatmap-matrix.md](./heatmap-matrix.md)                                                                                                                                   |
 | `map`           | `[{ name: <regionName>, value }, ...]` plus a GeoJSON registered via `registerMap`          | Any frame with a region-name string field and a numeric field       | needs a reshape or an out-of-contract frame | Throws — **out of scope this pass**                                                                                                                                                  |
 | `parallel`      | `[[d0, d1, ..., dn], ...]`; one row per polyline, one `parallelAxis` per dimension          | `NumericWide` — every numeric field becomes an axis                 | works today                                 | Enabled — [multivariate.md](./multivariate.md)                                                                                                                                       |
-| `lines`         | `[{ coords: [[x1, y1], [x2, y2], ...] }, ...]`; polylines in cartesian, geo or single axis  | none — no kind carries coordinate-pair polylines                    | no Grafana source                           | Throws — deferred, [../todo/lines.md](../todo/lines.md); [stream.md](./stream.md) covers why single-axis does not rescue it                                                          |
+| `lines`         | `[{ coords: [[x1, y1], [x2, y2], ...] }, ...]`; polylines in cartesian, geo or single axis  | none — no kind carries coordinate-pair polylines                    | no Grafana source                           | Throws — deferred, [#74](https://github.com/grafana/dataViz/issues/74); [stream.md](./stream.md) covers why single-axis does not rescue it                                           |
 | `graph`         | `data`/`nodes` plus `links`/`edges`; arbitrary topology, cycles allowed                     | Node graph nodes + edges frames                                     | works today                                 | Enabled — [graph-wide.md](./graph-wide.md)                                                                                                                                           |
 | `sankey`        | `data`/`nodes` plus `links`/`edges`, **DAG only** (see below)                               | Node graph nodes + edges frames                                     | works today (converter breaks cycles)       | Enabled — [graph-wide.md](./graph-wide.md)                                                                                                                                           |
 | `funnel`        | `[{ name, value }, ...]`; same slice model as `pie`                                         | Same as `pie`                                                       | works today                                 | Enabled — [part-to-whole.md](./part-to-whole.md)                                                                                                                                     |
@@ -96,7 +96,7 @@ the identical node/link model, differing only in layout (and, for sankey, in the
 cycle policy its layout forces). `lines` is the one member of ECharts' relationship
 group left out, and deliberately — it needs coordinate-pair polylines, which no
 Grafana frame carries. See the [Relations parity guide](../src/modules/relations/parity.md)
-for the three that shipped. See [../todo/lines.md](../todo/lines.md) for why the
+for the three that shipped. See [#74](https://github.com/grafana/dataViz/issues/74) for why the
 fourth did not.
 
 "Identical input" is literal. `getInitialData` in `GraphSeries.ts`, `SankeySeries.ts`
@@ -411,7 +411,7 @@ Two items were checked but are recorded with reservations:
   that yields `NaN` for a bare coordinate-array item and reads `dataItem.value` for an
   object item. So `value` is tooltip/`visualMap` metadata only and never affects
   geometry, which comes exclusively from `coords`. See
-  [../todo/lines.md](../todo/lines.md).
+  [#74](https://github.com/grafana/dataViz/issues/74).
 - **`treemap` parent auto-summing — verified in source, undocumented upstream.**
   Both `TreemapSeries.js` and `SunburstSeries.js` define a private
   `completeTreeValue(dataNode)` that post-order traverses the tree and, with the

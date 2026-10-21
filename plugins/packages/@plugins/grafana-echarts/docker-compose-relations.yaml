@@ -7,8 +7,11 @@ services:
     container_name: ${GRAFANA_CONTAINER_NAME:-grafana-echarts-panel-relations-${GRAFANA_PORT:-4001}}
     ports: !override
       - ${GRAFANA_PORT:-4001}:3000/tcp
-    volumes: !override # server:relations:dev sets RELATIONS_DIST to the `pnpm run dev` output.
-      - ${RELATIONS_DIST:-./dist}:/var/lib/grafana/plugins/grafana-echarts-panel
+    environment:
+      # Empty by default. server:e2e:nightly turns on the server side of system transformations.
+      GF_FEATURE_TOGGLES_ENABLE: ${GF_FEATURE_TOGGLES_ENABLE:-}
+    volumes: !override
+      - ./dist:/var/lib/grafana/plugins/grafana-echarts-panel
       - ./provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./provisioning/dashboards/default.yaml:/etc/grafana/provisioning/dashboards/default.yaml
       - ./provisioning/dashboards/relations:/etc/grafana/provisioning/dashboards/relations

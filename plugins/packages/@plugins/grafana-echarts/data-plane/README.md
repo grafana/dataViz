@@ -83,7 +83,7 @@ drop the rest, so multi-frame responses (`*Multi`, one-frame-per-series
 datasources like Prometheus) are not merged. They pick it with
 `findCategoricalFrame` (`src/lib/echarts/converters/frames.ts`), the first frame
 with a numeric field; hierarchy's flame-graph path likewise takes the first
-flame-graph frame. See `todo/multiple-frames.md`.
+flame-graph frame. See [#73](https://github.com/grafana/dataViz/issues/73).
 
 Four models are genuine exceptions and do read every frame:
 

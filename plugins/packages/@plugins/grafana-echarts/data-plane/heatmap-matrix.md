@@ -71,7 +71,7 @@ Because it is built on the categorical model, it inherits the same limitations
 
 - **Single frame only.** Only the first frame with a numeric field is used;
   additional frames (`NumericMulti`, one-frame-per-series responses) are not
-  merged. Tracked in `todo/multiple-frames.md`.
+  merged. Tracked in [#73](https://github.com/grafana/dataViz/issues/73).
 - **No long-format pivot.** A `NumericLong` frame with several string dimension
   columns is not pivoted into a matrix; only the first string field is treated as
   the Y axis and each numeric field is a column.

@@ -62,7 +62,8 @@ Run the LGTM development stack on port 3010:
 pnpm run server:lgtm
 ```
 
-Run the standalone Relations panel on port 4001:
+Run the standalone Relations panel on port 4001. Run `pnpm run dev` or `pnpm run build:relations` first, because
+the command serves the existing `dist`:
 
 ```sh
 pnpm run server:relations

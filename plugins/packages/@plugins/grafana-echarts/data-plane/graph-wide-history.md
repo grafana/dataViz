@@ -9,9 +9,9 @@ This file is a design reference. It does not describe open implementation work.
 This reference is not a release gate. The shipped contract and implementation documents define current behavior.
 
 > **A working record, not the specification.** The portable proposal is
-> [data-plane/graph-wide-proposed.md](../data-plane/graph-wide-proposed.md). The ECharts implementation is
-> [data-plane/graph-wide.md](../data-plane/graph-wide.md), and the row form it replaced is
-> [data-plane/graph-long.md](../data-plane/graph-long.md). What is kept here is the
+> [graph-wide-proposed.md](./graph-wide-proposed.md). The ECharts implementation is
+> [graph-wide.md](./graph-wide.md), and the row form it replaced is
+> [graph-long.md](./graph-long.md). What is kept here is the
 > evidence and reasoning behind the contract — what was measured in a running Grafana,
 > what was considered and rejected, and what the pivot costs. Read the spec first; come
 > here for _why_ a rule says what it says.
@@ -35,7 +35,7 @@ above the panel, registered via `PanelPlugin.setDataTransformations` so it runs 
 
 ## Why fields rather than rows
 
-`todo/relations-item-overrides.md` (since resolved) documented the wall: Grafana's override
+The resolved todo `relations-item-overrides.md` documented the wall: Grafana's override
 matcher is `FieldMatcher = (field, frame, allFrames) => boolean`, so it cannot address a
 row. A long node-graph frame makes every node and every edge a row, which is why "colour
 `eu-west` red" and "link `us-west → us-east` to a trace" were inexpressible, and why five
@@ -43,7 +43,7 @@ escape routes were enumerated — four of them needing core changes.
 
 Making the mark a **field** dissolves the question instead of arbitrating it, because a
 field is the unit Grafana's whole configuration pipeline already addresses. The pivot is
-not novel in this repo: [part-to-whole](../data-plane/part-to-whole.md) already made it,
+not novel in this repo: [part-to-whole](./part-to-whole.md) already made it,
 deleting its long-format path so one field = one slice.
 
 Today's nodes and edges frames are not a novel kind either. They are ordinary
@@ -166,7 +166,7 @@ second carrier: a label, at the cost of its type and unit.
 
 `RelationLink.id` is `field.name`, always — including when several collected marks share
 it, which is exactly what N raw `Value` frames produce (the Multi row-dimension variant,
-[data-plane/graph-wide.md](../data-plane/graph-wide.md)). A synthesised `a-->b` would look
+[graph-wide.md](./graph-wide.md)). A synthesised `a-->b` would look
 addressable and not be: `byName`/`byNames` compare against `field.name` or the display name,
 and neither is a minted string. Worse, the panel's override universe
 (`getOverrideTargetNames`) feeds an **exclude** matcher, so an id no field answers to there
@@ -250,7 +250,7 @@ better wherever per-mark configuration has any value, and worse wherever it has 
   (`/^db-/`, not `/^db-.*$/` against an id that carries labels).
 - **Dense graphs are pathological in the edge-per-field form**: |E| grows as N·(N−1), so a
   30-node chord is 870 fields. The adjacency-matrix variant
-  ([data-plane/graph-matrix.md](../data-plane/graph-matrix.md)) trades per-edge overrides
+  ([graph-matrix.md](./graph-matrix.md)) trades per-edge overrides
   for a flat field count.
 - **Parallel edges cannot be authored in a wide CSV** directly — see the worked example
   below.
@@ -324,12 +324,12 @@ residual cost of the name-split form, and representable only via labels.
 
 - Grafana data plane contract (kinds, versioning, "propose a new type"):
   https://grafana.com/developers/dataplane/
-- The row format, still supported: [../data-plane/graph-long.md](../data-plane/graph-long.md)
-- The proposed specification this record backs: [../data-plane/graph-wide-proposed.md](../data-plane/graph-wide-proposed.md)
-- The ECharts implementation: [../data-plane/graph-wide.md](../data-plane/graph-wide.md)
+- The row format, still supported: [graph-long.md](./graph-long.md)
+- The proposed specification this record backs: [graph-wide-proposed.md](./graph-wide-proposed.md)
+- The ECharts implementation: [graph-wide.md](./graph-wide.md)
 - `rowsToFields` source (the auto-detection, the display-name keying and the label
   fall-through measured above):
   https://github.com/grafana/grafana/blob/v13.1.0/public/app/features/transformers/rowsToFields/rowsToFields.ts
 - Sourcing guide: [../docs/relations-data-sources.md](../docs/relations-data-sources.md)
-- Family coverage overview: [../data-plane/echarts-coverage.md](../data-plane/echarts-coverage.md)
+- Family coverage overview: [echarts-coverage.md](./echarts-coverage.md)
 - Proof dashboard: `provisioning/dashboards/relations/graph-wide.json`

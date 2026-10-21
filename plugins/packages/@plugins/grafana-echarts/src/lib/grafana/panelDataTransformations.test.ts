@@ -16,7 +16,7 @@ describe('setDataTransformations', () => {
   });
 
   it('no-ops on a host without the API', () => {
-    // `@grafana/data` 13.1.1 and any Grafana built without grafana/grafana#129992.
+    // `@grafana/data` 13.1.1 and any Grafana built without grafana/grafana#132104.
     // The panel still renders — it just converts at its own frame boundary, where
     // the conversion is downstream of `applyFieldOverrides`.
     const plugin = { setPanelOptions: jest.fn() };

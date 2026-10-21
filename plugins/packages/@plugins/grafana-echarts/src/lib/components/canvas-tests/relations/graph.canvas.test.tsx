@@ -3,7 +3,7 @@ import { FieldColorModeId, FieldType, type Labels, ThresholdsMode, toDataFrame }
 import { normalizeCanvasEvents } from 'test/canvas';
 import { height, width } from 'test/panel';
 import { edgesFrame, nodesFrame, pinnedNodesFrame } from 'test/relations';
-import { renderRelations } from 'test/relationsCanvas';
+import { hoverGraphNode, renderRelations } from 'test/relationsCanvas';
 
 import { GRAPH_EDGES_WIDE, GRAPH_NODES_WIDE } from 'lib/echarts/relations/converters/contract';
 
@@ -79,7 +79,15 @@ describe('relations graph', () => {
       const { defaultEvents, seriesEvents } = await renderRelations({
         frames: [nodesFrame, edgesFrame],
         options: { relationsShowNodeLabels: false },
-        beforeCapture: (chart) => chart.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: 0 }),
+        beforeCapture: (chart) => {
+          chart.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: 0 });
+          // The hover fades in (`getRelationsHoverAnimation`). Apply the hover state, then jump to its end.
+          chart.resize({ width: chart.getWidth(), height: chart.getHeight() });
+          chart
+            .getZr()
+            .storage.getDisplayList(true, true)
+            .forEach((el) => el.stopAnimation(undefined, true));
+        },
       });
 
       expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
@@ -95,6 +103,28 @@ describe('relations graph', () => {
         ],
       });
       const { defaultEvents, seriesEvents } = await renderRelations({ frames: [coloredNodes, edgesFrame] });
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
+    });
+  });
+
+  describe('focus adjacency', () => {
+    // A real pointer over `gateway`, so ECharts runs its own hover emphasis.
+    it('a hovered node (its links and neighbours full strength, the other marks faded)', async () => {
+      const { defaultEvents, seriesEvents } = await renderRelations({
+        frames: [nodesFrame, edgesFrame],
+        beforeCapture: (chart) => hoverGraphNode(chart, 0),
+      });
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
+    });
+
+    it('focus adjacency off with a hovered node (no mark faded)', async () => {
+      const { defaultEvents, seriesEvents } = await renderRelations({
+        frames: [nodesFrame, edgesFrame],
+        options: { relationsFocusAdjacency: false },
+        beforeCapture: (chart) => hoverGraphNode(chart, 0),
+      });
 
       expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
     });

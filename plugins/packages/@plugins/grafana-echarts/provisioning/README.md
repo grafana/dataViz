@@ -5,19 +5,22 @@ Use the local directory (`provisioning/dashboards/local`) to add dashboards that
 
 ## Relations-only server
 
-Run `pnpm run server:relations` to build one standalone Relations panel and start
-Grafana on port 4001. Set `GRAFANA_PORT` and `GRAFANA_CONTAINER_NAME` to run it
+Run `pnpm run server:relations` to start Grafana on port 4001 with the standalone
+Relations panel in `dist`. The command does not build the panel. Set `GRAFANA_PORT` and `GRAFANA_CONTAINER_NAME` to run it
 beside another local stack.
 
 This stack provisions only the TestData datasource and dashboards from the
 `relations/` directory. It does not enable the app plugin or provision dashboards
 for the other panel families.
 
-This command tests the production build. It does not watch source files. Stop the
-stack and run `pnpm run server:relations` again after each source change.
+To build the panel, run one of these commands before or while the stack runs:
 
-The standalone build replaces `dist` with the Relations panel artifact. The
-`server:lgtm` command rebuilds the `grafana-echarts-app` app before it starts.
+- `pnpm run dev` watches the source files. It writes the Relations panel to `dist`
+  and the app to `dist-app`.
+- `pnpm run build:relations` writes the production build of the panel to `dist`.
+- `pnpm run server:e2e` runs `build:relations` and then starts the stack.
+
+The `server:lgtm` command rebuilds the `grafana-echarts-app` app before it starts.
 Run `pnpm run build` before you restart `server`, which uses the existing build.
 
 The provider recurses (`foldersFromFilesStructure: true`), so each subdirectory of

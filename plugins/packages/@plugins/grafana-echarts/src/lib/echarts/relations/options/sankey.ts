@@ -18,7 +18,7 @@ import {
   SANKEY_ORIENT_DEFAULT,
 } from 'editor/relations/sankey';
 import { type RelationsSeriesContext } from 'lib/echarts/relations/context';
-import { resolveRelationsFocusAdjacency } from 'lib/echarts/relations/options/emphasis';
+import { getRelationsHoverAnimation, resolveRelationsFocusAdjacency } from 'lib/echarts/relations/options/emphasis';
 import {
   getRelationsEdgeLabel,
   getRelationsLabelLayout,
@@ -196,6 +196,8 @@ export function getSankeySeries(data: NodeGraphData, ctx: RelationsSeriesContext
       ? { layoutIterations: relationsSankeyLayoutIterations }
       : {}),
     ...(emphasis ? { emphasis } : {}),
+    // 1 ms, see `getRelationsHoverAnimation`.
+    ...getRelationsHoverAnimation(ctx.options, 1),
     ...(edgeLabel ? { edgeLabel } : {}),
     ...(labelLayout ? { labelLayout } : {}),
     // Override ECharts defaults so graph and sankey use the same controls.
