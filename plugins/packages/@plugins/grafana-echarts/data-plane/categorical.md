@@ -71,7 +71,7 @@ Per-chart narrowing on top of this model:
 - **Single frame only.** `findCategoricalFrame` returns the _first_ frame with a
   numeric field; all other frames are silently dropped. `NumericMulti` (and the
   time series "Multi" format, one frame per series) is **not** merged. This is a
-  known gap tracked in `todo/multiple-frames.md`. The part-to-whole charts sidestep
+  known gap tracked in [#73](https://github.com/grafana/dataViz/issues/73). The part-to-whole charts sidestep
   it by reducing through Grafana's own display pipeline instead — see
   [part-to-whole.md](./part-to-whole.md).
 - **Labels are not used for identity.** The spec builds series identity from

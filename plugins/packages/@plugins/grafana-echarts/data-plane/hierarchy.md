@@ -229,7 +229,7 @@ degenerates to the single-level forest described above. See
 - **Single frame only.** The first flame-graph frame wins; otherwise
   `findCategoricalFrame` returns the first frame with a numeric field and the
   rest are dropped. Multi-frame responses are not merged — see
-  [../todo/multiple-frames.md](../todo/multiple-frames.md).
+  [#73](https://github.com/grafana/dataViz/issues/73).
 - **No fallback after a positive detection.** A frame tagged
   `preferredVisualisationType: 'flamegraph'` that lacks `level`, `value`, or
   `label` yields an empty root list, and `frameToHierarchy` returns `null`
