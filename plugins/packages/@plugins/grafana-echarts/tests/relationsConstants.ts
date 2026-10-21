@@ -111,7 +111,7 @@ export const TOOLTIP_LINK = {
 
 /**
  * `GRAPH_REMEMBER_VIEW` with every field filterable, so the tooltip offers ad hoc filters, and a
- * data link on `TOOLTIP_NODE`.
+ * data link on `TOOLTIP_NODE` that opens in a new tab.
  */
 export const TOOLTIP_ACTIONS: PanelFixture = {
   ...GRAPH_REMEMBER_VIEW,
@@ -122,7 +122,9 @@ export const TOOLTIP_ACTIONS: PanelFixture = {
       overrides: [
         {
           matcher: { id: 'byName', options: TOOLTIP_NODE },
-          properties: [{ id: 'links', value: [{ title: TOOLTIP_LINK.title, url: TOOLTIP_LINK.url }] }],
+          properties: [
+            { id: 'links', value: [{ title: TOOLTIP_LINK.title, url: TOOLTIP_LINK.url, targetBlank: true }] },
+          ],
         },
       ],
     };

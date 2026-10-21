@@ -230,13 +230,20 @@ test.describe('relations tooltip actions', () => {
     await expect(tooltip.getByRole('button', { name: FILTER_OUT_BUTTON })).toHaveCount(0);
   });
 
-  test('a data link on the node fills in its field name', async ({ page, copyPanel, gotoDashboardPage }) => {
+  test('a data link on the node fills in its field name and opens in a new tab', async ({
+    page,
+    copyPanel,
+    gotoDashboardPage,
+  }) => {
     const copy = await copyPanel(TOOLTIP_ACTIONS);
     await gotoDashboardPage({ uid: copy.uid });
     const nodes = await waitForNodes(panelCanvas(page, copy.panelId), GRAPH_REMEMBER_VIEW.nodes);
     const tooltip = await pinTooltip(page, topmostNode(nodes));
 
     // Read the href, and do not click: the link goes to a page outside Grafana.
-    await expect(tooltip.getByRole('link', { name: TOOLTIP_LINK.title })).toHaveAttribute('href', TOOLTIP_LINK.href);
+    const link = tooltip.getByRole('link', { name: TOOLTIP_LINK.title });
+    await expect(link).toHaveAttribute('href', TOOLTIP_LINK.href);
+    // Grafana sets the target from `targetBlank`. The plugin passes the link through unchanged.
+    await expect(link).toHaveAttribute('target', '_blank');
   });
 });
