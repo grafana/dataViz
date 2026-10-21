@@ -3,7 +3,7 @@ import { FieldColorModeId, FieldType, type Labels, ThresholdsMode, toDataFrame }
 import { normalizeCanvasEvents } from 'test/canvas';
 import { height, width } from 'test/panel';
 import { edgesFrame, nodesFrame, pinnedNodesFrame } from 'test/relations';
-import { renderRelations } from 'test/relationsCanvas';
+import { hoverGraphNode, renderRelations } from 'test/relationsCanvas';
 
 import { GRAPH_EDGES_WIDE, GRAPH_NODES_WIDE } from 'lib/echarts/relations/converters/contract';
 
@@ -95,6 +95,28 @@ describe('relations graph', () => {
         ],
       });
       const { defaultEvents, seriesEvents } = await renderRelations({ frames: [coloredNodes, edgesFrame] });
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
+    });
+  });
+
+  describe('focus adjacency', () => {
+    // A real pointer over `gateway`, so ECharts runs its own hover emphasis.
+    it('a hovered node (its links and neighbours full strength, the other marks faded)', async () => {
+      const { defaultEvents, seriesEvents } = await renderRelations({
+        frames: [nodesFrame, edgesFrame],
+        beforeCapture: (chart) => hoverGraphNode(chart, 0),
+      });
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
+    });
+
+    it('focus adjacency off with a hovered node (no mark faded)', async () => {
+      const { defaultEvents, seriesEvents } = await renderRelations({
+        frames: [nodesFrame, edgesFrame],
+        options: { relationsFocusAdjacency: false },
+        beforeCapture: (chart) => hoverGraphNode(chart, 0),
+      });
 
       expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
     });

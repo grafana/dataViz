@@ -192,11 +192,14 @@ export const getCanvasEvents = async (container: HTMLElement) => {
  * creates that canvas; only the series layer is required. Reads both layers
  * without asserting either exists (unlike `getCanvasEvents`).
  */
-export const getSeriesCanvasEvents = async (container: HTMLElement, beforeCapture?: (chart: EChartsType) => void) => {
+export const getSeriesCanvasEvents = async (
+  container: HTMLElement,
+  beforeCapture?: (chart: EChartsType) => void | Promise<void>
+) => {
   const { chartInstanceDom, chart } = getChart(container);
   await waitForFinished(chart);
   if (beforeCapture) {
-    beforeCapture(chart!);
+    await beforeCapture(chart!);
   }
   recordOnePaint(chartInstanceDom, chart);
   const defaultEvents = readCanvasLayer(chartInstanceDom, DEFAULT_LAYER_SELECTOR);

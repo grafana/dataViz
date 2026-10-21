@@ -7,6 +7,7 @@ import { deriveNodes } from 'lib/echarts/relations/converters/deriveNodes';
 import { legacyToWide } from 'lib/echarts/relations/converters/legacyToWide';
 import { SERIES_ZLEVEL } from 'test/canvas';
 import { getComponent, getSeriesCanvasEvents } from 'test/panel';
+import { dispatch } from 'test/tooltipPointer';
 import { type PanelOptions } from 'types';
 
 import { type EChartsRelationsFieldConfig } from 'editor/relations/types';
@@ -37,7 +38,7 @@ interface RenderRelationsInput<FieldConfig> {
   /** The pipeline prefix to run the fixture through. */
   prefix?: PipelinePrefix;
   /** Apply a chart action before the canvas is captured. */
-  beforeCapture?: (chart: EChartsType) => void;
+  beforeCapture?: (chart: EChartsType) => void | Promise<void>;
 }
 
 /** Render one relations variant and return its canvas events. */
@@ -84,3 +85,21 @@ export const labelPositions = (events: CanvasRenderingContext2DEvent[], from = 0
     const [a, b, c, d, e, f] = (event as unknown as { transform: number[] }).transform;
     return [{ text: String(text), x: a * x + c * y + e, y: b * x + d * y + f }];
   });
+
+/**
+ * Move a real pointer over one graph node, so ECharts runs its own hover emphasis.
+ * https://echarts.apache.org/en/api.html#echartsInstance.convertToPixel
+ */
+export const hoverGraphNode = async (chart: EChartsType, dataIndex: number): Promise<void> => {
+  // The series data layout is not in the public typings.
+  const data = (
+    chart as unknown as {
+      getModel(): { getSeriesByIndex(index: number): { getData(): { getItemLayout(index: number): number[] } } };
+    }
+  )
+    .getModel()
+    .getSeriesByIndex(0)
+    .getData();
+  const [x, y] = chart.convertToPixel({ seriesIndex: 0 }, data.getItemLayout(dataIndex));
+  await dispatch(chart, 'mousemove', x, y);
+};

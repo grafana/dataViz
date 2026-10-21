@@ -115,6 +115,16 @@ describe('relations sankey', () => {
       expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
     });
 
+    // No relaxation steps, so the nodes keep the order of the data in each column.
+    it('layout iterations 0 (bars in data order, not moved to shorten the ribbons)', async () => {
+      const { defaultEvents, seriesEvents } = await renderSankey({
+        frames: [nodesFrame, edgesFrame],
+        options: { relationsSankeyLayoutIterations: 0 },
+      });
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
+    });
+
     it('ribbon curveness 0 (straight-sided ribbons between the columns)', async () => {
       const { defaultEvents, seriesEvents } = await renderSankey({
         frames: [nodesFrame, edgesFrame],

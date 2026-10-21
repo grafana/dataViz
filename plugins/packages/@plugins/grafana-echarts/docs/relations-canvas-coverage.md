@@ -17,7 +17,7 @@ The last audit was 2026-09-16. It used `src/lib/grafana/editor/relations/*` and 
 
 Canvas tests set these values for stable output:
 
-- `relationsLayout: 'circular'`
+- `relationsLayout: 'circular'`, except in the force suite
 - `animation.enabled: false`
 - `editorMode: 'advanced'`
 - `relationsLinkColor: 'source'` in the chord suite
@@ -30,8 +30,8 @@ Canvas tests set these values for stable output:
 | `relationsShowNodeValues`        | `false`       | ■ all base renders             | ■ graph and timeline                     |
 | `relationsHideOverlappingLabels` | `true`        | ■ all base renders             | ■ graph and sankey, ▫ labels integration |
 | `relationsNodeSize`              | `20`          | ■ all base renders             | ■ graph node size 40                     |
-| `relationsLayout`                | `force`       | · harness uses circular        | ■ circular and fixed, ▫ force            |
-| `relationsFocusAdjacency`        | `true`        | ■ base and graph hover         | · needs a browser hover                  |
+| `relationsLayout`                | `force`       | ■ force suite                  | ■ circular and fixed, ▫ force            |
+| `relationsFocusAdjacency`        | `true`        | ■ base and graph hover         | ■ pointer hover on and off               |
 | `relationsSankeyOrient`          | `horizontal`  | ■ sankey base                  | ■ vertical flow                          |
 | `relationsSankeyNodeAlign`       | `left`        | ■ sankey base                  | ▫ left and justify differ                |
 | `relationsTimeSlider`            | `false`       | ■ all base renders             | ■ timeline                               |
@@ -53,16 +53,16 @@ Canvas tests set these values for stable output:
 | `relationsSankeyNodeGap`          | `8`           | ■ sankey base      | ■ gap 20         |
 | `relationsSankeyCurveness`        | `0.5`         | ■ sankey base      | ■ 0              |
 | `relationsSankeyLinkOpacity`      | `0.2`         | ■ sankey base      | ■ 0.7            |
-| `relationsSankeyLayoutIterations` | `32`          | ■ sankey base      | · unit test only |
+| `relationsSankeyLayoutIterations` | `32`          | ■ sankey base      | ■ 0              |
 | `relationsChordStartAngle`        | `90`          | ■ chord base       | ■ 0              |
 | `relationsChordClockwise`         | `true`        | ■ chord base       | ■ false          |
 | `relationsChordPadAngle`          | `3`           | ■ chord base       | ■ 12             |
 | `relationsChordMinAngle`          | `0`           | ■ chord base       | ■ 30             |
 | `relationsChordLinkOpacity`       | `0.2`         | ■ chord base       | · unit test only |
 | `relationsDraggable`              | `false`       | ■ all base renders | n/a              |
-| `relationsRepulsion`              | Automatic     | ·                  | · unit test only |
-| `relationsEdgeLength`             | Automatic     | ·                  | · unit test only |
-| `relationsGravity`                | Automatic     | ·                  | · unit test only |
+| `relationsRepulsion`              | Automatic     | ■ force suite      | ■ 900            |
+| `relationsEdgeLength`             | Automatic     | ■ force suite      | ■ 200            |
+| `relationsGravity`                | Automatic     | ■ force suite      | ■ 1              |
 | `relationsLayoutAnimation`        | `false`       | ·                  | ·                |
 | `animation.enabled`               | `false`       | n/a                | n/a              |
 
@@ -112,7 +112,7 @@ A test cannot set a scheme through `fieldConfig.defaults` in this harness. `src/
 
 ## Gaps
 
-Force layout coordinates depend on the random seed and simulation timing. Unit tests pin the automatic limits, fallback dimensions, and explicit values.
+Force layout coordinates depend on the random start positions. `force.canvas.test.tsx` replaces `Math.random` with a seeded generator (`src/test/random.ts`), so each run draws the same picture. `force-seed.integration.test.tsx` makes sure that one seed gives one picture, and that each force setting changes the picture. Unit tests pin the automatic limits, fallback dimensions, and explicit values.
 
 `layout.integration.test.tsx` verifies that each static fixture draws every node with finite geometry at 400 by 300 and 640 by 360. ECharts does not constrain force nodes or labels to the plot boundary.
 
@@ -120,7 +120,7 @@ The same integration suite mounts one force graph at 400 by 300. It resizes the 
 
 This mounted-resize coverage uses drawn primitives. It does not add or change a canvas snapshot.
 
-The graph canvas suite uses the ECharts highlight action to pin node emphasis. Pointer-driven adjacency emphasis still needs a browser hover.
+The graph canvas suite uses the ECharts highlight action to pin node emphasis. It pins adjacency emphasis with a real pointer: `hoverGraphNode` in `src/test/relationsCanvas.tsx` sends a `mousemove` through the zrender handler. `focus-adjacency.integration.test.tsx` makes sure that the hover fades marks only when the option is on.
 
 Drag and remembered view describe gestures. A static render cannot prove them.
 
@@ -129,6 +129,10 @@ Drag and remembered view describe gestures. A static render cannot prove them.
 Graph pins the shared node value formatter. Sankey and chord use the same formatter.
 
 The `not.toEqual` cross-render guard is not a valid geometry test for sankey. Each ribbon gets a new gradient object, so two renders differ when their geometry is equal. The same guard is still present in `chord.canvas.test.tsx`, `graph.canvas.test.tsx`, and `overrides.canvas.test.tsx`. Move these comparisons to integration tests when you change them.
+
+## Coverage rule
+
+`src/test/relationsRenderCoverage.test.ts` reads the options from the options pane. Each option in a section that changes the drawing must have a row in this document, and its "Changed render" cell must start with ■, ▫, or `n/a`. `KNOWN_GAPS` in the test lists the options that do not have a changed render yet.
 
 ## Snapshot cost
 
