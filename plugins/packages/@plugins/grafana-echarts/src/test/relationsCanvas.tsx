@@ -102,4 +102,10 @@ export const hoverGraphNode = async (chart: EChartsType, dataIndex: number): Pro
     .getData();
   const [x, y] = chart.convertToPixel({ seriesIndex: 0 }, data.getItemLayout(dataIndex));
   await dispatch(chart, 'mousemove', x, y);
+  // The hover fades in (`getRelationsHoverAnimation`). Apply the hover state, then jump to its end.
+  chart.resize({ width: chart.getWidth(), height: chart.getHeight() });
+  chart
+    .getZr()
+    .storage.getDisplayList(true, true)
+    .forEach((el) => el.stopAnimation(undefined, true));
 };
