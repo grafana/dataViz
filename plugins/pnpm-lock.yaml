@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@plugins/grafana-clock-panel>moment': 2.30.1
+  '@plugins/grafana-clock-panel>moment': 2.31.0
 
 patchedDependencies:
   jest-canvas-mock@2.5.2: dc8514334e01d95ac41193086e86beca41bdc7267f04114ed811469fac8d28ba
@@ -193,8 +193,8 @@ importers:
         specifier: 4.18.1
         version: 4.18.1
       moment:
-        specifier: 2.30.1
-        version: 2.30.1
+        specifier: 2.31.0
+        version: 2.31.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -2167,6 +2167,7 @@ packages:
   '@opentelemetry/sdk-trace-base@2.0.1':
     resolution: {integrity: sha512-xYLlvk/xdScGx1aEqvxLwf6sXQLXCjk3/1SQT9X9AoN5rXRhkdvIFShuNNmtTEPRBqcsMbS4p/gJLNI2wXaDuQ==}
     engines: {node: ^18.19.0 || >=20.6.0}
+    deprecated: Use @opentelemetry/sdk-trace package
     peerDependencies:
       '@opentelemetry/api': '>=1.3.0 <1.10.0'
 
@@ -5795,6 +5796,9 @@ packages:
   moment@2.30.1:
     resolution: {integrity: sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how==}
 
+  moment@2.31.0:
+    resolution: {integrity: sha512-0acOTfMiWOheYS4eoWb80yYMb/JLvVv9SHbs2PehaDzfUG0Bw855SKyk0IKTnPGa5+U2bmi3W68l1+sGLX/pvw==}
+
   monaco-editor@0.34.1:
     resolution: {integrity: sha512-FKc80TyiMaruhJKKPz5SpJPIjL+dflGvz4CpuThaPMc94AyN7SeC9HQ8hrvaxX7EyHdJcUY5i4D0gNyJj1vSZQ==}
 
@@ -8947,7 +8951,7 @@ snapshots:
       lodash: 4.18.1
       marked: 16.3.0
       marked-mangle: 1.1.12(marked@16.3.0)
-      moment: 2.30.1
+      moment: 2.31.0
       moment-timezone: 0.5.47
       ol: 10.7.0
       papaparse: 5.5.3
@@ -14809,13 +14813,15 @@ snapshots:
 
   moment-timezone@0.5.47:
     dependencies:
-      moment: 2.30.1
+      moment: 2.31.0
 
   moment-timezone@0.6.3:
     dependencies:
-      moment: 2.30.1
+      moment: 2.31.0
 
   moment@2.30.1: {}
+
+  moment@2.31.0: {}
 
   monaco-editor@0.34.1: {}
 

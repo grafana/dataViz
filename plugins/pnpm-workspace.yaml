@@ -12,7 +12,7 @@ overrides:
   # grafana-clock-panel pins moment to avoid duplicate versions in its
   # bundle; scoped to that package so it doesn't affect other workspace
   # members that may depend on moment independently.
-  '@plugins/grafana-clock-panel>moment': 2.30.1
+  '@plugins/grafana-clock-panel>moment': 2.31.0
 patchedDependencies:
   # Imported with grafana-echarts; its canvas snapshot tests depend on this
   # patch. pnpm only reads patchedDependencies from the workspace root, so the
