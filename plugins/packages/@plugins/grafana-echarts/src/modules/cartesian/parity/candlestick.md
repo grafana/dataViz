@@ -7,16 +7,15 @@ Covers the ECharts **Cartesian** module ([../module.tsx](../module.tsx)) renderi
 ## Current support status
 
 Candlestick is a **multi-value** cartesian render type: each x position carries
-several aligned dimensions (OHLC). The render path exists in the chart module
-(`buildMultiValueOption` in
+several aligned dimensions (OHLC). The render path is `buildMultiValueOption` in
 [../../../lib/echarts/charts/cartesian.ts](../../../lib/echarts/charts/cartesian.ts),
 fed by
-[../../../lib/echarts/converters/multiValueCartesian.ts](../../../lib/echarts/converters/multiValueCartesian.ts)),
-but there is currently **no editor option to select it**: the per-field
-`seriesType` override only offers line/bar/scatter/effectScatter
-(`cartesianOverrideOptions`), and the module has no panel-level series-type
-picker. So none of the core Candlestick editor options below have an equivalent
-today.
+[../../../lib/echarts/converters/multiValueCartesian.ts](../../../lib/echarts/converters/multiValueCartesian.ts).
+
+The panel-level Series type option selects it. When the frames have the OHLC shape,
+the option offers only candlestick and boxplot (`framesLookMultiValue`). The per-field
+`seriesType` override does not offer it. The candlestick-specific editor options of
+core (mode, candle style, colors, field pickers) have no equivalent.
 
 ## Design difference
 
@@ -35,8 +34,8 @@ exposes no per-field mapping or candlestick-specific styling in the editor.
 | Up color / down color                     | none                                                               | Not supported |
 | Open/High/Low/Close/Volume field pickers  | none (mapping inferred in converter)                               | Not supported |
 | Additional fields (ignore / include)      | none                                                               | Not supported |
-| Tooltip: mode                             | `tooltip.mode` (only if candlestick is rendered)                   | Partial       |
-| Legend                                    | Grafana legend via `addLegendOptions`                              | Partial       |
+| Tooltip: mode                             | `tooltip.mode`                                                     | Supported     |
+| Legend                                    | Grafana legend via `addLegendOptions`                              | Supported     |
 | Annotations: points and regions           | `data.annotations` at the nearest candle                           | Partial       |
 | Annotations: Hide lines and areas         | `options.annotations` lines and bands                              | Supported     |
 | Annotations: Enable multi-row annotations | `options.annotations.multiLane` hides the lines and bands, as core | Partial       |
@@ -52,14 +51,11 @@ Color), matching core Candlestick which uses the timeseries graph field config.
 ## Notes / gaps
 
 - The defining Candlestick features (OHLC field mapping, candle mode/style,
-  up/down colors) are not exposed. Making candlestick usable would require a
-  panel-level render-type selector and OHLC mapping options.
-- The **Show points** and Advanced **Downsampling** options are registered for the
-  whole cartesian panel, so they appear here, but they do nothing: candlestick
-  renders through `converters/multiValueCartesian.ts`, which never calls
-  `getSeriesPerfOptions`. ECharts does support `large`/`largeThreshold` on
-  candlestick, so wiring that converter is the obvious fix; it is not done. See
-  [performance.md](../../../../docs/performance.md).
+  up/down colors) are not exposed. The panel has no OHLC mapping options.
+- Show points and Advanced **Downsampling** do not show for candlestick (they are
+  line-only). `converters/multiValueCartesian.ts` never calls `getSeriesPerfOptions`.
+  ECharts supports `large`/`largeThreshold` on candlestick, so wiring that converter
+  is an option. See [performance.md](../../../../docs/performance.md).
 - **Annotations** use the code of the time axis ([timeseries.md](./timeseries.md)):
   a dashed line for a point, and a band with a dashed line at each edge for a region.
   Core Candlestick draws them on a time axis. This panel draws candles on a category
@@ -83,7 +79,7 @@ the registered runtime surface.
 
 | ECharts API                                                                                    | Status                                                         | Notes                                                                                                                                                                                                                                 |
 | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `series` (candlestick)                                                                         | Partial                                                        | Render path only, not editor-selectable (no render-type picker).                                                                                                                                                                      |
+| `series` (candlestick)                                                                         | Supported                                                      | `seriesType: candlestick`, selected by the panel Series type when the frames have the OHLC shape.                                                                                                                                     |
 | `grid`                                                                                         | Supported                                                      | Single cartesian grid; spacing adapts to the legend.                                                                                                                                                                                  |
 | `xAxis` / `yAxis`                                                                              | Supported                                                      | Category x (ISO-timestamp labels); single shared value axis.                                                                                                                                                                          |
 | `tooltip`                                                                                      | Supported                                                      | Rendered by a React `@grafana/ui` `VizTooltip` overlay; category axis uses per-item `trigger`. One row per packed dimension (Open/Close/Low/High), each resolving its own field, so a pinned candle's footer unions their data links. |
