@@ -13,15 +13,18 @@ different render type.
 
 Core Time series exposes the full graph field config (draw style, line width,
 fill, points, stacking, per-axis config) plus the standard field-config set. This
-module keeps the standard field-config set but renders with ECharts' own line
-styling defaults, exposing only a small set of per-field overrides.
+module keeps the standard field-config set and most of the graph field config:
+axis, line style, line interpolation, line width, fill opacity, points, stacking and
+Connect null values. The gaps are gradient mode, fill below to, bar alignment and
+Disconnect values (see "Graph styles"). The module also reads the core option paths,
+so a switch from core Time series keeps the settings ([panelChange](../../../lib/grafana/panelChange/timeseries.ts)).
 
 ## Panel options
 
 | Core Grafana option                                | ECharts equivalent                                                                                     | Status        |
 | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------- |
 | Tooltip: mode (Single/All/Hidden)                  | `tooltip.mode`                                                                                         | Supported     |
-| Tooltip: hover sort, hide zeros, max width         | none (ECharts renders its own box)                                                                     | Not supported |
+| Tooltip: hover sort, hide zeros, max width         | `tooltip.sort`, `tooltip.hideZeros`, `tooltip.maxWidth` (React `VizTooltip`)                           | Supported     |
 | Legend: visibility, mode, placement, width, values | Grafana legend via `addLegendOptions`                                                                  | Supported     |
 | Legend: series show/hide + color (interactive)     | `VizLegend` writes `hideFrom`/color field-config overrides                                             | Supported     |
 | Axis: time zone editor                             | none (timeZone from panel context)                                                                     | Not supported |
@@ -36,19 +39,24 @@ styling defaults, exposing only a small set of per-field overrides.
 
 ## Graph styles (core custom field config)
 
-| Core Grafana option                                    | ECharts equivalent                                                                                        | Status        |
-| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- | ------------- |
-| Style (lines/bars/points), line interpolation          | `seriesType` (line/bar/scatter); per-field `lineInterpolation` -> ECharts `smooth` / `step`               | Supported     |
-| Line width, fill opacity                               | `lineWidth`, `fillOpacity` (panel options, Default tier) -> `lineStyle.width`, `areaStyle.opacity`        | Partial       |
-| Gradient mode, line style                              | none (ECharts defaults)                                                                                   | Not supported |
-| Connect null values                                    | per-field `spanNulls` (Default tier): `true` -> `connectNulls`; a threshold (ms) spans shorter gaps       | Supported     |
-| Disconnect values                                      | none                                                                                                      | Not supported |
-| Show points, point size                                | `performance.showPoints` -> `series.showSymbol`, `pointSize` -> `symbolSize` (Default tier)               | Partial       |
-| Stack series                                           | panel `stacking` (none/normal/percent) plus per-field `stackSeries` override (bars; lines on a time axis) | Partial       |
-| Axis placement                                         | per-field `axisPlacement`                                                                                 | Supported     |
-| Axis: label, width, soft min/max, scale, centered zero | none                                                                                                      | Not supported |
-| Show thresholds (thresholds style)                     | per-field `thresholdsStyle.mode`                                                                          | Supported     |
-| Hide in area (viz/legend/tooltip)                      | `custom.hideFrom` (via `addHideFrom`)                                                                     | Partial       |
+| Core Grafana option                                                        | ECharts equivalent                                                                                                | Status        |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------- |
+| Style (lines/bars/points), line interpolation                              | `seriesType` (line/bar/scatter); per-field `lineInterpolation` -> ECharts `smooth` / `step`                       | Supported     |
+| Line width, fill opacity                                                   | `lineWidth`, `fillOpacity` (panel options, Default tier, and per field) -> `lineStyle.width`, `areaStyle.opacity` | Supported     |
+| Line style (solid, dash, dots)                                             | per-field `lineStyle` (`LineStyleEditor`)                                                                         | Supported     |
+| Gradient mode                                                              | none (the chart draws no gradient on lines; histogram only)                                                       | Not supported |
+| Fill below to                                                              | none                                                                                                              | Not supported |
+| Bar alignment                                                              | none (each bar is at the center of its time)                                                                      | Not supported |
+| Transform (Negative Y)                                                     | per-field `transform`; Constant is not supported                                                                  | Partial       |
+| Connect null values                                                        | per-field `spanNulls` (Default tier): `true` -> `connectNulls`; a threshold (ms) spans shorter gaps               | Supported     |
+| Disconnect values                                                          | none                                                                                                              | Not supported |
+| Show points, point size                                                    | `showPoints` -> `series.showSymbol`, `pointSize` -> `symbolSize` (Default tier, and per field)                    | Supported     |
+| Stack series                                                               | panel `stacking` (none/normal/percent), per-field `stackSeries` and `stackGroup` (bars; lines on a time axis)     | Supported     |
+| Axis placement                                                             | per-field `axisPlacement`                                                                                         | Supported     |
+| Axis: label, width, soft min/max, centered zero, color, border, grid lines | `commonOptionsBuilder.addAxisConfig`, read in `buildCartesianYAxes`                                               | Supported     |
+| Axis: scale (linear, log)                                                  | per-field `scaleDistribution`; symlog draws as linear                                                             | Partial       |
+| Show thresholds (thresholds style)                                         | per-field `thresholdsStyle.mode`; the `series` mode does not color the series                                     | Partial       |
+| Hide in area (viz/legend/tooltip)                                          | `custom.hideFrom` (via `addHideFrom`)                                                                             | Partial       |
 
 Connect null values follows core `nullToUndefThreshold`. A threshold leaves the connected null rows out of the
 ECharts series data, and the tooltip maps each point back to its frame row. The frame values do not change. On a
@@ -78,8 +86,10 @@ byValue + bySeries).
 
 - ECharts-only: a single panel can mix cartesian render types per field (e.g. one
   field as `bar` over others as `line`) via the `seriesType` override.
-- The bulk of the parity gap is line/point _styling_, which ECharts controls
-  internally rather than through Grafana field config.
+- The remaining gaps are gradient mode, fill below to, bar alignment, Disconnect values,
+  the symlog scale, Show values on points, annotation clustering and annotation edit/delete.
+  The source of truth for a switch from core Time series is
+  [capabilities/timeseries.json](../../../lib/grafana/panelChange/capabilities/timeseries.json).
 - **Hide in area** registers all three toggles (viz/legend/tooltip), but only
   `viz` is honored: viz-hidden fields are stripped from the render, while the
   series stays greyed in the legend. The `legend`/`tooltip` sub-toggles have no
