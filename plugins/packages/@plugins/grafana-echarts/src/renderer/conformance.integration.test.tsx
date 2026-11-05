@@ -10,7 +10,7 @@ import { render } from './index';
  * The sets that do not give their `state.json` yet. Each one has the state that it gives now, so the test fails when
  * the cause is fixed, and then the set moves back to the normal list.
  * The multivariate panel reads each row as one axis, and the contract reads each number field as one axis.
- * Follow-up issue: "Multivariate panel (radar, parallel): read number fields as axes, not rows".
+ * Follow-up issue: https://github.com/grafana/dataViz/issues/148
  */
 const KNOWN_MISMATCHES: Record<string, RenderState> = {
   'smoke-radar': {
