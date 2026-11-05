@@ -143,6 +143,15 @@ describe('the handle', () => {
     expect(states).toHaveLength(1);
     handle.destroy();
   });
+
+  // contract-rule: renderer.13
+  it('shows no panel editor: no input of options or field config', async () => {
+    const { el } = draw(fixtureSpec('smoke-timeseries'));
+    await waitForState(el, 'ready');
+    for (const role of ['textbox', 'checkbox', 'switch', 'combobox', 'spinbutton', 'slider', 'radio'] as const) {
+      expect([role, within(el).queryAllByRole(role)]).toEqual([role, []]);
+    }
+  });
 });
 
 describe('refresh', () => {

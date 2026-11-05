@@ -22,6 +22,7 @@ const isIconFetch = (m: Message) =>
 
 for (const set of ['prometheus-line', 'smoke-geomap']) {
   test(`${set}: draws in the sandbox with no request, no CSP violation and no error`, async ({ page }) => {
+    // contract-rule: delivery.1
     // contract-rule: renderer.6
     // contract-rule: renderer.7
     const { requests, of, states } = await draw(page, fixtureSpec(set));

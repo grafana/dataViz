@@ -22,6 +22,7 @@ const FILES = {
 /** The fixture files of the Renderer test (`fixtures.10`). A set has them only when it is a Renderer set. */
 const FIXTURE_FILES = ['spec.json', 'state.json'];
 
+// contract-rule: fixtures.11
 /**
  * The `fixtures.11` checks. Each one has a type that the report names; the report never shows the value.
  * Public hosts and the loopback host (a fixture records `grafanaUrl` of a local Grafana) are allowed.
