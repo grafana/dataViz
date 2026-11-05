@@ -8,7 +8,7 @@ import webpack, { type Configuration } from 'webpack';
 /** The contract peers (`renderer.9`). The App gives them, so they stay bare `import` specifiers. */
 export const PEER = /^(react|react-dom)(\/.*)?$|^@grafana\/(ui|data)(\/.*)?$|^@emotion\//;
 
-/** The output directory. `scripts/renderer-manifest.mjs` and the bundle check read it. */
+/** The output directory. `scripts/renderer-manifest.mjs` has the same path in `DIST_DIR`. */
 export const RENDERER_DIST_DIR = 'dist-renderer';
 
 // Decision 1 of the plan: the Renderer `version` is the package version, until the Renderer has its own package.

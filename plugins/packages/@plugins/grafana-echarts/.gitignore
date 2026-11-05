@@ -71,6 +71,8 @@ scripts/*
 !scripts/package-relations.mjs
 !scripts/build-basemap.mjs
 !scripts/sync-contract.mjs
+!scripts/renderer-manifest.mjs
+!scripts/check-renderer-bundle.mjs
 !scripts/renderer-harness/
 !scripts/bench/
 scripts/bench/*

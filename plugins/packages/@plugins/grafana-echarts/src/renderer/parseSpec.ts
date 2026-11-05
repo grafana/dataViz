@@ -5,12 +5,16 @@ import { type Notice, type RenderError } from './contract/renderer-api';
 import { errorMessage } from './messages';
 import { PANEL_IDS, type SpecErrorCode } from './registry';
 import { orderedResults } from './results';
+import specVersions from './specVersions.json';
 import { type QueryResult, type VizSpec } from './vizSpec';
 
 export type ParseResult = { ok: true; spec: VizSpec } | { ok: false; error: RenderError };
 
-/** The viz spec versions that this Renderer supports. `index.ts` exports the same list. */
-export const SUPPORTED_SPEC_VERSIONS: readonly number[] = [1];
+/**
+ * The viz spec versions that this Renderer supports. `index.ts` exports the same list, and
+ * `scripts/renderer-manifest.mjs` writes it into the manifest (`delivery.2`).
+ */
+export const SUPPORTED_SPEC_VERSIONS: readonly number[] = specVersions;
 
 type JsonObject = Record<string, unknown>;
 

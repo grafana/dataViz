@@ -1,6 +1,8 @@
 // The Renderer in `<iframe sandbox="allow-scripts">` with the default CSP of MCP Apps and the network blocked
 // (`renderer.6`, `renderer.7`, `renderer.8`). Build first: `pnpm run build:renderer && pnpm run build:renderer-harness`.
 import { expect, test } from '@playwright/test';
+import fs from 'node:fs';
+import path from 'node:path';
 import { draw, fixtureSpec, fixtureState, type Message } from './harness';
 
 /**
@@ -29,6 +31,14 @@ for (const set of ['prometheus-line', 'smoke-geomap']) {
     expect(of('error')).toEqual([]);
   });
 }
+
+test('the manifest gives the version and the specVersions of the built bundle', async ({ page }) => {
+  // contract-rule: delivery.2
+  const manifestPath = path.join(__dirname, '..', 'dist-renderer', 'renderer.manifest.json');
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  const { of } = await draw(page, fixtureSpec('smoke-timeseries'));
+  expect(of('module')).toEqual([{ type: 'module', version: manifest.version, specVersions: manifest.specVersions }]);
+});
 
 test('localStorage is blocked in the sandbox, and the chart still draws', async ({ page }) => {
   // contract-rule: renderer.8
