@@ -26,6 +26,7 @@ import { useBrushTimeZoom } from './hooks/useBrushTimeZoom';
 import { useTimeAxisPan } from './hooks/useTimeAxisPan';
 import { useDoubleClickZoomOut } from './hooks/useDoubleClickZoomOut';
 import { TimeZoomOutContext } from './TimeZoomOutContext';
+import { ChartInitContext } from './chartInitContext';
 import { useChartOption } from './hooks/useChartOption';
 import { useChartResize } from './hooks/useChartResize';
 import { useRelationsPersistence } from './hooks/useRelationsPersistence';
@@ -114,6 +115,7 @@ export const EChart: React.FC<Props> = ({
     dismiss: dismissTooltip,
   } = useEChartsTooltip(isPreview ? null : chart, panelDOMRef, { series: proximitySeries });
 
+  const onChartInit = useContext(ChartInitContext);
   useLayoutEffect(() => {
     const dom = panelDOMRef.current;
     if (!dom) {
@@ -129,6 +131,7 @@ export const EChart: React.FC<Props> = ({
     // See docs/performance.md and `pnpm run bench:dirty-rect`.
     // https://echarts.apache.org/en/api.html#echarts.init
     const instance = init(dom);
+    onChartInit(instance);
     setChart(instance);
     if (instanceRef) {
       instanceRef.current = instance;
@@ -141,7 +144,7 @@ export const EChart: React.FC<Props> = ({
         instanceRef.current = null;
       }
     };
-  }, [instanceRef]);
+  }, [instanceRef, onChartInit]);
 
   const treemapRootRef = useTreemapDrillDown(isPreview ? null : chart);
   useChartOption(chart, chartContext, {

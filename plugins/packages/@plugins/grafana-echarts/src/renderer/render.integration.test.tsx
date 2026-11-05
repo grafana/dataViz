@@ -54,11 +54,12 @@ describe('render', () => {
   });
 
   // contract-rule: renderer.3
-  it('shows the error state for a spec that is not correct, and writes the error with the prefix', () => {
+  it('shows the error state for a spec that is not correct, and writes the error with the prefix', async () => {
     const error = jest.spyOn(console, 'error').mockImplementation(() => {});
     const el = sizedElement();
     render(el, fixtureSpec('error-invalid-spec'));
-    expect([el.getAttribute('data-viz-state'), el.getAttribute('data-viz-error')]).toEqual(['error', 'invalid-spec']);
+    await waitFor(() => expect(el.getAttribute('data-viz-state')).toBe('error'));
+    expect(el.getAttribute('data-viz-error')).toBe('invalid-spec');
     expect(error).toHaveBeenCalledWith('grafana-viz:', 'The viz spec is not correct: data is missing.');
     error.mockRestore();
   });

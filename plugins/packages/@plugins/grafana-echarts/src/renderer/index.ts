@@ -21,9 +21,8 @@ export function render(el: HTMLElement, spec: unknown, options?: RenderOptions):
   if (!(el instanceof HTMLElement)) {
     throw new TypeError(`${LOG_PREFIX} render needs an HTMLElement`);
   }
-  // Phase 3 and 4 of the plan add the states, `onState`, `update` and refresh.
-  void options;
-  const unmount = mount(el, spec);
+  // Phase 4 of the plan adds `update`, refresh and the size observer.
+  const unmount = mount(el, spec, options);
   return {
     update: () => {},
     setRefreshed: () => {},

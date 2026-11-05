@@ -1,0 +1,48 @@
+// Sets `data-viz-state` and `data-viz-error` on `el` (`state.1`, `state.2`) and calls `onState` (`state.12`,
+// `state.13`).
+import { type RenderOptions, type RenderState } from './contract/renderer-api';
+import { LOG_PREFIX } from './log';
+
+export class StateReporter {
+  /** The last state given to `onState`, as JSON, so a draw with the same values does not call it again. */
+  private last: string | undefined;
+
+  constructor(
+    private readonly el: HTMLElement,
+    private readonly onState: RenderOptions['onState']
+  ) {}
+
+  /** The draw is not complete (`state.1`). `onState` is not called for `rendering`. */
+  rendering(): void {
+    this.el.setAttribute('data-viz-state', 'rendering');
+    this.el.removeAttribute('data-viz-error');
+  }
+
+  /** A final state: set the attributes, then call `onState` when the state, the error or the notices changed. */
+  report(state: RenderState): void {
+    this.el.setAttribute('data-viz-state', state.state);
+    if (state.error) {
+      this.el.setAttribute('data-viz-error', state.error.code);
+    } else {
+      this.el.removeAttribute('data-viz-error');
+    }
+    const key = JSON.stringify(state);
+    if (key === this.last) {
+      return;
+    }
+    this.last = key;
+    try {
+      // A copy, so a change of the App to the object does not change the Renderer.
+      this.onState?.(structuredClone(state));
+    } catch (error) {
+      // `state.13`: the chart, the state and the notices do not change.
+      console.error(LOG_PREFIX, error);
+    }
+  }
+
+  /** Removes the attributes (`renderer.5`). */
+  clear(): void {
+    this.el.removeAttribute('data-viz-state');
+    this.el.removeAttribute('data-viz-error');
+  }
+}

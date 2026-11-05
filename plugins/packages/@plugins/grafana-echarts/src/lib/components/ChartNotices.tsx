@@ -6,6 +6,8 @@ import React from 'react';
 
 interface Props {
   notices: ChartNotice[];
+  /** The corner of the badge. The default is the top right, as the notices of the Grafana panel header. */
+  corner?: 'top-left' | 'top-right';
 }
 
 /**
@@ -21,9 +23,11 @@ interface Props {
  * mean mutating a prop and would not re-render the chrome anyway. So the badge is
  * rendered by the panel, pinned to the top-right of the viz area, and reads the
  * same as a chrome notice.
+ *
+ * @todo use the PanelContext notice API added in 13.3 and delete this
  */
-export const ChartNotices: React.FC<Props> = ({ notices }) => {
-  const styles = useStyles2(getStyles);
+export const ChartNotices: React.FC<Props> = ({ notices, corner = 'top-right' }) => {
+  const styles = useStyles2(getStyles, corner);
 
   if (notices.length === 0) {
     return null;
@@ -85,7 +89,7 @@ export const ChartNotices: React.FC<Props> = ({ notices }) => {
   );
 };
 
-const getStyles = (theme: GrafanaTheme2) => ({
+const getStyles = (theme: GrafanaTheme2, corner: NonNullable<Props['corner']>) => ({
   // Absolute so the badge overlays the chart rather than taking layout from it —
   // the panel body is sized by VizLayout and any reserved strip would shrink the
   // plot. `pointer-events: none` on the strip keeps chart hover working around
@@ -93,7 +97,7 @@ const getStyles = (theme: GrafanaTheme2) => ({
   wrapper: css({
     position: 'absolute',
     top: theme.spacing(0.5),
-    right: theme.spacing(0.5),
+    ...(corner === 'top-left' ? { left: theme.spacing(0.5) } : { right: theme.spacing(0.5) }),
     display: 'flex',
     gap: theme.spacing(0.5),
     pointerEvents: 'none',

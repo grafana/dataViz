@@ -2,7 +2,7 @@ import { FieldType } from '@grafana/data';
 import { fixtureSets, fixtureSpec } from 'test/rendererFixtures';
 import { PANELS } from './panels';
 import { parseSpec } from './parseSpec';
-import { themeOf, toPanelProps, withoutCallOuts } from './toPanelProps';
+import { preparePanel, themeOf, toPanelProps, withoutCallOuts } from './toPanelProps';
 import { type VizSpec } from './vizSpec';
 
 const parse = (input: unknown): VizSpec => {
@@ -123,5 +123,51 @@ describe('toPanelProps for each fixture set', () => {
         expect(field.display).toBeDefined();
       }
     }
+  });
+});
+
+describe('preparePanel: the series-truncated cut', () => {
+  /** smoke-timeseries with one frame of `count` number fields. */
+  const wide = (type: string, count: number) => {
+    const spec = parse(fixtureSpec('smoke-timeseries'));
+    return {
+      ...spec,
+      panel: { ...spec.panel, type },
+      data: {
+        ...spec.data,
+        results: {
+          A: {
+            frames: [
+              {
+                schema: {
+                  fields: [
+                    { name: 'time', type: FieldType.time },
+                    ...Array.from({ length: count }, (_, i) => ({ name: `s${i}`, type: FieldType.number })),
+                  ],
+                },
+                data: { values: [[1, 2], ...Array.from({ length: count }, () => [1, 2])] },
+              },
+            ],
+          },
+        },
+      },
+    };
+  };
+
+  // contract-rule: state.10
+  it('draws the first 50 series of a cartesian panel and counts the rest', () => {
+    const { props, omittedSeries } = preparePanel(wide('grafana-echartscartesian-panel', 53), cartesian);
+    expect(omittedSeries).toBe(3);
+    const names = props.data.series[0].fields.filter((field) => field.type === FieldType.number).map((f) => f.name);
+    expect(names).toHaveLength(50);
+    expect(names.at(-1)).toBe('s49');
+  });
+
+  it('does not cut at 50 series, and does not cut the other families', () => {
+    expect(preparePanel(wide('grafana-echartscartesian-panel', 50), cartesian).omittedSeries).toBe(0);
+    const heatmap = PANELS['grafana-echartsheatmap-panel'];
+    expect(preparePanel(wide('grafana-echartsheatmap-panel', 60), heatmap).omittedSeries).toBe(0);
+    const stream = PANELS['grafana-echartsstream-panel'];
+    expect(preparePanel(wide('grafana-echartsstream-panel', 60), stream).omittedSeries).toBe(10);
   });
 });
