@@ -1,0 +1,103 @@
+# The Renderer of the viz contract (grafana-echarts `src/renderer/`, docs/renderer.md): the bundle checks and the
+# sandbox test. The Renderer is an ES module, not a plugin, so plugin-ci.yml does not build it. Its Jest tests,
+# with the conformance and the rule coverage tests, run in ci.yml.
+#
+# No `paths:` filter: discover-plugins decides if the change touches the echarts package, as in plugin-ci.yml.
+name: Renderer
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions: {}
+
+# The same groups as plugin-ci.yml: a newer PR push cancels the old run, and each push to main has its own group.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  discover:
+    name: Discover plugins
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      targets: ${{ steps.find.outputs.targets }}
+    steps:
+      # Full history: changed-only diffs against the PR base / previous commit.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - id: find
+        uses: $/.github/actions/discover-plugins
+        with:
+          changed-only: 'true'
+          # A change to this workflow runs it.
+          shared-paths: |
+            .github/workflows/renderer.yml
+
+  renderer:
+    name: Renderer bundle and sandbox
+    needs: discover
+    if: contains(fromJSON(needs.discover.outputs.targets).*.pkg, '@plugins/grafana-echarts')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Read-only: this job runs PR code (install scripts, the build, the tests) and writes nothing back.
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: plugins/packages/@plugins/grafana-echarts
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up workspace
+        uses: $/.github/actions/setup-workspace
+        with:
+          package: '@plugins/grafana-echarts'
+
+      # Builds the bundle with webpack stats, writes the manifest and the package.json, and checks them:
+      # delivery.2, delivery.5 (reports the gzip size), delivery.6, renderer.9, and the @grafana/runtime modules.
+      - name: Bundle checks
+        run: pnpm run check:renderer
+
+      # The Chromium download is cached per Playwright version, as in plugin-e2e.yml. A cache hit still runs
+      # install-deps, because the OS packages are not in the cache.
+      - name: Read Playwright version
+        id: playwright
+        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+
+      - name: Install Playwright Browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install chromium --with-deps
+
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
+
+      # The Renderer in a sandbox iframe with the default CSP of MCP Apps and no network. Needs no Grafana.
+      - name: Sandbox test
+        id: sandbox
+        run: pnpm run test:renderer-sandbox
+
+      - name: Upload Playwright traces
+        if: ${{ always() && steps.sandbox.outcome == 'failure' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: renderer-sandbox-traces
+          path: plugins/packages/@plugins/grafana-echarts/test-results
+          retention-days: 5

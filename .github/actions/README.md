@@ -7,9 +7,11 @@ How every plugin package gets built, checked and tested, and why it is built the
 | `ci.yml` | every PR and push to main | Format, lint, type-check and unit tests for all packages, then builds each plugin the packages publish |
 | `plugin-ci.yml` | every PR and push to main | Grafana API compatibility (levitate) per plugin, and Playwright e2e per package |
 | `plugin-bundle-stats.yml` | every PR and push to main | Bundle size per plugin, compared against main |
+| `renderer.yml` | every PR and push to main | The viz contract Renderer of grafana-echarts: bundle checks and the sandbox test ([docs/renderer.md](../../plugins/packages/@plugins/grafana-echarts/docs/renderer.md)) |
 
 None of them names a plugin. Each asks `discover-plugins` what exists, so a new package gets CI without
-any workflow changes. Releases are covered separately, in [RELEASES.md](RELEASES.md).
+any workflow changes. `renderer.yml` is the one exception: the Renderer is an ES module in the echarts package, not a
+plugin, so the workflow names that package and uses `discover-plugins` only to skip a change that does not touch it. Releases are covered separately, in [RELEASES.md](RELEASES.md).
 
 ## What runs for a package
 
