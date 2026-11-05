@@ -79,7 +79,7 @@ Imported wholesale from `grafana/clock-panel` via `git filter-repo` (procedure i
 - ESLint + Prettier (not Biome) — `pnpm lint`, `pnpm format`
 - Its own webpack config under `.config/webpack/`, own `tsconfig.json` extending `@grafana/tsconfig`
 - Playwright e2e tests (`pnpm e2e` / `pnpm playwright:test`)
-- MIT license (vs. `UNLICENSED` elsewhere in this repo)
+- MIT license (vs. Apache-2.0 for the rest of this repo, from the root `LICENSE`)
 
 Do not assume `biome.json` / `.shared/` conventions apply inside this package unless it has been explicitly migrated onto them. (Jest is *not* a difference — the whole repo uses Jest.)
 
@@ -106,7 +106,7 @@ Differences worth knowing:
   plugin directory name to equal the plugin id, so the dev-stack mount is
   `echarts-app-dist:/var/lib/grafana/plugins/grafana-echarts-app` even though the package directory is
   `grafana-echarts`.
-- **Apache-2.0 licensed** (vs. `UNLICENSED` / clock-panel's MIT).
+- **Apache-2.0 licensed**, like the rest of the repo, but with its own `LICENSE` (clock-panel is MIT).
 - **Its `jest-canvas-mock` patch lives at the workspace root.** pnpm reads `patchedDependencies` only
   from `plugins/pnpm-workspace.yaml`, never from a package's `pnpm` field, so the patch was moved there
   with a root-relative path while the `.patch` file stayed in the package. Its canvas snapshot tests
