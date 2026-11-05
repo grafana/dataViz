@@ -1,0 +1,82 @@
+{
+  "specVersion": 1,
+  "panel": {
+    "type": "grafana-echartsmultivariate-panel",
+    "options": {
+      "seriesType": "radar"
+    },
+    "datasource": {
+      "uid": "testdata"
+    },
+    "targets": [
+      {
+        "refId": "A"
+      }
+    ]
+  },
+  "data": {
+    "range": {
+      "from": 1790349877294,
+      "to": 1790353477294
+    },
+    "capturedAt": 1790353477806,
+    "results": {
+      "A": {
+        "status": 200,
+        "frames": [
+          {
+            "schema": {
+              "refId": "A",
+              "fields": [
+                {
+                  "name": "service",
+                  "type": "string"
+                },
+                {
+                  "name": "cpu",
+                  "type": "number"
+                },
+                {
+                  "name": "memory",
+                  "type": "number"
+                },
+                {
+                  "name": "disk",
+                  "type": "number"
+                },
+                {
+                  "name": "network",
+                  "type": "number"
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  "api",
+                  "db"
+                ],
+                [
+                  70,
+                  40
+                ],
+                [
+                  55,
+                  85
+                ],
+                [
+                  20,
+                  90
+                ],
+                [
+                  60,
+                  30
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

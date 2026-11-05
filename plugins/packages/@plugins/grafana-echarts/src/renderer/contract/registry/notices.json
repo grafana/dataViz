@@ -1,0 +1,40 @@
+{
+  "notices": [
+    {
+      "code": "query-failed",
+      "raisedBy": "renderer",
+      "when": "An entry of data.results has an error, and another entry has no error",
+      "message": "Query <refId> failed: <error>"
+    },
+    {
+      "code": "unit-unknown",
+      "raisedBy": "renderer",
+      "when": "panel.fieldConfig.defaults.unit is not a unit ID of @grafana/data",
+      "message": "Unit <unit> is not a Grafana unit. The values show with no unit."
+    },
+    {
+      "code": "series-truncated",
+      "raisedBy": "renderer",
+      "when": "The frames have more series than maxSeries",
+      "message": "<omitted> series with the smallest peak values are not shown."
+    },
+    {
+      "code": "chart-changed",
+      "raisedBy": "app",
+      "when": "A refresh got the type-mismatch error, and the App drew the picked chart in its place",
+      "message": "The <old> chart does not fit the new data. The chart is now a <new>."
+    },
+    {
+      "code": "geo-map-tiles",
+      "raisedBy": "renderer",
+      "when": "A map layer of the geo panel needs map tiles from the network",
+      "message": "Map layer <name> (<type>) needs map tiles from the network. The vector basemap is drawn in its place."
+    },
+    {
+      "code": "geo-offline-file",
+      "raisedBy": "renderer",
+      "when": "A map layer of the geo panel needs a file that is not in the Renderer",
+      "message": "Map layer <name>: <url> is not available offline."
+    }
+  ]
+}

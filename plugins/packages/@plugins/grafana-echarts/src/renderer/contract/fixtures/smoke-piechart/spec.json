@@ -1,0 +1,62 @@
+{
+  "specVersion": 1,
+  "panel": {
+    "type": "grafana-echartsparttowhole-panel",
+    "options": {
+      "seriesType": "pie"
+    },
+    "datasource": {
+      "uid": "testdata"
+    },
+    "targets": [
+      {
+        "refId": "A"
+      }
+    ]
+  },
+  "data": {
+    "range": {
+      "from": 1790349877294,
+      "to": 1790353477294
+    },
+    "capturedAt": 1790353477806,
+    "results": {
+      "A": {
+        "status": 200,
+        "frames": [
+          {
+            "schema": {
+              "refId": "A",
+              "fields": [
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "requests",
+                  "type": "number"
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  "2xx",
+                  "3xx",
+                  "4xx",
+                  "5xx"
+                ],
+                [
+                  9120,
+                  410,
+                  230,
+                  41
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

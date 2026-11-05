@@ -13,6 +13,8 @@ global.structuredClone ??= (value) => v8.deserialize(v8.serialize(value));
 // webpack's DefinePlugin sets `__PLUGIN_ID__` in each build (webpack.config.ts). Each panel `module.tsx` reads it
 // when it loads. A test can set its own value.
 global.__PLUGIN_ID__ = 'grafana-echarts-app';
+// `webpack.renderer.config.ts` sets `__RENDERER_VERSION__` to the package version. The Renderer `version` reads it.
+global.__RENDERER_VERSION__ = require('./package.json').version;
 
 // https://jestjs.io/docs/manual-mocks#mocking-methods-which-are-not-implemented-in-jsdom
 Object.defineProperty(global, 'matchMedia', {

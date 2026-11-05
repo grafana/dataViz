@@ -33,6 +33,7 @@ coverage
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 dist/
 dist-app/
+dist-renderer/
 artifacts/
 work/
 ci/
@@ -67,6 +68,7 @@ scripts/__pycache__
 scripts/*
 !scripts/package-relations.mjs
 !scripts/build-basemap.mjs
+!scripts/sync-contract.mjs
 !scripts/bench/
 scripts/bench/*
 !scripts/bench/relations-refresh.mjs

@@ -24,6 +24,9 @@ export default defineConfig([
       '**/coverage',
       '**/dist/',
       '**/dist-app/',
+      '**/dist-renderer/',
+      // A copy of the viz contract. `scripts/sync-contract.mjs` writes it.
+      'src/renderer/contract/**',
       '**/artifacts/',
       '**/work/',
       '**/ci/',

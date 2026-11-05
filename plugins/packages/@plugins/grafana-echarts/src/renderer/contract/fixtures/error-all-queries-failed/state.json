@@ -1,0 +1,8 @@
+{
+  "state": "error",
+  "error": {
+    "code": "all-queries-failed",
+    "message": "Query A failed: bad_data: invalid parameter \"query\": 1:10: parse error: unexpected end of input\nQuery B failed: context deadline exceeded"
+  },
+  "notices": []
+}

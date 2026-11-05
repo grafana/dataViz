@@ -23,7 +23,7 @@ type Property = Pick<FieldConfigPropertyItem, 'id' | 'name' | 'process'> &
       'description' | 'settings' | 'shouldApply' | 'showIf' | 'defaultValue' | 'category' | 'hideFromDefaults'
     >
   > & {
-    /** The editor id of Grafana core. A test does not render the editor. */
+    /** The editor id of Grafana core. Nothing here renders the editor. */
     editorId: string;
   };
 

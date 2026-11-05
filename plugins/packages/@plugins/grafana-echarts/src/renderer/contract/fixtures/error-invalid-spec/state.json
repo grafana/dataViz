@@ -1,0 +1,8 @@
+{
+  "state": "error",
+  "error": {
+    "code": "invalid-spec",
+    "message": "The viz spec is not correct: data is missing."
+  },
+  "notices": []
+}

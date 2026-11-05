@@ -1,0 +1,14 @@
+{
+  "panels": [
+    { "id": "grafana-echartscartesian-panel", "family": "cartesian", "name": "XY chart" },
+    { "id": "grafana-echartsgeo-panel", "family": "geo", "name": "geo map" },
+    { "id": "grafana-echartsheatmap-panel", "family": "heatmap", "name": "heatmap" },
+    { "id": "grafana-echartshierarchy-panel", "family": "hierarchy", "name": "hierarchy chart" },
+    { "id": "grafana-echartsmultivariate-panel", "family": "multivariate", "name": "multivariate chart" },
+    { "id": "grafana-echartsparttowhole-panel", "family": "partToWhole", "name": "part-to-whole chart" },
+    { "id": "grafana-relations-panel", "family": "relations", "name": "relations chart" },
+    { "id": "grafana-echartsstatetimeline-panel", "family": "stateTimeline", "name": "state timeline" },
+    { "id": "grafana-echartsstatushistory-panel", "family": "statusHistory", "name": "status history" },
+    { "id": "grafana-echartsstream-panel", "family": "stream", "name": "stream chart" }
+  ]
+}

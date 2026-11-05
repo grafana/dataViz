@@ -1,0 +1,72 @@
+{
+  "specVersion": 1,
+  "panel": {
+    "type": "grafana-relations-panel",
+    "options": {
+      "seriesType": "sankey"
+    },
+    "datasource": {
+      "uid": "testdata"
+    },
+    "targets": [
+      {
+        "refId": "A"
+      }
+    ]
+  },
+  "data": {
+    "range": {
+      "from": 1790349877294,
+      "to": 1790353477294
+    },
+    "capturedAt": 1790353477806,
+    "results": {
+      "A": {
+        "status": 200,
+        "frames": [
+          {
+            "schema": {
+              "refId": "A",
+              "fields": [
+                {
+                  "name": "source",
+                  "type": "string"
+                },
+                {
+                  "name": "target",
+                  "type": "string"
+                },
+                {
+                  "name": "value",
+                  "type": "number"
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  "web",
+                  "web",
+                  "api",
+                  "api"
+                ],
+                [
+                  "api",
+                  "cache",
+                  "db",
+                  "queue"
+                ],
+                [
+                  120,
+                  30,
+                  80,
+                  40
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

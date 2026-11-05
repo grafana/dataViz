@@ -1,0 +1,85 @@
+{
+  "states": [
+    {
+      "state": "rendering",
+      "final": false,
+      "meaning": "The render is not complete. The Renderer shows nothing"
+    },
+    {
+      "state": "ready",
+      "final": true,
+      "meaning": "The Renderer shows the chart"
+    },
+    {
+      "state": "no-data",
+      "final": true,
+      "meaning": "The frames have no rows. The Renderer shows No data, as Grafana does"
+    },
+    {
+      "state": "error",
+      "final": true,
+      "meaning": "The Renderer shows an error message in place of the chart"
+    }
+  ],
+  "errors": [
+    {
+      "code": "invalid-spec",
+      "when": "The viz spec is not an object, or a required field is missing",
+      "message": "The viz spec is not correct: <field> is missing."
+    },
+    {
+      "code": "unsupported-spec-version",
+      "when": "specVersion is not a version that the Renderer supports",
+      "message": "This viz spec version (<n>) is not supported. Supported versions: <list>."
+    },
+    {
+      "code": "unsupported-panel-type",
+      "when": "panel.type is not a panel ID of panel-types.json",
+      "message": "Panel type <type> is not supported. Supported types: <list>."
+    },
+    {
+      "code": "all-queries-failed",
+      "when": "Each entry of data.results has an error",
+      "message": "Query <refId> failed: <error>"
+    },
+    {
+      "code": "panel-error",
+      "when": "The panel shows its own error view in place of the chart",
+      "message": "<panel message>"
+    },
+    {
+      "code": "render-error",
+      "when": "An error occurs in the Renderer after the checks of the viz spec",
+      "message": "This data cannot be shown as a <panelName>."
+    }
+  ],
+  "toolErrors": [
+    {
+      "code": "type-mismatch",
+      "when": "The frames have data, and they do not meet the fits condition of the type from the model",
+      "message": "<chart> needs <dataShape>. Charts that fit: <charts>."
+    },
+    {
+      "code": "too-large",
+      "when": "The structured content of the tool result is larger than maxResultBytes",
+      "message": "The result is larger than <maxResultBytes> bytes. Use a shorter range, a larger intervalMs or fewer series."
+    }
+  ],
+  "refresh": [
+    {
+      "code": "refresh-failed",
+      "when": "The App calls setRefreshed(false, error) with an error text, or onRefresh throws",
+      "message": "Refresh failed: <error>"
+    },
+    {
+      "code": "refresh-failed-no-detail",
+      "when": "The App calls setRefreshed(false) with no error text",
+      "message": "Refresh failed."
+    },
+    {
+      "code": "refresh-timeout",
+      "when": "refreshTimeoutMs passes with no result",
+      "message": "Refresh failed: no result in time."
+    }
+  ]
+}

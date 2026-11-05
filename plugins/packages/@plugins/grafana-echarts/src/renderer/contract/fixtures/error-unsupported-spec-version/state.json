@@ -1,0 +1,8 @@
+{
+  "state": "error",
+  "error": {
+    "code": "unsupported-spec-version",
+    "message": "This viz spec version (99) is not supported. Supported versions: 1."
+  },
+  "notices": []
+}

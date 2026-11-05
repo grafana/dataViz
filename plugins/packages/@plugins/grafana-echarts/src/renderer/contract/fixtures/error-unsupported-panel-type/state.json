@@ -1,0 +1,8 @@
+{
+  "state": "error",
+  "error": {
+    "code": "unsupported-panel-type",
+    "message": "Panel type timeseries is not supported. Supported types: grafana-echartscartesian-panel, grafana-echartsgeo-panel, grafana-echartsheatmap-panel, grafana-echartshierarchy-panel, grafana-echartsmultivariate-panel, grafana-echartsparttowhole-panel, grafana-relations-panel, grafana-echartsstatetimeline-panel, grafana-echartsstatushistory-panel, grafana-echartsstream-panel."
+  },
+  "notices": []
+}

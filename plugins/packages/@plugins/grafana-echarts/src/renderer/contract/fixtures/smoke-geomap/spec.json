@@ -1,0 +1,76 @@
+{
+  "specVersion": 1,
+  "panel": {
+    "type": "grafana-echartsgeo-panel",
+    "options": {},
+    "datasource": {
+      "uid": "testdata"
+    },
+    "targets": [
+      {
+        "refId": "A"
+      }
+    ]
+  },
+  "data": {
+    "range": {
+      "from": 1790349877294,
+      "to": 1790353477294
+    },
+    "capturedAt": 1790353477806,
+    "results": {
+      "A": {
+        "status": 200,
+        "frames": [
+          {
+            "schema": {
+              "refId": "A",
+              "fields": [
+                {
+                  "name": "city",
+                  "type": "string"
+                },
+                {
+                  "name": "latitude",
+                  "type": "number"
+                },
+                {
+                  "name": "longitude",
+                  "type": "number"
+                },
+                {
+                  "name": "requests",
+                  "type": "number"
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  "Stockholm",
+                  "New York",
+                  "Tokyo"
+                ],
+                [
+                  59.33,
+                  40.71,
+                  35.68
+                ],
+                [
+                  18.07,
+                  -74.01,
+                  139.69
+                ],
+                [
+                  320,
+                  910,
+                  540
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

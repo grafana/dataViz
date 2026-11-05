@@ -6,6 +6,8 @@
     "build:dev": "webpack -c ./webpack.config.ts --env development",
     "build:analyze": "webpack -c ./webpack.config.ts --env production --env analyze",
     "build:relations": "webpack -c ./webpack.config.ts --env production --env standalone=relations",
+    "build:renderer": "webpack -c ./webpack.renderer.config.ts",
+    "sync:contract": "node scripts/sync-contract.mjs",
     "archive:relations": "node scripts/package-relations.mjs",
     "package:relations": "pnpm run build:relations && pnpm run archive:relations",
     "checks": "pnpm run type-check && pnpm run lint && pnpm run format && pnpm run test:ci",

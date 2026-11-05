@@ -1,0 +1,96 @@
+{
+  "specVersion": 1,
+  "panel": {
+    "type": "grafana-echartscartesian-panel",
+    "options": {
+      "seriesType": "boxplot"
+    },
+    "datasource": {
+      "uid": "testdata"
+    },
+    "targets": [
+      {
+        "refId": "A"
+      }
+    ]
+  },
+  "data": {
+    "range": {
+      "from": 1790349877294,
+      "to": 1790353477294
+    },
+    "capturedAt": 1790353477806,
+    "results": {
+      "A": {
+        "status": 200,
+        "frames": [
+          {
+            "schema": {
+              "refId": "A",
+              "fields": [
+                {
+                  "name": "service",
+                  "type": "string"
+                },
+                {
+                  "name": "min",
+                  "type": "number"
+                },
+                {
+                  "name": "q1",
+                  "type": "number"
+                },
+                {
+                  "name": "median",
+                  "type": "number"
+                },
+                {
+                  "name": "q3",
+                  "type": "number"
+                },
+                {
+                  "name": "max",
+                  "type": "number"
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  "api",
+                  "web",
+                  "db"
+                ],
+                [
+                  5,
+                  3,
+                  8
+                ],
+                [
+                  12,
+                  9,
+                  15
+                ],
+                [
+                  20,
+                  14,
+                  22
+                ],
+                [
+                  31,
+                  22,
+                  30
+                ],
+                [
+                  55,
+                  40,
+                  48
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}
