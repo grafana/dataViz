@@ -86,9 +86,8 @@ export async function draw(page: Page, spec: unknown) {
   });
   await page.goto(HOST_URL);
   await expect
-    .poll(
-      () =>
-        page.evaluate(() => (window as unknown as { messages: Message[] }).messages.some((m) => m.type === 'state'))
+    .poll(() =>
+      page.evaluate(() => (window as unknown as { messages: Message[] }).messages.some((m) => m.type === 'state'))
     )
     .toBe(true);
   // Late requests and errors after the first draw count too.
