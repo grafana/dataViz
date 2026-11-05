@@ -121,7 +121,10 @@ jobs:
         id: add-nightly
         env:
           MATRIX: ${{ steps.resolve-versions.outputs.matrix }}
-        run: echo "matrix=$(jq -c '[{name: "grafana", version: "nightly"}] + .' <<<"$MATRIX")" >> "$GITHUB_OUTPUT"
+        # Block scalar: a plain scalar can't contain ': ', and the jq object
+        # literal does, which makes the whole file unparseable.
+        run: |
+          echo "matrix=$(jq -c '[{name: "grafana", version: "nightly"}] + .' <<<"$MATRIX")" >> "$GITHUB_OUTPUT"
 
   playwright-tests:
     needs: [resolve-versions, build]
@@ -136,7 +139,10 @@ jobs:
       matrix:
         GRAFANA_IMAGE: ${{ fromJson(needs.resolve-versions.outputs.matrix) }}
     name: ${{ matrix.GRAFANA_IMAGE.name }}@${{ matrix.GRAFANA_IMAGE.VERSION }}${{ matrix.GRAFANA_IMAGE.VERSION == 'nightly' && ' (non-blocking)' || '' }}
-    runs-on: ubuntu-latest
+    # Not ubuntu-latest: that label moves to Ubuntu 26.04 (actions/runner-images#14748), and Playwright 1.57.0
+    # cannot install Chromium there ("Playwright does not support chromium on ubuntu26.04-x64"). grafana-echarts
+    # uses 1.57.0. Go back to ubuntu-latest when every package with e2e tests uses Playwright 1.62 or later.
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     defaults:

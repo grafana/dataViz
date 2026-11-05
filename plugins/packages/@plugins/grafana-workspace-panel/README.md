@@ -18,4 +18,4 @@ See the workspace README at the root of the monorepo for development instruction
 
 ## License
 
-UNLICENSED
+Apache License 2.0, see [`LICENSE`](../../../../LICENSE).
