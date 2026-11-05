@@ -7,7 +7,7 @@ import { Panel } from 'lib/components/Panel';
 import { PanelDataErrorViewContext } from 'lib/components/panelDataErrorViewContext';
 import { PanelErrorContext, type PanelErrorSignal } from 'lib/components/panelErrorContext';
 import { TimeZoomOutContext } from 'lib/components/TimeZoomOutContext';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { type RefreshRequest } from './contract/renderer-api';
 import { dataIssueText } from './dataIssueText';
 import { TOOLBAR_HEIGHT_PX } from './layout';
@@ -18,6 +18,7 @@ import { type Prepared } from './prepare';
 import { type RefreshStatus } from './refresh';
 import { RendererErrorView } from './RendererErrorView';
 import { RendererToolbar } from './RendererToolbar';
+import { rootClassName } from './rootStyles';
 
 interface Props {
   prepared: Prepared;
@@ -55,6 +56,7 @@ export const RendererView = ({
   refresh,
 }: Props) => {
   const chartHeight = Math.max(0, height - (refresh ? TOOLBAR_HEIGHT_PX : 0));
+  const rootClass = useMemo(() => rootClassName(prepared.theme), [prepared.theme]);
   useEffect(() => {
     if (prepared.kind !== 'chart') {
       onViewShown();
@@ -69,34 +71,36 @@ export const RendererView = ({
         <TimeZoomOutContext.Provider value={null}>
           <PanelErrorContext.Provider value={onPanelError}>
             <PanelDataErrorViewContext.Provider value={renderDataIssue}>
-              {refresh && (
-                <RendererToolbar
-                  status={refresh.status}
-                  timeRange={prepared.timeRange}
-                  timeZone={prepared.timeZone}
-                  onRequest={refresh.onRequest}
-                />
-              )}
-              <div style={{ position: 'relative', width, height: chartHeight }}>
-                {prepared.kind === 'error' && <RendererErrorView message={prepared.error.message} />}
-                {prepared.kind === 'no-data' && (
-                  <>
-                    <NoDataView noValue={prepared.noValue} />
-                    <ChartNotices notices={toChartNotices(prepared.notices)} corner="top-left" />
-                  </>
+              <div className={rootClass} style={{ width, height }}>
+                {refresh && (
+                  <RendererToolbar
+                    status={refresh.status}
+                    timeRange={prepared.timeRange}
+                    timeZone={prepared.timeZone}
+                    onRequest={refresh.onRequest}
+                  />
                 )}
-                {prepared.kind === 'chart' && (
-                  <ChartErrorBoundary
-                    resetKeys={[prepared.props]}
-                    onError={onRenderError}
-                    fallback={() => (
-                      <RendererErrorView message={errorMessage('render-error', { panelName: prepared.panelName })} />
-                    )}
-                  >
-                    <Panel {...prepared.props} width={width} height={chartHeight} />
-                    <ChartNotices notices={toChartNotices(prepared.notices)} corner="top-left" />
-                  </ChartErrorBoundary>
-                )}
+                <div style={{ position: 'relative', width, height: chartHeight }}>
+                  {prepared.kind === 'error' && <RendererErrorView message={prepared.error.message} />}
+                  {prepared.kind === 'no-data' && (
+                    <>
+                      <NoDataView noValue={prepared.noValue} />
+                      <ChartNotices notices={toChartNotices(prepared.notices)} corner="top-left" />
+                    </>
+                  )}
+                  {prepared.kind === 'chart' && (
+                    <ChartErrorBoundary
+                      resetKeys={[prepared.props]}
+                      onError={onRenderError}
+                      fallback={() => (
+                        <RendererErrorView message={errorMessage('render-error', { panelName: prepared.panelName })} />
+                      )}
+                    >
+                      <Panel {...prepared.props} width={width} height={chartHeight} />
+                      <ChartNotices notices={toChartNotices(prepared.notices)} corner="top-left" />
+                    </ChartErrorBoundary>
+                  )}
+                </div>
               </div>
             </PanelDataErrorViewContext.Provider>
           </PanelErrorContext.Provider>

@@ -53,12 +53,13 @@ const getStyles = (theme: GrafanaTheme2) => ({
     whiteSpace: 'nowrap',
     color: theme.colors.warning.text,
   }),
+  // `flex: none`: the controls keep their own width, and the message gets the rest.
   controls: css({
     display: 'flex',
+    flex: 'none',
     gap: theme.spacing(1),
     margin: 0,
     padding: 0,
     border: 'none',
-    minWidth: 0,
   }),
 });

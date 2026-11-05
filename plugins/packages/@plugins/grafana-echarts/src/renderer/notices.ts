@@ -2,6 +2,7 @@
 // notices of the viz spec.
 import { type ChartNotice } from 'lib/echarts/charts/types';
 import { type Notice } from './contract/renderer-api';
+import { geoNotices } from './geoNotices';
 import { fillPattern, noticeMessage } from './messages';
 import { MAX_SERIES } from './registry';
 import { orderedResults } from './results';
@@ -14,6 +15,9 @@ import { type VizSpec } from './vizSpec';
  * the plan, `state.10`). The follow-up issue "Renderer: choose the best series and add a show-all control for
  * series-truncated" changes the cut, and then this message goes back to the registry one.
  */
+/** The panel of the geo notices (`state.11`). */
+const GEO_PANEL_ID = 'grafana-echartsgeo-panel';
+
 export const SERIES_TRUNCATED_PATTERN = '<omitted> series are not shown. The first <maxSeries> series are drawn.';
 
 /** The notices that the Renderer raises, in the order of `notices.json`. `omittedSeries` comes from the cut. */
@@ -43,6 +47,10 @@ export function rendererNotices(spec: VizSpec, omittedSeries: number): Notice[] 
       code: 'series-truncated',
       message: fillPattern(SERIES_TRUNCATED_PATTERN, { omitted: omittedSeries, maxSeries: MAX_SERIES }),
     });
+  }
+
+  if (spec.panel.type === GEO_PANEL_ID) {
+    notices.push(...geoNotices(spec.panel.options));
   }
 
   return notices;
