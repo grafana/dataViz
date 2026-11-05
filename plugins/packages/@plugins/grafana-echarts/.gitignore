@@ -69,6 +69,8 @@ scripts/*
 !scripts/package-relations.mjs
 !scripts/build-basemap.mjs
 !scripts/sync-contract.mjs
+!scripts/contract-scan.mjs
+!scripts/contract-scan.test.mjs
 !scripts/bench/
 scripts/bench/*
 !scripts/bench/relations-refresh.mjs

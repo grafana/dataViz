@@ -13,7 +13,7 @@
     "checks": "pnpm run type-check && pnpm run lint && pnpm run format && pnpm run test:ci",
     "dev": "webpack -w -c ./webpack.config.ts --env development --env withRelations",
     "test": "jest --watch --onlyChanged",
-    "test:ci": "jest --ci --passWithNoTests --maxWorkers 4",
+    "test:ci": "jest --ci --passWithNoTests --maxWorkers 4 && node --test 'scripts/*.test.mjs'",
     "type-check": "tsc --noEmit",
     "lint": "eslint --cache .",
     "lint:fix": "pnpm run lint --fix && prettier --write --list-different .",
