@@ -199,9 +199,12 @@ before pushing workflow changes:
 
 ```bash
 zizmor .github/workflows/
+actionlint   # from the repo root; reads .github/actionlint.yaml
 ```
 
-(`brew install zizmor` if not already installed.) Get a tag's current commit
+(`brew install zizmor actionlint shellcheck` if not already installed.) The `actionlint` workflow runs
+the same check in CI. It is a separate workflow because a workflow file that is not valid YAML never
+starts, and neither does any workflow that calls it, with no failed check to show it. Get a tag's current commit
 hash with:
 
 ```bash
