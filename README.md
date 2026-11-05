@@ -208,7 +208,7 @@ A change outside the plugin packages (the lockfile, `plugins/.shared/`) runs eve
 
 ## License
 
-UNLICENSED - Update this in `plugins/package.json` for your use case
+Apache License 2.0, see [`LICENSE`](LICENSE). The imported plugins keep their own licenses: `grafana-clock-panel` is MIT and `grafana-echarts` is Apache-2.0, each in its package `LICENSE`.
 
 ## Support
 

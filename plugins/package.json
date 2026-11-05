@@ -1,6 +1,6 @@
 {
   "name": "grafana-workspace",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "private": true,
   "version": "1.0.0",
   "devDependencies": {
