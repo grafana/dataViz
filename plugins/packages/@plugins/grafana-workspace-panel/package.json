@@ -18,7 +18,7 @@
     "type-check": "tsc --noEmit"
   },
   "author": "Grafana Labs",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@swc/core": "^1.7.0",
     "@swc/jest": "^0.2.39",

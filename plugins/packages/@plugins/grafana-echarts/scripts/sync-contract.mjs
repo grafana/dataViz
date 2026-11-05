@@ -7,6 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { scanContractFiles } from './contract-scan.mjs';
 
 const REPO = 'grafana-experimental/grafana-beyond-docs';
 /** Files that the Renderer reads (contract README, "How to read"). The key is the path in the contract. */
@@ -21,26 +22,6 @@ const FILES = {
 };
 /** The fixture files of the Renderer test (`fixtures.10`). A set has them only when it is a Renderer set. */
 const FIXTURE_FILES = ['spec.json', 'state.json'];
-
-// contract-rule: fixtures.11
-/**
- * The `fixtures.11` checks. Each one has a type that the report names; the report never shows the value.
- * Public hosts and the loopback host (a fixture records `grafanaUrl` of a local Grafana) are allowed.
- */
-const SECRET_CHECKS = [
-  ['private key', /-----BEGIN [A-Z ]*PRIVATE KEY-----/],
-  ['Grafana token', /\bgl(c|sa)_[A-Za-z0-9+/=_-]{20,}/],
-  ['GitHub token', /\bgh[pousr]_[A-Za-z0-9]{30,}/],
-  ['AWS key', /\bAKIA[0-9A-Z]{16}\b/],
-  ['auth header', /"(authorization|x-api-key|cookie)"\s*:/i],
-  ['bearer token', /\bBearer\s+[A-Za-z0-9._~+/-]{16,}/],
-  ['password', /"(password|passwd|secret|apiKey|api_key|token)"\s*:\s*"[^"]+"/i],
-  ['credentials in URL', /[a-z]+:\/\/[^/\s"@]+:[^/\s"@]+@/i],
-  ['internal host', /\b[a-z0-9.-]+\.(grafana-ops\.net|grafana-dev\.net|internal|svc\.cluster\.local|local)\b/i],
-  ['private IP', /\b(10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)\b/],
-];
-const ALLOWED_URL =
-  /^(https:\/\/((www\.)?grafana\.com|github\.com|json-schema\.org|echarts\.apache\.org|example\.(com|org))\b|http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$))/;
 
 const tag = process.argv[2];
 if (!/^contract-\d+\.\d+\.\d+$/.test(tag ?? '')) {
@@ -84,20 +65,7 @@ for (const [from, to] of copies) {
 }
 
 // `fixtures.11`: check each file before anything is written. A hit stops the sync.
-const hits = [];
-for (const [file, text] of contents) {
-  for (const [type, pattern] of SECRET_CHECKS) {
-    if (pattern.test(text)) {
-      hits.push(`${file}: ${type}`);
-    }
-  }
-  for (const url of text.match(/https?:\/\/[^\s"'<>)\\]+/g) ?? []) {
-    if (!ALLOWED_URL.test(url)) {
-      hits.push(`${file}: URL that is not on the allowed list`);
-      break;
-    }
-  }
-}
+const hits = scanContractFiles(contents);
 if (hits.length > 0) {
   console.error(`Stopped. Review these files (the values are not shown):\n${[...new Set(hits)].join('\n')}`);
   process.exit(1);

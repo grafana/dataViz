@@ -5,7 +5,7 @@ import rules from './contractRules.json';
 
 const PACKAGE_DIR = path.join(__dirname, '..', '..');
 
-/** The files that can name a rule: the Jest tests, the sandbox tests and the bundle and sync checks. */
+/** The files that can name a rule: the Jest tests, the sandbox tests, the bundle check and the sync scan test. */
 const sourceFiles = (): string[] => [
   ...fs
     .readdirSync(path.join(PACKAGE_DIR, 'src'), { recursive: true, encoding: 'utf8' })
@@ -13,7 +13,7 @@ const sourceFiles = (): string[] => [
     .map((file) => path.join('src', file)),
   ...fs.readdirSync(path.join(PACKAGE_DIR, 'tests-renderer')).map((file) => path.join('tests-renderer', file)),
   path.join('scripts', 'check-renderer-bundle.mjs'),
-  path.join('scripts', 'sync-contract.mjs'),
+  path.join('scripts', 'contract-scan.test.mjs'),
 ];
 
 /** The rule ids that each file names, as `id → files`. Only ids with a contract prefix count. */

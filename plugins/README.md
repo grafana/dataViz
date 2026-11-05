@@ -235,4 +235,4 @@ This "ejected" approach differs from the standard `@grafana/create-plugin`:
 
 ## License
 
-UNLICENSED
+Apache License 2.0, see [`LICENSE`](../LICENSE).
