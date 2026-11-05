@@ -8,8 +8,10 @@ services:
     ports: !override
       - ${GRAFANA_PORT:-4001}:3000/tcp
     environment:
-      # Empty by default. server:e2e:nightly turns on the server side of system transformations.
-      GF_FEATURE_TOGGLES_ENABLE: ${GF_FEATURE_TOGGLES_ENABLE:-}
+      # On by default, because Grafana 13.3.0 runs system transformations only when the server enables this
+      # toggle. The flag that relations-persistence-system.spec.ts sets in the browser is not sufficient there.
+      # Set GF_FEATURE_TOGGLES_ENABLE to an empty value to turn it off.
+      GF_FEATURE_TOGGLES_ENABLE: ${GF_FEATURE_TOGGLES_ENABLE-grafana.panelPluginTransformations}
     volumes: !override
       - ./dist:/var/lib/grafana/plugins/grafana-echarts-panel
       - ./provisioning/datasources:/etc/grafana/provisioning/datasources
