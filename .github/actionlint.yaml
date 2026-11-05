@@ -1,6 +1,6 @@
-# actionlint config. Nothing in CI runs actionlint — zizmor is the workflow
-# linter that gates — but it is worth running locally, and without this it
-# reports an error for every `$/` reference, none of which are errors.
+# actionlint config, read by the actionlint workflow and by a local
+# `actionlint` run. Without it, actionlint reports an error for every `$/`
+# reference, none of which are errors.
 paths:
   .github/workflows/**/*.{yml,yaml}:
     ignore:
@@ -25,6 +25,6 @@ paths:
       #
       # zizmor's self-repository audit enforces the opposite direction — it
       # flags `./` and asks for `$/` — so the two linters disagree and zizmor
-      # is the one that gates.
+      # wins: the workflows use `$/` and this entry silences actionlint.
       - 'specifying action "\$/.+" in invalid format because ref is missing'
       - 'reusable workflow call "\$/.+" at "uses" is not following the format'

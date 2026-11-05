@@ -1,0 +1,56 @@
+name: actionlint
+
+# Parses and lints every workflow. A workflow that is not valid YAML never
+# starts, and neither does any workflow that calls it, and GitHub shows no
+# failed check for either. plugin-e2e.yml did that to plugin-ci.yml, so PRs
+# went green with no compatibility or e2e jobs. This is its own workflow, not a
+# job in ci.yml, so a broken workflow file elsewhere can't stop it from starting.
+#
+# No path filter: it takes seconds, and a filtered workflow can't be a required
+# check (a PR that doesn't match stays pending).
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  actionlint:
+    name: Lint workflows
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read # checkout only
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The release binary, checked against its published checksum, rather
+      # than a third-party wrapper action. To bump: take the linux_amd64 line
+      # from the release's actionlint_<version>_checksums.txt.
+      - name: Install actionlint
+        env:
+          VERSION: 1.7.12
+          SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+        run: |
+          set -euo pipefail
+          tarball="actionlint_${VERSION}_linux_amd64.tar.gz"
+          curl -fsSLo "$RUNNER_TEMP/$tarball" "https://github.com/rhysd/actionlint/releases/download/v${VERSION}/${tarball}"
+          echo "$SHA256  $RUNNER_TEMP/$tarball" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/$tarball" -C "$RUNNER_TEMP" actionlint
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+
+      # Reads .github/actionlint.yaml. shellcheck is preinstalled on
+      # ubuntu-latest, so run: scripts are checked too.
+      - name: Lint workflows
+        run: actionlint -color
