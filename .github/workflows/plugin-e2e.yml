@@ -121,7 +121,10 @@ jobs:
         id: add-nightly
         env:
           MATRIX: ${{ steps.resolve-versions.outputs.matrix }}
-        run: echo "matrix=$(jq -c '[{name: "grafana", version: "nightly"}] + .' <<<"$MATRIX")" >> "$GITHUB_OUTPUT"
+        # Block scalar: a plain scalar can't contain ': ', and the jq object
+        # literal does, which makes the whole file unparseable.
+        run: |
+          echo "matrix=$(jq -c '[{name: "grafana", version: "nightly"}] + .' <<<"$MATRIX")" >> "$GITHUB_OUTPUT"
 
   playwright-tests:
     needs: [resolve-versions, build]
