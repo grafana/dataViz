@@ -48,6 +48,58 @@ function runScripts(file: string): { line: number; text: string }[] {
 	return scripts;
 }
 
+/**
+ * Lines whose value is an unquoted (plain) scalar containing `: `. YAML forbids
+ * that, so the whole file fails to parse, and GitHub then silently never starts
+ * the workflow, or any workflow that calls it. A `run: echo '{a: 1}'` did that
+ * to plugin-ci.yml via plugin-e2e.yml. Quote the value or use a `|` block.
+ */
+function colonsInPlainScalars(text: string): number[] {
+	const bad: number[] = [];
+	let blockIndent = -1; // indentation of the key that opened a block scalar
+	for (const [index, line] of text.split('\n').entries()) {
+		if (blockIndent >= 0) {
+			if (line.trim() === '' || indent(line) > blockIndent) {
+				continue;
+			}
+			blockIndent = -1;
+		}
+		const entry = line.match(/^\s*(?:- )*[^\s#'"][^:#]*?:\s+(.*)$/);
+		if (!entry) {
+			continue;
+		}
+		const value = entry[1].replace(/\s+#.*$/, ''); // a trailing comment
+		if (/^[|>]/.test(value)) {
+			blockIndent = indent(line);
+		} else if (!/^['"{[&*!]/.test(value) && value.includes(': ')) {
+			bad.push(index + 1);
+		}
+	}
+	return bad;
+}
+
+describe('colonsInPlainScalars', () => {
+	test('flags a plain scalar containing ": "', () => {
+		assert.deepEqual(colonsInPlainScalars(`steps:\n  - run: echo "$(jq '{name: "x"}')"\n`), [2]);
+		assert.deepEqual(colonsInPlainScalars('name: a: b\n'), [1]);
+	});
+
+	test('allows quoted, flow, block and commented values', () => {
+		const ok = [
+			`run: 'echo a: b'`,
+			'run: "echo a: b"',
+			'with: { a: b }',
+			'run: |\n  echo {a: 1}\n  echo b: c\nnext: x',
+			'run: echo hi # note: fine',
+			'# comment: with: colons',
+			'name: ${{ a }}:${{ b }}',
+		];
+		for (const text of ok) {
+			assert.deepEqual(colonsInPlainScalars(text), [], text);
+		}
+	});
+});
+
 // The one uses: pinned to a tag: the call to cd.yml in plugin-publish.yml and
 // release-please.yml. cd.yml fails a caller that pins it to a hash, and the
 // GCP identity it publishes with trusts it only at main or a semver tag. Only plugin-ci-workflows'
@@ -67,6 +119,11 @@ describe('workflows and composite actions', () => {
 
 	for (const file of [...workflows, ...actions]) {
 		describe(file, () => {
+			test('no plain scalar contains ": " (the file would not parse)', () => {
+				const bad = colonsInPlainScalars(readFileSync(join(REPO, file), 'utf8')).map((line) => `line ${line}`);
+				assert.deepEqual(bad, [], 'quote the value or use a | block scalar');
+			});
+
 			test('third-party uses: are pinned to a commit SHA with a # tag comment', () => {
 				const bad: string[] = [];
 				for (const [i, raw] of lines(file).entries()) {
