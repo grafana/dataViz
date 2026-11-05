@@ -45,7 +45,9 @@ jobs:
     name: Renderer bundle and sandbox
     needs: discover
     if: contains(fromJSON(needs.discover.outputs.targets).*.pkg, '@plugins/grafana-echarts')
-    runs-on: ubuntu-latest
+    # Not ubuntu-latest: that label moves to Ubuntu 26.04 (actions/runner-images#14748), and Playwright 1.57.0
+    # cannot install Chromium there ("Playwright does not support chromium on ubuntu26.04-x64").
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     # Read-only: this job runs PR code (install scripts, the build, the tests) and writes nothing back.
     permissions:
