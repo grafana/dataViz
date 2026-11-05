@@ -1,7 +1,7 @@
 // The Renderer of the viz contract: an ES module that draws a viz spec into an element (`renderer.1`).
 // The contract is in `contract/` (see its README). The API shape is `contract/renderer-api.d.ts`.
 import { type RenderHandle, type RenderOptions } from './contract/renderer-api';
-import { mount } from './mount';
+import { createRenderer } from './handle';
 import { SUPPORTED_SPEC_VERSIONS } from './parseSpec';
 import { LOG_PREFIX } from './log';
 
@@ -21,11 +21,5 @@ export function render(el: HTMLElement, spec: unknown, options?: RenderOptions):
   if (!(el instanceof HTMLElement)) {
     throw new TypeError(`${LOG_PREFIX} render needs an HTMLElement`);
   }
-  // Phase 4 of the plan adds `update`, refresh and the size observer.
-  const unmount = mount(el, spec, options);
-  return {
-    update: () => {},
-    setRefreshed: () => {},
-    destroy: unmount,
-  };
+  return createRenderer(el, spec, options);
 }
