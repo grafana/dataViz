@@ -20,6 +20,7 @@ import {
   sha256,
   writeRendererPackage,
 } from './renderer-manifest.mjs';
+import { bundleImports } from './bundle-imports.mjs';
 
 const PACKAGE_DIR = join(dirname(fileURLToPath(import.meta.url)), '..');
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
@@ -94,13 +95,6 @@ function packageOf(path) {
   return match ? { name: match[1], file: match[2] } : undefined;
 }
 
-/** The specifiers of the static imports at the top of the bundle. Webpack puts all of them there. */
-function bundleImports(code) {
-  // The license comment, then `import*as e from"x";` or `import{a as b}from"x";` statements.
-  const header = /^\s*(?:\/\*[\s\S]*?\*\/\s*)?((?:import\s*(?:[^"';]*?from\s*)?"[^"]+";?\s*)*)/.exec(code)[1];
-  return [...header.matchAll(/"([^"]+)"/g)].map((match) => match[1]);
-}
-
 const packageName = (specifier) => specifier.match(/^((?:@[^/]+\/)?[^/]+)/)[1];
 
 const noBuild = process.argv.includes('--no-build');
@@ -131,14 +125,17 @@ for (const field of ['version', 'contractVersion', 'specVersions']) {
 check('delivery.2', packageJson.version === manifest.version, `package.json version ${packageJson.version}`);
 
 // renderer.9: the bundle imports only the peers, and the generated package.json lists each one.
+// The bundle imports react, so no imports means that the scan did not find them.
 const imports = bundleImports(code);
 const notPeers = imports.filter(
   (specifier) => !Object.hasOwn(packageJson.peerDependencies ?? {}, packageName(specifier))
 );
 check(
   'renderer.9',
-  notPeers.length === 0,
-  `bare imports ${imports.join(', ')}${notPeers.length ? `; not peers: ${notPeers.join(', ')}` : ''}`
+  imports.length > 0 && notPeers.length === 0,
+  imports.length === 0
+    ? 'found no bare imports in the bundle'
+    : `bare imports ${imports.join(', ')}${notPeers.length ? `; not peers: ${notPeers.join(', ')}` : ''}`
 );
 check(
   'renderer.9',
