@@ -1,6 +1,7 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getInstanceByDom } from 'lib/echarts/echarts';
+import { withLayout } from 'test/layout';
 import { fixtureSpec } from 'test/rendererFixtures';
 import { type RenderHandle, type RenderOptions, type RenderState } from './contract/renderer-api';
 import { render } from './index';
@@ -88,7 +89,7 @@ describe('the handle', () => {
 
   // contract-rule: renderer.5
   it('removes the chart and the attributes on destroy, and then update and setRefreshed do nothing', async () => {
-    const el = document.createElement('div');
+    const el = withLayout(document.createElement('div'));
     el.style.width = '600px';
     document.body.appendChild(el);
     const { handle, states } = draw(fixtureSpec('smoke-timeseries'), { onRefresh: jest.fn() }, el);
@@ -144,7 +145,7 @@ describe('the handle', () => {
 
   // contract-rule: renderer.10
   it('sets no height on an el that is not in the document, so a later stylesheet height applies', async () => {
-    const el = document.createElement('div');
+    const el = withLayout(document.createElement('div'));
     el.style.width = '600px';
     draw(fixtureSpec('smoke-timeseries'), {}, el);
     expect(el.style.height).toBe('');
@@ -158,8 +159,24 @@ describe('the handle', () => {
   });
 
   // contract-rule: renderer.10
+  it('sets no height on a hidden el, so its stylesheet height applies when it shows', async () => {
+    const el = withLayout(document.createElement('div'));
+    el.style.width = '600px';
+    el.style.display = 'none';
+    document.body.appendChild(el);
+    draw(fixtureSpec('smoke-timeseries'), {}, el);
+    expect(el.style.height).toBe('');
+    // A stylesheet height: jsdom has no layout, so the test gives `clientHeight`.
+    Object.defineProperty(el, 'clientHeight', { configurable: true, value: 250 });
+    el.style.display = '';
+    resize();
+    expect(el.style.height).toBe('');
+    await waitFor(() => expect((el.firstElementChild as HTMLElement).style.height).toBe('250px'));
+  });
+
+  // contract-rule: renderer.10
   it('sets defaultHeightPx on an el with no height when it goes into the document', () => {
-    const el = document.createElement('div');
+    const el = withLayout(document.createElement('div'));
     el.style.width = '600px';
     const { handle } = draw(fixtureSpec('smoke-timeseries'), {}, el);
     document.body.appendChild(el);
@@ -170,7 +187,7 @@ describe('the handle', () => {
   });
 
   it('keeps on destroy a height that the App set after render', () => {
-    const el = document.createElement('div');
+    const el = withLayout(document.createElement('div'));
     el.style.width = '600px';
     document.body.appendChild(el);
     const { handle } = draw(fixtureSpec('smoke-timeseries'), {}, el);

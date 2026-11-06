@@ -1,5 +1,6 @@
 import { act, waitFor } from '@testing-library/react';
 import { getInstanceByDom } from 'lib/echarts/echarts';
+import { withLayout } from 'test/layout';
 import { fixtureSpec } from 'test/rendererFixtures';
 import { render } from './index';
 
@@ -47,7 +48,7 @@ describe('render', () => {
 
   // contract-rule: renderer.10
   it('sets the height of an element with no height to defaultHeightPx', () => {
-    const el = document.createElement('div');
+    const el = withLayout(document.createElement('div'));
     document.body.appendChild(el);
     const handle = render(el, fixtureSpec('smoke-timeseries'));
     expect(el.style.height).toBe('400px');
@@ -56,7 +57,7 @@ describe('render', () => {
   });
 
   it('gives back the inline height of the element on destroy', () => {
-    const el = document.createElement('div');
+    const el = withLayout(document.createElement('div'));
     el.style.height = '0px';
     document.body.appendChild(el);
     const handle = render(el, fixtureSpec('smoke-timeseries'));

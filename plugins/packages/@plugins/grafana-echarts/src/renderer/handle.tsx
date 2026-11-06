@@ -33,7 +33,7 @@ class Renderer {
   private readonly resizeObserver: ResizeObserver | undefined;
   /** The inline height before `renderer.10` set one, so `destroy` can put it back if the App did not change it. */
   private heightBefore: string | undefined;
-  /** Set when `el` was in the document once, and `setDefaultHeight` looked at its height. */
+  /** Set when `el` had a box once, and `setDefaultHeight` looked at its height. */
   private heightChecked = false;
   private prepared: Prepared | undefined;
   private signals = newSignals();
@@ -93,11 +93,13 @@ class Renderer {
   }
 
   /**
-   * `renderer.10`: an element with no height gets `defaultHeightPx`. An element that is not in the document has a
-   * `clientHeight` of 0 for each height, so the check waits for the first resize after `el` goes into the document.
+   * `renderer.10`: an element with no height gets `defaultHeightPx`. An element with no box (not in the document, or
+   * hidden by `display: none`) has a `clientHeight` of 0 for each height, so the check waits for the first resize
+   * after `el` has a box.
+   * https://developer.mozilla.org/en-US/docs/Web/API/Element/getClientRects
    */
   private setDefaultHeight(): void {
-    if (this.heightChecked || !this.el.isConnected) {
+    if (this.heightChecked || this.el.getClientRects().length === 0) {
       return;
     }
     this.heightChecked = true;
