@@ -79,7 +79,10 @@ export type Message = { type: string; [key: string]: unknown };
  */
 export const HOST_URL = 'https://sandbox.host.test/';
 
-/** Draws `spec`, records every request but the page (and blocks it), and waits for the first `onState`. */
+/**
+ * Draws `spec`, records every request but the page (and blocks it), and waits for `idle` from the App: the first
+ * `onState` and the work that it queued are done. A timer that the Renderer sets for later is not included.
+ */
 export async function draw(page: Page, spec: unknown) {
   const requests: string[] = [];
   const html = harnessPage(spec);
@@ -93,12 +96,9 @@ export async function draw(page: Page, spec: unknown) {
   await page.goto(HOST_URL);
   await expect
     .poll(() =>
-      page.evaluate(() => (window as unknown as { messages: Message[] }).messages.some((m) => m.type === 'state'))
+      page.evaluate(() => (window as unknown as { messages: Message[] }).messages.some((m) => m.type === 'idle'))
     )
     .toBe(true);
-  // Late requests and errors after the first draw count too.
-  // @todo slop - clean it up
-  await page.waitForTimeout(500);
   const messages: Message[] = await page.evaluate(() => (window as unknown as { messages: Message[] }).messages);
   const of = (type: string) => messages.filter((m) => m.type === type);
   return { requests, messages, of, states: of('state').map((m) => m.state) };
