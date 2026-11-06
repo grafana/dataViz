@@ -9,15 +9,15 @@ import { orderedResults } from './results';
 import { isUnitId } from './units';
 import { type VizSpec } from './vizSpec';
 
+/** The panel of the geo notices (`state.11`). */
+const GEO_PANEL_ID = 'grafana-echartsgeo-panel';
+
 /**
  * The `series-truncated` message of the Renderer. It is not the `notices.json` message ("series with the smallest
  * peak values are not shown"): the Renderer draws the first `maxSeries` series, not the largest ones (decision 2 of
  * the plan, `state.10`). The follow-up issue "Renderer: choose the best series and add a show-all control for
  * series-truncated" changes the cut, and then this message goes back to the registry one.
  */
-/** The panel of the geo notices (`state.11`). */
-const GEO_PANEL_ID = 'grafana-echartsgeo-panel';
-
 export const SERIES_TRUNCATED_PATTERN = '<omitted> series are not shown. The first <maxSeries> series are drawn.';
 
 /** The notices that the Renderer raises, in the order of `notices.json`. `omittedSeries` comes from the cut. */
