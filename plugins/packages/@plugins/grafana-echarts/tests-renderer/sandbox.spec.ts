@@ -6,12 +6,12 @@ import { draw, fixtureSpec, fixtureState, type Message } from './harness';
 /**
  * CSP reports that the Renderer does not cause. The `@grafana/data` bundle of the App tests `new Function('')` in a
  * try/catch to see if eval works (a feature probe of a bundled schema library). The probe is blocked and caught:
- * nothing breaks. `check-renderer-bundle.mjs` makes sure that the Renderer bundle has no eval of its own.
+ * nothing breaks.
  */
 const isPeerEvalProbe = (m: Message) => m.directive === 'script-src' && m.blocked === 'eval';
 
 /**
- * KNOWN DEFECT (Phase 5 note of the plan, decision 7): `@grafana/ui` `Icon` fetches each SVG from
+ * KNOWN DEFECT (https://github.com/grafana/viz-contract/issues/1): `@grafana/ui` `Icon` fetches each SVG from
  * `public/build/img/icons/` with `react-inlinesvg`. `connect-src 'none'` blocks the fetch, and the icon is blank.
  * The test below with `test.fail` passes while the defect is there, and fails when the icons load with no network.
  */
@@ -86,7 +86,7 @@ test('a refresh asks the App, and the result shows in the sandbox', async ({ pag
 
 test('the icons load with no network request', async ({ page }) => {
   // contract-rule: renderer.7
-  test.fail(true, 'Known defect: @grafana/ui icons are fetched by URL (decision 7 of the plan).');
+  test.fail(true, 'Known defect: @grafana/ui icons are fetched by URL (grafana/viz-contract#1).');
   const { of } = await draw(page, fixtureSpec('smoke-timeseries'));
   expect(of('csp').filter(isIconFetch)).toEqual([]);
 });
