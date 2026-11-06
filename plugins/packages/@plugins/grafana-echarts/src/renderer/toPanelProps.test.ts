@@ -187,4 +187,39 @@ describe('preparePanel: the series-truncated cut', () => {
     const stream = PANELS['grafana-echartsstream-panel'];
     expect(preparePanel(wide('grafana-echartsstream-panel', 60), stream).omittedSeries).toBe(10);
   });
+
+  // contract-rule: state.10
+  it('does not cut an Auto candlestick, which draws one series from the number fields of the first frame', () => {
+    const spec = wide('grafana-echartscartesian-panel', 0);
+    const ohlc = (refId: string) => ({
+      schema: {
+        refId,
+        fields: [
+          { name: 'time', type: FieldType.time },
+          ...['open', 'high', 'low', 'close', 'volume'].map((name) => ({ name, type: FieldType.number })),
+        ],
+      },
+      data: {
+        values: [
+          [1, 2],
+          [1, 2],
+          [3, 4],
+          [0, 1],
+          [2, 3],
+          [9, 9],
+        ],
+      },
+    });
+    const frames = Array.from({ length: 11 }, (_, i) => ohlc(`F${i}`));
+    const { props, omittedSeries } = preparePanel(
+      {
+        ...spec,
+        panel: { ...spec.panel, options: { ...spec.panel.options, seriesType: 'Auto' } },
+        data: { ...spec.data, results: { A: { frames } } },
+      },
+      cartesian
+    );
+    expect(omittedSeries).toBe(0);
+    expect(props.data.series).toHaveLength(11);
+  });
 });

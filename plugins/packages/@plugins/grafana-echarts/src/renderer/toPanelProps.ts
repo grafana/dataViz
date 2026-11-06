@@ -6,6 +6,9 @@ import {
   getPanelOptionsWithDefaults,
   type GrafanaTheme2,
 } from '@grafana/data';
+import { seriesTypePath } from 'editor/constants';
+import { resolveSeriesType } from 'lib/echarts/charts/autoSeriesType';
+import { isMultiValueSeriesType } from 'lib/echarts/charts/narrowing';
 import { type PanelComponentProps } from 'lib/components/types';
 import { type PanelOptions } from 'types';
 import { withoutCallOuts } from './callOuts';
@@ -56,7 +59,8 @@ export const toPanelProps = (spec: VizSpec, entry: PanelEntry): SpecPanelProps =
 
 /**
  * `toPanelProps`, and the number of series that the `series-truncated` cut leaves out (`state.10`). The cut runs
- * before the field overrides, only for the families of `TRUNCATED_FAMILIES`.
+ * before the field overrides, only for the families of `TRUNCATED_FAMILIES`. A candlestick or boxplot is not cut: it
+ * draws one series from several number fields of the first frame, as `PanelContent` resolves the series type.
  */
 export function preparePanel(spec: VizSpec, entry: PanelEntry): { props: SpecPanelProps; omittedSeries: number } {
   const theme = themeOf(spec.theme);
@@ -70,9 +74,11 @@ export function preparePanel(spec: VizSpec, entry: PanelEntry): { props: SpecPan
     throw new Error(`The options of ${spec.panel.type} are not an object`);
   }
   const data = toSpecData(spec, entry);
-  const cut = TRUNCATED_FAMILIES.has(entry.family)
-    ? truncateSeries(data.series, MAX_SERIES)
-    : { series: data.series, omitted: 0 };
+  const multiValue = isMultiValueSeriesType(resolveSeriesType(options[seriesTypePath], data.series, entry.family));
+  const cut =
+    TRUNCATED_FAMILIES.has(entry.family) && !multiValue
+      ? truncateSeries(data.series, MAX_SERIES)
+      : { series: data.series, omitted: 0 };
   const series = applyFieldOverrides({
     data: cut.series,
     fieldConfig,
