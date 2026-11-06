@@ -5,6 +5,8 @@
 // Grafana core registers the editors in `getAllOptionEditors`:
 // https://github.com/grafana/grafana/blob/main/public/app/core/components/OptionsUI/registry.tsx
 import {
+  type Registry,
+  type RegistryItem,
   type StandardEditorsRegistryItem,
   standardEditorsRegistry,
   standardFieldConfigEditorRegistry,
@@ -40,23 +42,24 @@ const EDITOR_IDS = [
 const noEditor = () => null;
 
 /**
- * Sets the init function of a registry. `setInit` throws when the registry is already initialized: Grafana core,
- * or an earlier call, filled it. That registry stays as it is.
+ * Registers each item that the registry does not have. `getIfExists` runs the init function of the registry first,
+ * so the items of the host (Grafana core calls `setInit` at boot) stay, and only the missing ids are added.
  * https://github.com/grafana/grafana/blob/main/packages/grafana-data/src/utils/Registry.ts
  */
-function setInitOnce<T extends { id: string }>(registry: { setInit: (init: () => T[]) => void }, init: () => T[]) {
-  try {
-    registry.setInit(init);
-  } catch {
-    // Already initialized.
+function registerMissing<T extends RegistryItem>(registry: Registry<T>, items: T[]) {
+  for (const item of items) {
+    if (!registry.getIfExists(item.id)) {
+      registry.register(item);
+    }
   }
 }
 
-/** Fills the standard editor and field config registries of `@grafana/data`, when they are not filled yet. */
+/** Adds the standard editors and field config properties to the registries of `@grafana/data`, when they are missing. */
 export function fillStandardRegistries(): void {
-  setInitOnce(standardEditorsRegistry, () =>
+  registerMissing(
+    standardEditorsRegistry,
     EDITOR_IDS.map((id): StandardEditorsRegistryItem => ({ id, name: id, editor: noEditor }))
   );
   // `PanelPlugin.useFieldConfig` copies these items into `plugin.fieldConfigRegistry`, with the plugin's own defaults.
-  setInitOnce(standardFieldConfigEditorRegistry, () => standardFieldConfigRegistry.list());
+  registerMissing(standardFieldConfigEditorRegistry, standardFieldConfigRegistry.list());
 }

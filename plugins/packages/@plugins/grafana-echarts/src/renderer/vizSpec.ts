@@ -3,9 +3,8 @@
 import { type DataFrameJSON, type FieldConfigSource } from '@grafana/data';
 import { type Notice } from './contract/renderer-api';
 
-/** One entry of `data.results`: the result of one query. */
+/** One entry of `data.results`: the result of one query. The Renderer does not read `status`. */
 export interface QueryResult {
-  status?: number;
   frames: DataFrameJSON[];
   error?: string;
 }

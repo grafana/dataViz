@@ -1,6 +1,7 @@
 // The frames of the viz spec as the `PanelData` of the panel (`spec.11` to `spec.13`).
 import { type DataFrame, dataFrameFromJSON, DataTopic, dateTime, LoadingState, type TimeRange } from '@grafana/data';
 import { of } from 'rxjs';
+import { frameWithoutCallOuts } from './callOuts';
 import { type PanelEntry } from './panels';
 import { orderedResults } from './results';
 import { type VizSpec } from './vizSpec';
@@ -51,13 +52,14 @@ export function runSystemTransformations(entry: PanelEntry, series: DataFrame[])
  * Reads the frames of all entries of `data.results`, in the order of `panel.targets` (`spec.11`). An entry with an
  * error keeps its frames. The failed queries go to the notices of the Renderer, not to `PanelData.errors`: with
  * errors, the panel does not check the data shape, so a `panel-error` would not show.
- * Frames with `meta.dataTopic` `annotations` go to `annotations` (`spec.12`).
+ * Frames with `meta.dataTopic` `annotations` go to `annotations` (`spec.12`). No frame keeps the data links and actions
+ * that a data source put in its field config (`renderer.12`).
  * https://grafana.com/developers/plugin-tools/key-concepts/data-frames
  */
 export function toSpecData(spec: VizSpec, entry: PanelEntry): SpecData {
   const frames = orderedResults(spec.panel.targetRefIds, spec.data.results).flatMap(([refId, result]) =>
     result.frames.map((json) => {
-      const frame = dataFrameFromJSON(json);
+      const frame = frameWithoutCallOuts(dataFrameFromJSON(json));
       // `spec.11`: each frame keeps its refId.
       return frame.refId ? frame : { ...frame, refId };
     })

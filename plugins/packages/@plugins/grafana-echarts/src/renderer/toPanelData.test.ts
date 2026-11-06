@@ -50,6 +50,26 @@ describe('toSpecData', () => {
     expect(data.annotations.map((f) => f.name)).toEqual(['n']);
   });
 
+  // contract-rule: renderer.12
+  it('removes the data links and actions that a data source puts in the field config, in series and annotations', () => {
+    const withCallOuts = (name: string, dataTopic?: DataTopic): DataFrameJSON => {
+      const json = frame('A', name, dataTopic);
+      json.schema!.fields[0].config = {
+        unit: 'short',
+        links: [{ title: 't', url: 'https://evil.example/x' }],
+        actions: [{ title: 'a' }],
+      } as never;
+      return json;
+    };
+    const data = toSpecData(
+      spec({ A: { frames: [withCallOuts('s'), withCallOuts('n', DataTopic.Annotations)] } }, ['A']),
+      cartesian
+    );
+    for (const field of [...data.series, ...data.annotations].flatMap((f) => f.fields)) {
+      expect(field.config).toEqual({ unit: 'short' });
+    }
+  });
+
   it('keeps the frames of a result that has an error', () => {
     const data = toSpecData(
       spec({ A: { frames: [frame('A', 'a')] }, B: { frames: [frame('B', 'b')], error: 'x' } }, ['A', 'B']),

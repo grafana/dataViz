@@ -31,8 +31,10 @@ class Renderer {
   private readonly reporter: StateReporter;
   private readonly refresh: RefreshController | undefined;
   private readonly resizeObserver: ResizeObserver | undefined;
-  /** The inline height before `renderer.10` set one, so `destroy` can put it back. */
-  private readonly heightBefore: string | undefined;
+  /** The inline height before `renderer.10` set one, so `destroy` can put it back if the App did not change it. */
+  private heightBefore: string | undefined;
+  /** Set when `el` had a box once, and `setDefaultHeight` looked at its height. */
+  private heightChecked = false;
   private prepared: Prepared | undefined;
   private signals = newSignals();
   private size: { width: number; height: number };
@@ -43,11 +45,7 @@ class Renderer {
     options: RenderOptions | undefined
   ) {
     this.reporter = new StateReporter(el, options?.onState);
-    // `renderer.10`: an element with no height gets `defaultHeightPx`.
-    if (el.clientHeight === 0) {
-      this.heightBefore = el.style.height;
-      el.style.height = `${DEFAULT_HEIGHT_PX}px`;
-    }
+    this.setDefaultHeight();
     this.size = this.measure();
     this.root = createRoot(el);
     this.refresh = options?.onRefresh ? new RefreshController(options.onRefresh, () => this.draw()) : undefined;
@@ -83,13 +81,31 @@ class Renderer {
     this.destroyed = true;
     this.resizeObserver?.disconnect();
     this.refresh?.dispose();
+    // First, so that a signal from the unmount does not report a state again.
+    this.reporter.stop();
     this.root.unmount();
-    this.reporter.clear();
-    if (this.heightBefore !== undefined) {
+    if (this.heightBefore !== undefined && this.el.style.height === `${DEFAULT_HEIGHT_PX}px`) {
       this.el.style.height = this.heightBefore;
     }
     if (renderers.get(this.el) === this) {
       renderers.delete(this.el);
+    }
+  }
+
+  /**
+   * `renderer.10`: an element with no height gets `defaultHeightPx`. An element with no box (not in the document, or
+   * hidden by `display: none`) has a `clientHeight` of 0 for each height, so the check waits for the first resize
+   * after `el` has a box.
+   * https://developer.mozilla.org/en-US/docs/Web/API/Element/getClientRects
+   */
+  private setDefaultHeight(): void {
+    if (this.heightChecked || this.el.getClientRects().length === 0) {
+      return;
+    }
+    this.heightChecked = true;
+    if (this.el.clientHeight === 0) {
+      this.heightBefore = this.el.style.height;
+      this.el.style.height = `${DEFAULT_HEIGHT_PX}px`;
     }
   }
 
@@ -98,6 +114,7 @@ class Renderer {
   }
 
   private readonly onResize = () => {
+    this.setDefaultHeight();
     const size = this.measure();
     if (size.width !== this.size.width || size.height !== this.size.height) {
       this.size = size;
