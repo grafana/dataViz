@@ -29,13 +29,26 @@ const waitForState = (el: HTMLElement, state: string) =>
 
 const chartOf = (el: HTMLElement) => getInstanceByDom(el.querySelector('[_echarts_instance_]') as HTMLElement)!;
 
+/** The callbacks of each `ResizeObserver` of a test, so a test can report a size change. */
+const resizeCallbacks: ResizeObserverCallback[] = [];
+const OriginalResizeObserver = global.ResizeObserver;
+const resize = () => act(() => resizeCallbacks.forEach((callback) => callback([], {} as ResizeObserver)));
+
 let consoleError: jest.SpyInstance;
 beforeEach(() => {
   consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+  global.ResizeObserver = class extends OriginalResizeObserver {
+    constructor(callback: ResizeObserverCallback) {
+      super(callback);
+      resizeCallbacks.push(callback);
+    }
+  };
 });
 afterEach(() => {
   act(() => handles.splice(0).forEach((handle) => handle.destroy()));
   consoleError.mockRestore();
+  global.ResizeObserver = OriginalResizeObserver;
+  resizeCallbacks.length = 0;
   document.body.innerHTML = '';
 });
 
@@ -120,24 +133,39 @@ describe('the handle', () => {
 
   // contract-rule: renderer.10
   it('fills el and follows a size change', async () => {
-    const callbacks: ResizeObserverCallback[] = [];
-    const Original = global.ResizeObserver;
-    global.ResizeObserver = class extends Original {
-      constructor(callback: ResizeObserverCallback) {
-        super(callback);
-        callbacks.push(callback);
-      }
-    };
-    try {
-      const { el } = draw(fixtureSpec('smoke-timeseries'));
-      await waitForState(el, 'ready');
-      expect(chartOf(el).getWidth()).toBe(600);
-      el.style.width = '500px';
-      act(() => callbacks.forEach((callback) => callback([], {} as ResizeObserver)));
-      await waitFor(() => expect(chartOf(el).getWidth()).toBe(500));
-    } finally {
-      global.ResizeObserver = Original;
-    }
+    const { el } = draw(fixtureSpec('smoke-timeseries'));
+    await waitForState(el, 'ready');
+    expect(chartOf(el).getWidth()).toBe(600);
+    el.style.width = '500px';
+    resize();
+    await waitFor(() => expect(chartOf(el).getWidth()).toBe(500));
+  });
+
+  // contract-rule: renderer.10
+  it('sets no height on an el that is not in the document, so a later stylesheet height applies', async () => {
+    const el = document.createElement('div');
+    el.style.width = '600px';
+    draw(fixtureSpec('smoke-timeseries'), {}, el);
+    expect(el.style.height).toBe('');
+    // A stylesheet height: jsdom has no layout, so the test gives `clientHeight`.
+    Object.defineProperty(el, 'clientHeight', { configurable: true, value: 250 });
+    document.body.appendChild(el);
+    resize();
+    expect(el.style.height).toBe('');
+    // The box of the chart. The legend takes a part of it.
+    await waitFor(() => expect((el.firstElementChild as HTMLElement).style.height).toBe('250px'));
+  });
+
+  // contract-rule: renderer.10
+  it('sets defaultHeightPx on an el with no height when it goes into the document', () => {
+    const el = document.createElement('div');
+    el.style.width = '600px';
+    const { handle } = draw(fixtureSpec('smoke-timeseries'), {}, el);
+    document.body.appendChild(el);
+    resize();
+    expect(el.style.height).toBe('400px');
+    act(() => handle.destroy());
+    expect(el.style.height).toBe('');
   });
 
   // contract-rule: renderer.14

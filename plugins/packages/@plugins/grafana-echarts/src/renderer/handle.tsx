@@ -32,7 +32,9 @@ class Renderer {
   private readonly refresh: RefreshController | undefined;
   private readonly resizeObserver: ResizeObserver | undefined;
   /** The inline height before `renderer.10` set one, so `destroy` can put it back. */
-  private readonly heightBefore: string | undefined;
+  private heightBefore: string | undefined;
+  /** Set when `el` was in the document once, and `setDefaultHeight` looked at its height. */
+  private heightChecked = false;
   private prepared: Prepared | undefined;
   private signals = newSignals();
   private size: { width: number; height: number };
@@ -43,11 +45,7 @@ class Renderer {
     options: RenderOptions | undefined
   ) {
     this.reporter = new StateReporter(el, options?.onState);
-    // `renderer.10`: an element with no height gets `defaultHeightPx`.
-    if (el.clientHeight === 0) {
-      this.heightBefore = el.style.height;
-      el.style.height = `${DEFAULT_HEIGHT_PX}px`;
-    }
+    this.setDefaultHeight();
     this.size = this.measure();
     this.root = createRoot(el);
     this.refresh = options?.onRefresh ? new RefreshController(options.onRefresh, () => this.draw()) : undefined;
@@ -94,11 +92,27 @@ class Renderer {
     }
   }
 
+  /**
+   * `renderer.10`: an element with no height gets `defaultHeightPx`. An element that is not in the document has a
+   * `clientHeight` of 0 for each height, so the check waits for the first resize after `el` goes into the document.
+   */
+  private setDefaultHeight(): void {
+    if (this.heightChecked || !this.el.isConnected) {
+      return;
+    }
+    this.heightChecked = true;
+    if (this.el.clientHeight === 0) {
+      this.heightBefore = this.el.style.height;
+      this.el.style.height = `${DEFAULT_HEIGHT_PX}px`;
+    }
+  }
+
   private measure() {
     return { width: this.el.clientWidth, height: this.el.clientHeight || DEFAULT_HEIGHT_PX };
   }
 
   private readonly onResize = () => {
+    this.setDefaultHeight();
     const size = this.measure();
     if (size.width !== this.size.width || size.height !== this.size.height) {
       this.size = size;
