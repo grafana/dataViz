@@ -12,9 +12,8 @@ export interface RefreshStatus {
 }
 
 export class RefreshController {
+  /** `busy` is true while the last `onRefresh` call has no result. Only that call gets a result (`refresh.6`). */
   private status: RefreshStatus = { busy: false };
-  /** True while the last `onRefresh` call has no result. Only that call gets a result (`refresh.6`). */
-  private pending = false;
   private timer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(
@@ -31,7 +30,6 @@ export class RefreshController {
     if (this.status.busy) {
       return;
     }
-    this.pending = true;
     this.set({ busy: true });
     this.timer = setTimeout(() => this.finish(refreshMessage('refresh-timeout')), REFRESH_TIMEOUT_MS);
     try {
@@ -45,7 +43,7 @@ export class RefreshController {
 
   /** `setRefreshed` of the handle (`refresh.5`, `refresh.6`). */
   setRefreshed(ok: boolean, error?: string): void {
-    if (!this.pending) {
+    if (!this.status.busy) {
       return;
     }
     if (ok) {
@@ -57,7 +55,7 @@ export class RefreshController {
 
   /** `update` of the handle: the busy state ends, and an old message goes (`refresh.5`). */
   updated(): void {
-    if (this.pending || this.status.message !== undefined) {
+    if (this.status.busy || this.status.message !== undefined) {
       this.finish(undefined);
     }
   }
@@ -65,12 +63,10 @@ export class RefreshController {
   /** Stops the timer (`renderer.5`). */
   dispose(): void {
     clearTimeout(this.timer);
-    this.pending = false;
   }
 
   private finish(message: string | undefined): void {
     clearTimeout(this.timer);
-    this.pending = false;
     this.set({ busy: false, message });
   }
 

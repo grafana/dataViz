@@ -4,6 +4,7 @@ import { getInstanceByDom } from 'lib/echarts/echarts';
 import { fixtureSpec } from 'test/rendererFixtures';
 import { type RenderHandle, type RenderOptions, type RenderState } from './contract/renderer-api';
 import { render } from './index';
+import { TOOLBAR_HEIGHT_PX } from './layout';
 
 /** An element with an inline size: the jsdom shim of `jest-setup.js` reads `clientWidth` from the style. */
 function sizedElement(width = 600, height = 300): HTMLElement {
@@ -214,7 +215,8 @@ describe('refresh', () => {
   it('gives the chart the height of el minus the bar', async () => {
     const { el } = draw(fixtureSpec('smoke-timeseries'), { onRefresh: jest.fn() });
     await waitForState(el, 'ready');
-    expect(chartOf(el).getHeight()).toBeLessThan(300 - 39);
+    // The box of the chart, after the bar. The legend takes a part of it.
+    expect((el.lastElementChild as HTMLElement).style.height).toBe(`${300 - TOOLBAR_HEIGHT_PX}px`);
   });
 
   // contract-rule: refresh.2
