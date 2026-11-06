@@ -104,6 +104,20 @@ describe('the handle', () => {
     expect(second.states.map((state) => state.state)).toEqual(['no-data']);
   });
 
+  // contract-rule: renderer.5
+  it.each([
+    ['destroy', (handle: RenderHandle) => handle.destroy()],
+    ['render again into el', (_handle: RenderHandle, el: HTMLElement) => draw(fixtureSpec('no-data'), {}, el)],
+  ])('lets onState %s without a React error', async (_name, call) => {
+    const el = sizedElement();
+    let handle: RenderHandle | undefined;
+    const onState = jest.fn(() => call(handle!, el));
+    handle = render(el, fixtureSpec('no-data'), { onState });
+    handles.push(handle);
+    await waitFor(() => expect(onState).toHaveBeenCalledTimes(1));
+    expect(consoleError).not.toHaveBeenCalledWith(expect.stringMatching(/synchronously unmount a root/));
+  });
+
   // contract-rule: renderer.10
   it('fills el and follows a size change', async () => {
     const callbacks: ResizeObserverCallback[] = [];

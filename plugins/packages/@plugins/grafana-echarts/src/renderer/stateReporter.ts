@@ -20,7 +20,12 @@ export class StateReporter {
     this.el.removeAttribute('data-viz-error');
   }
 
-  /** A final state: set the attributes, then call `onState` when the state, the error or the notices changed. */
+  /**
+   * A final state: set the attributes, then call `onState` when the state, the error or the notices changed. The call
+   * is in a microtask, because a report can come from a React effect, and an `onState` that destroys the handle must
+   * not unmount the root while React renders (`state.13` lets `onState` come after `render` returns).
+   * https://developer.mozilla.org/en-US/docs/Web/API/Window/queueMicrotask
+   */
   report(state: RenderState): void {
     if (this.stopped) {
       return;
@@ -36,18 +41,29 @@ export class StateReporter {
       return;
     }
     this.last = key;
-    try {
-      // A copy, so a change of the App to the object does not change the Renderer.
-      this.onState?.(structuredClone(state));
-    } catch (error) {
-      // `state.13`: the chart, the state and the notices do not change.
-      console.error(LOG_PREFIX, error);
+    const onState = this.onState;
+    if (!onState) {
+      return;
     }
+    // A copy, so a change of the App to the object does not change the Renderer.
+    const copy = structuredClone(state);
+    queueMicrotask(() => {
+      if (this.stopped) {
+        return;
+      }
+      try {
+        onState(copy);
+      } catch (error) {
+        // `state.13`: the chart, the state and the notices do not change.
+        console.error(LOG_PREFIX, error);
+      }
+    });
   }
 
   /**
-   * Removes the attributes (`renderer.5`), and ignores each later report. `destroy` calls it first, because the
-   * unmount of the chart can give a signal (the cleanup of `DataIssueView`) that computes the state again.
+   * Removes the attributes (`renderer.5`), and ignores each later report and each `onState` call that did not run yet.
+   * `destroy` calls it first, because the unmount of the chart can give a signal (the cleanup of `DataIssueView`) that
+   * computes the state again.
    */
   stop(): void {
     this.stopped = true;

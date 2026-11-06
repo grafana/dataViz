@@ -19,7 +19,7 @@ jest.mock('./RendererView', () => ({
 
 describe('RenderHandle', () => {
   // contract-rule: renderer.5
-  it('does not call onState on destroy after a chart drew and then got a panel error', () => {
+  it('does not call onState on destroy after a chart drew and then got a panel error', async () => {
     const onState = jest.fn();
     const el = document.createElement('div');
     let destroy = () => {};
@@ -31,9 +31,11 @@ describe('RenderHandle', () => {
     view.onChartInit({ on: (_event: string, listener: () => void) => listeners.push(listener) } as never);
     listeners.forEach((listener) => listener());
     view.onPanelError('Two fields have the name v.');
+    await Promise.resolve();
     expect(onState.mock.calls.map(([state]) => state.state)).toEqual(['ready', 'error']);
 
     act(() => destroy());
+    await Promise.resolve();
     expect(onState).toHaveBeenCalledTimes(2);
     expect(el.hasAttribute('data-viz-state')).toBe(false);
   });
