@@ -84,8 +84,8 @@ export function mount(el: HTMLElement, input: unknown, options?: RenderOptions):
     />
   );
   return () => {
+    reporter.stop();
     root.unmount();
     el.style.height = inlineHeight;
-    reporter.clear();
   };
 }

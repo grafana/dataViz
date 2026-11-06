@@ -6,6 +6,8 @@ import { LOG_PREFIX } from './log';
 export class StateReporter {
   /** The last state given to `onState`, as JSON, so a draw with the same values does not call it again. */
   private last: string | undefined;
+  /** Set by `stop`. After it, each call does nothing. */
+  private stopped = false;
 
   constructor(
     private readonly el: HTMLElement,
@@ -20,6 +22,9 @@ export class StateReporter {
 
   /** A final state: set the attributes, then call `onState` when the state, the error or the notices changed. */
   report(state: RenderState): void {
+    if (this.stopped) {
+      return;
+    }
     this.el.setAttribute('data-viz-state', state.state);
     if (state.error) {
       this.el.setAttribute('data-viz-error', state.error.code);
@@ -40,8 +45,12 @@ export class StateReporter {
     }
   }
 
-  /** Removes the attributes (`renderer.5`). */
-  clear(): void {
+  /**
+   * Removes the attributes (`renderer.5`), and ignores each later report. `destroy` calls it first, because the
+   * unmount of the chart can give a signal (the cleanup of `DataIssueView`) that computes the state again.
+   */
+  stop(): void {
+    this.stopped = true;
     this.el.removeAttribute('data-viz-state');
     this.el.removeAttribute('data-viz-error');
   }
