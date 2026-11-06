@@ -83,8 +83,9 @@ class Renderer {
     this.destroyed = true;
     this.resizeObserver?.disconnect();
     this.refresh?.dispose();
+    // First, so that a signal from the unmount does not report a state again.
+    this.reporter.stop();
     this.root.unmount();
-    this.reporter.clear();
     if (this.heightBefore !== undefined) {
       this.el.style.height = this.heightBefore;
     }

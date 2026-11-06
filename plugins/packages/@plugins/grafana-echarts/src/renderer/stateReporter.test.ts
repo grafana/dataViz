@@ -15,7 +15,18 @@ describe('StateReporter', () => {
     expect([el.getAttribute('data-viz-state'), el.getAttribute('data-viz-error')]).toEqual(['error', 'invalid-spec']);
     reporter.report(ready);
     expect([el.getAttribute('data-viz-state'), el.getAttribute('data-viz-error')]).toEqual(['ready', null]);
-    reporter.clear();
+    reporter.stop();
+    expect(el.hasAttribute('data-viz-state')).toBe(false);
+  });
+
+  // contract-rule: renderer.5
+  it('ignores each report after stop', () => {
+    const el = document.createElement('div');
+    const onState = jest.fn();
+    const reporter = new StateReporter(el, onState);
+    reporter.stop();
+    reporter.report(ready);
+    expect(onState).not.toHaveBeenCalled();
     expect(el.hasAttribute('data-viz-state')).toBe(false);
   });
 
