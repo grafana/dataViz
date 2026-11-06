@@ -17,6 +17,64 @@ type JsonObject = Record<string, unknown>;
 export const isObject = (value: unknown): value is JsonObject =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
+/**
+ * The path below the frame of the first part that breaks the frame schema, `''` for the frame itself, or `undefined`
+ * when the frame matches it. The schema needs `schema`, a `name` in each field, and an array for each entry of
+ * `data.values`. A frame that matches the schema but that `dataFrameFromJSON` cannot read, for example one with no
+ * `schema.fields`, gives `render-error` when the Renderer draws.
+ * https://grafana.com/developers/plugin-tools/key-concepts/data-frames
+ */
+function frameProblem(frame: unknown): string | undefined {
+  if (!isObject(frame)) {
+    return '';
+  }
+  const { schema, data } = frame;
+  if (!isObject(schema)) {
+    return '.schema';
+  }
+  if (schema.fields !== undefined) {
+    if (!Array.isArray(schema.fields)) {
+      return '.schema.fields';
+    }
+    const field = schema.fields.findIndex((item) => !isObject(item) || typeof item.name !== 'string');
+    if (field >= 0) {
+      return isObject(schema.fields[field]) ? `.schema.fields.${field}.name` : `.schema.fields.${field}`;
+    }
+  }
+  if (data !== undefined) {
+    if (!isObject(data)) {
+      return '.data';
+    }
+    if (data.values !== undefined) {
+      if (!Array.isArray(data.values)) {
+        return '.data.values';
+      }
+      const values = data.values.findIndex((item) => !Array.isArray(item));
+      if (values >= 0) {
+        return `.data.values.${values}`;
+      }
+    }
+  }
+  return undefined;
+}
+
+/** A frame in the JSON of `/api/ds/query` that matches the frame schema. */
+const isFrameJson = (value: unknown): value is DataFrameJSON => frameProblem(value) === undefined;
+
+/** The path of the first frame in `results` that breaks the frame schema, in the order of the entries. */
+function firstFrameProblem(results: JsonObject): string | undefined {
+  for (const [refId, result] of Object.entries(results)) {
+    const frames = isObject(result) && Array.isArray(result.frames) ? result.frames : [];
+    for (const [index, frame] of frames.entries()) {
+      const problem = frameProblem(frame);
+      if (problem !== undefined) {
+        return `data.results.${refId}.frames.${index}${problem}`;
+      }
+    }
+  }
+  return undefined;
+}
+
 /** The required fields of the schema, after the presence check. Their values are not checked yet. */
 interface RequiredFields {
   specVersion: unknown;
@@ -27,7 +85,7 @@ interface RequiredFields {
 /**
  * The required fields of the schema, or the first one that is missing, as a dotted path, in the order of the schema.
  * A field of the wrong JSON type counts as missing. A spec that is not an object has no fields, so its first
- * missing field is `specVersion`.
+ * missing field is `specVersion`. The frames are checked last (`firstFrameProblem`).
  */
 function readRequired(input: unknown): RequiredFields | { missing: string } {
   if (!isObject(input) || input.specVersion == null) {
@@ -60,6 +118,10 @@ function readRequired(input: unknown): RequiredFields | { missing: string } {
   if (!isObject(results)) {
     return { missing: 'data.results' };
   }
+  const frame = firstFrameProblem(results);
+  if (frame !== undefined) {
+    return { missing: frame };
+  }
   return {
     specVersion: input.specVersion,
     panel: { ...panel, type: panel.type },
@@ -67,13 +129,10 @@ function readRequired(input: unknown): RequiredFields | { missing: string } {
   };
 }
 
-/** A frame in the JSON of `/api/ds/query`. `dataFrameFromJSON` checks the rest. */
-const isFrameJson = (value: unknown): value is DataFrameJSON =>
-  isObject(value) &&
-  (value.schema === undefined || isObject(value.schema)) &&
-  (value.data === undefined || isObject(value.data));
-
-/** A result entry with its optional fields checked. An entry that is not an object has no frames and no error. */
+/**
+ * A result entry with its optional fields checked. An entry that is not an object has no frames and no error.
+ * `readRequired` already checked the frames, so `isFrameJson` only narrows the type here.
+ */
 function toQueryResult(value: unknown): QueryResult {
   if (!isObject(value)) {
     return { frames: [] };

@@ -62,4 +62,19 @@ describe('render', () => {
     expect(error).toHaveBeenCalledWith('grafana-viz:', 'The viz spec is not correct: data is missing.');
     error.mockRestore();
   });
+
+  // contract-rule: state.5
+  it('shows render-error for a frame that matches the schema but cannot be read', () => {
+    const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const spec = fixtureSpec('smoke-timeseries') as { data: { results: { A: { frames: unknown[] } } } };
+    spec.data.results.A.frames.push({ schema: { name: 'no fields' } });
+    const el = sizedElement();
+    render(el, spec);
+    expect([el.getAttribute('data-viz-state'), el.getAttribute('data-viz-error')]).toEqual(['error', 'render-error']);
+    expect(error).toHaveBeenCalledWith(
+      'grafana-viz:',
+      expect.objectContaining({ message: 'JSON needs a fields definition' })
+    );
+    error.mockRestore();
+  });
 });
