@@ -168,6 +168,17 @@ describe('the handle', () => {
     expect(el.style.height).toBe('');
   });
 
+  it('keeps on destroy a height that the App set after render', () => {
+    const el = document.createElement('div');
+    el.style.width = '600px';
+    document.body.appendChild(el);
+    const { handle } = draw(fixtureSpec('smoke-timeseries'), {}, el);
+    expect(el.style.height).toBe('400px');
+    el.style.height = '250px';
+    act(() => handle.destroy());
+    expect(el.style.height).toBe('250px');
+  });
+
   // contract-rule: renderer.14
   it('does nothing outside data.range for a brush zoom: no onRefresh, the same state', async () => {
     const onRefresh = jest.fn();

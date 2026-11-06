@@ -31,7 +31,7 @@ class Renderer {
   private readonly reporter: StateReporter;
   private readonly refresh: RefreshController | undefined;
   private readonly resizeObserver: ResizeObserver | undefined;
-  /** The inline height before `renderer.10` set one, so `destroy` can put it back. */
+  /** The inline height before `renderer.10` set one, so `destroy` can put it back if the App did not change it. */
   private heightBefore: string | undefined;
   /** Set when `el` was in the document once, and `setDefaultHeight` looked at its height. */
   private heightChecked = false;
@@ -84,7 +84,7 @@ class Renderer {
     // First, so that a signal from the unmount does not report a state again.
     this.reporter.stop();
     this.root.unmount();
-    if (this.heightBefore !== undefined) {
+    if (this.heightBefore !== undefined && this.el.style.height === `${DEFAULT_HEIGHT_PX}px`) {
       this.el.style.height = this.heightBefore;
     }
     if (renderers.get(this.el) === this) {
