@@ -91,6 +91,16 @@ test('the icons load with no network request', async ({ page }) => {
   expect(of('csp').filter(isIconFetch)).toEqual([]);
 });
 
+test('a label with HTML comment and script markup gets to the Renderer as text', async ({ page }) => {
+  // The page puts the spec in a `<script>` element, so its escapes must give back the same JSON.
+  const label = '<!-- </script><script>alert(5)</script> -->';
+  const spec = JSON.stringify(fixtureSpec('hostile-label')).replaceAll('<img src=x onerror=alert(1)>', label);
+  const { of, states } = await draw(page, JSON.parse(spec));
+  expect(of('error')).toEqual([]);
+  expect(states.at(-1)).toEqual(fixtureState('hostile-label'));
+  await expect(page.frameLocator('#app').locator('button', { hasText: label })).toHaveCount(1);
+});
+
 test('the text of the panel has the theme color, also in a button (a legend label)', async ({ page }) => {
   // contract-rule: renderer.11
   await draw(page, fixtureSpec('prometheus-line'));
