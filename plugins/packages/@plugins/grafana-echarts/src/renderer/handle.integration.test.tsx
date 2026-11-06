@@ -232,8 +232,10 @@ describe('refresh', () => {
   it('gives the chart the height of el minus the bar', async () => {
     const { el } = draw(fixtureSpec('smoke-timeseries'), { onRefresh: jest.fn() });
     await waitForState(el, 'ready');
-    // The box of the chart, after the bar. The legend takes a part of it.
-    expect((el.lastElementChild as HTMLElement).style.height).toBe(`${300 - TOOLBAR_HEIGHT_PX}px`);
+    // In the root of the Renderer, the box of the chart is after the bar. The legend takes a part of it.
+    const root = el.firstElementChild as HTMLElement;
+    expect(root.style.height).toBe('300px');
+    expect((root.lastElementChild as HTMLElement).style.height).toBe(`${300 - TOOLBAR_HEIGHT_PX}px`);
   });
 
   // contract-rule: refresh.2
