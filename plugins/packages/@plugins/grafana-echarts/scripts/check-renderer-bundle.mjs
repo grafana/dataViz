@@ -44,7 +44,10 @@ const check = (rule, ok, text) => {
   }
 };
 
-/** Builds the bundle and returns the webpack stats, or exits when the build fails. */
+/**
+ * Builds the bundle and returns the webpack stats, or null when the build fails. It does not exit, because
+ * `process.exit` skips the `finally` that deletes the stats folder.
+ */
 function build() {
   const dir = mkdtempSync(join(tmpdir(), 'renderer-stats-'));
   const statsPath = join(dir, 'stats.json');
@@ -59,12 +62,12 @@ function build() {
       stats = readJson(statsPath);
     } catch {
       console.error(`webpack wrote no stats (exit ${result.status})`);
-      process.exit(1);
+      return null;
     }
     if (result.status !== 0 || stats.errors.length > 0) {
       stats.errors.forEach((error) => console.error(error.message));
       console.error(`webpack failed (exit ${result.status})`);
-      process.exit(1);
+      return null;
     }
     return stats;
   } finally {
@@ -99,6 +102,9 @@ const packageName = (specifier) => specifier.match(/^((?:@[^/]+\/)?[^/]+)/)[1];
 
 const noBuild = process.argv.includes('--no-build');
 const stats = noBuild ? undefined : build();
+if (stats === null) {
+  process.exit(1);
+}
 if (!noBuild) {
   writeRendererPackage();
 }

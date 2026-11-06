@@ -75,6 +75,7 @@ scripts/*
 !scripts/check-renderer-bundle.mjs
 !scripts/bundle-imports.mjs
 !scripts/bundle-imports.test.mjs
+!scripts/check-renderer-bundle.test.mjs
 !scripts/contract-scan.mjs
 !scripts/contract-scan.test.mjs
 !scripts/renderer-harness/
