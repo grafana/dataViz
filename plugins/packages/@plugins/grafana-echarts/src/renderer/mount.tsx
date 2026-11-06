@@ -58,6 +58,8 @@ export function mount(el: HTMLElement, input: unknown, options?: RenderOptions):
   };
 
   // `renderer.10`: an element with no height gets `defaultHeightPx`. Phase 4 follows size changes.
+  // `destroy` gives back the inline height that `el` had.
+  const inlineHeight = el.style.height;
   if (el.clientHeight === 0) {
     el.style.height = `${DEFAULT_HEIGHT_PX}px`;
   }
@@ -83,6 +85,7 @@ export function mount(el: HTMLElement, input: unknown, options?: RenderOptions):
   );
   return () => {
     root.unmount();
+    el.style.height = inlineHeight;
     reporter.clear();
   };
 }
