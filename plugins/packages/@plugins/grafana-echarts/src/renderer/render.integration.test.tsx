@@ -49,8 +49,20 @@ describe('render', () => {
   it('sets the height of an element with no height to defaultHeightPx', () => {
     const el = document.createElement('div');
     document.body.appendChild(el);
-    render(el, fixtureSpec('smoke-timeseries'));
+    const handle = render(el, fixtureSpec('smoke-timeseries'));
     expect(el.style.height).toBe('400px');
+    act(() => handle.destroy());
+    expect(el.style.height).toBe('');
+  });
+
+  it('gives back the inline height of the element on destroy', () => {
+    const el = document.createElement('div');
+    el.style.height = '0px';
+    document.body.appendChild(el);
+    const handle = render(el, fixtureSpec('smoke-timeseries'));
+    expect(el.style.height).toBe('400px');
+    act(() => handle.destroy());
+    expect(el.style.height).toBe('0px');
   });
 
   // contract-rule: renderer.3

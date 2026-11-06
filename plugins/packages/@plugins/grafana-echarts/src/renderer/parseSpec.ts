@@ -138,7 +138,6 @@ function toQueryResult(value: unknown): QueryResult {
     return { frames: [] };
   }
   return {
-    status: typeof value.status === 'number' ? value.status : undefined,
     frames: Array.isArray(value.frames) ? value.frames.filter(isFrameJson) : [],
     error: typeof value.error === 'string' ? value.error : undefined,
   };
