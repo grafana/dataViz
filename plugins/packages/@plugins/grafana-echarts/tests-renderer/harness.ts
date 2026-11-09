@@ -35,8 +35,16 @@ export const fixtureState = (set: string): unknown =>
     fs.readFileSync(path.join(PACKAGE_DIR, 'src', 'renderer', 'contract', 'fixtures', set, 'state.json'), 'utf8')
   );
 
-/** Text in a `<script>` element: a `</script` in it would end the element. */
+/**
+ * Code in a `<script>` element: a `</script` in it would end the element. The escapes are legal in a JS string and in
+ * a regular expression with no `u` or `v` flag, which is where the App bundle has them. With `u` or `v`, `\/` is legal
+ * but `\!` is not: `/<\!--/u` throws "Invalid escape". If the bundle gets one, the App script does not parse, and the
+ * `error` probe (which runs first, in its own script) reports the `SyntaxError`, so the sandbox tests fail.
+ */
 const scriptText = (text: string) => text.replace(/<\/script/gi, '<\\/script').replace(/<!--/g, '<\\!--');
+
+/** JSON in a `<script>` element. `<` replaces each `<`, because `\!` is not a JSON escape. */
+const scriptJson = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u003c');
 
 /** The probes run first: CSP violations, errors, and a `localStorage` read (`renderer.8`). */
 const PROBES = `
@@ -56,7 +64,7 @@ export function harnessPage(spec: unknown, size = { width: 640, height: 400 }): 
 <style>html,body{margin:0}#root{width:${size.width}px;height:${size.height}px}</style></head>
 <body><div id="root"></div>
 <script>${scriptText(PROBES)}</script>
-<script type="application/json" id="viz-spec">${scriptText(JSON.stringify(spec))}</script>
+<script type="application/json" id="viz-spec">${scriptJson(spec)}</script>
 <script>${scriptText(app())}</script></body></html>`;
   const srcdoc = inner.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
   return `<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0">
@@ -73,7 +81,10 @@ export type Message = { type: string; [key: string]: unknown };
  */
 export const HOST_URL = 'https://sandbox.host.test/';
 
-/** Draws `spec`, records every request but the page (and blocks it), and waits for the first `onState`. */
+/**
+ * Draws `spec`, records every request but the page (and blocks it), and waits for `idle` from the App: the first
+ * `onState` and the work that it queued are done. A timer that the Renderer sets for later is not included.
+ */
 export async function draw(page: Page, spec: unknown) {
   const requests: string[] = [];
   const html = harnessPage(spec);
@@ -87,12 +98,9 @@ export async function draw(page: Page, spec: unknown) {
   await page.goto(HOST_URL);
   await expect
     .poll(() =>
-      page.evaluate(() => (window as unknown as { messages: Message[] }).messages.some((m) => m.type === 'state'))
+      page.evaluate(() => (window as unknown as { messages: Message[] }).messages.some((m) => m.type === 'idle'))
     )
     .toBe(true);
-  // Late requests and errors after the first draw count too.
-  // @todo slop - clean it up
-  await page.waitForTimeout(500);
   const messages: Message[] = await page.evaluate(() => (window as unknown as { messages: Message[] }).messages);
   const of = (type: string) => messages.filter((m) => m.type === type);
   return { requests, messages, of, states: of('state').map((m) => m.state) };

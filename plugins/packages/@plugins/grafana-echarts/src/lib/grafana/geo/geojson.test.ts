@@ -1,6 +1,6 @@
 import { createTheme } from '@grafana/data';
 import { ComparisonOperation, type MapLayerOptions } from '@grafana/schema';
-import { getGeoJsonLayers, getGeoJsonSrcs } from './geojson';
+import { getGeoJsonLayers, getGeoJsonSrcs, getLayerSrc } from './geojson';
 import { type GeoJsonFeature, setGeoJsonSource } from './geojsonSource';
 
 const theme = createTheme();
@@ -83,5 +83,11 @@ describe('GeoJSON layer styles', () => {
       'public/maps/countries.geojson',
       'test.geojson',
     ]);
+  });
+
+  it('gives a src that is not text as text, and the core default for an empty src', () => {
+    const src = (value: unknown) => getLayerSrc({ type: 'geojson', config: { src: value as string } });
+    expect(src(5)).toBe('5');
+    expect(src('')).toBe('public/maps/countries.geojson');
   });
 });
