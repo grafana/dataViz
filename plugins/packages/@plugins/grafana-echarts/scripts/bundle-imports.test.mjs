@@ -21,6 +21,10 @@ describe('bundleImports', () => {
     assert.deepEqual(bundleImports('var a=1;import*as b from"lodash";'), ['lodash']);
   });
 
+  test('finds a re-export from a package', () => {
+    assert.deepEqual(bundleImports('export*from"react";export{a as b}from"lodash";export{c};'), ['react', 'lodash']);
+  });
+
   test('ignores a dynamic import and import.meta', () => {
     assert.deepEqual(bundleImports('import("lodash");import.meta.url;a.import("x");'), []);
   });
