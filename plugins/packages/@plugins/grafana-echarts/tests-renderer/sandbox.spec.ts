@@ -79,7 +79,7 @@ test('a refresh asks the App, and the result shows in the sandbox', async ({ pag
     .toEqual([{ type: 'refresh', request: { cause: 'refresh' } }]);
   await page.evaluate(() =>
     document
-      .querySelector('iframe')!
+      .querySelector<HTMLIFrameElement>('#app')!
       .contentWindow!.postMessage({ type: 'setRefreshed', ok: false, error: 'boom' }, '*')
   );
   await expect(app.getByRole('status')).toHaveText('Refresh failed: boom');
