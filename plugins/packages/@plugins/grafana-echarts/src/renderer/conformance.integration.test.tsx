@@ -81,17 +81,27 @@ describe('the fixture sets of the contract', () => {
   });
 });
 
+/** The label values of each field of a spec, once each. They are the hostile strings of `hostile-label`. */
+function labelValues(spec: Record<string, unknown>): string[] {
+  type Field = { labels?: Record<string, string> };
+  type Results = Record<string, { frames: Array<{ schema: { fields: Field[] } }> }>;
+  const results = (spec.data as { results: Results }).results;
+  const values = Object.values(results).flatMap((result) =>
+    result.frames.flatMap((frame) => frame.schema.fields.flatMap((field) => Object.values(field.labels ?? {})))
+  );
+  return [...new Set(values)];
+}
+
 describe('hostile-label', () => {
   // contract-rule: renderer.14
   it('shows the label values as text, and makes no element or script from them', async () => {
     const alert = jest.spyOn(window, 'alert').mockImplementation(() => {});
-    const { el, states } = await draw(fixtureSpec('hostile-label'));
+    const spec = fixtureSpec('hostile-label');
+    const { el, states } = await draw(spec);
     await waitFor(() => expect(states.at(-1)).toEqual(fixtureState('hostile-label')));
-    for (const text of [
-      '<img src=x onerror=alert(1)>',
-      '</script><script>alert(2)</script>',
-      '"><svg onload=alert(4)>',
-    ]) {
+    const texts = labelValues(spec);
+    expect(texts.length).toBeGreaterThan(0);
+    for (const text of texts) {
       expect(el.textContent).toContain(text);
     }
     expect(el.querySelectorAll('script, img, iframe, object, embed')).toHaveLength(0);
