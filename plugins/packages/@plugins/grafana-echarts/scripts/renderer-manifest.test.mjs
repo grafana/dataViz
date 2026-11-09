@@ -9,12 +9,15 @@ describe('renderer.package.json', () => {
     assert.deepEqual(templateProblems(), []);
   });
 
-  test('reports a peer range that is not the installed version', () => {
+  test('names each peer range that is not the installed version, and the range to set', () => {
+    // A Renovate bump changes package.json only, so the message must say what to edit.
     const template = readTemplate();
-    const peerDependencies = { ...template.peerDependencies, react: '^18.0.0' };
-    const problems = templateProblems({ ...template, peerDependencies });
-    assert.equal(problems.length, 1);
-    assert.match(problems[0], /^peerDependencies: .*"react":"\^18\.0\.0"/);
+    const peerDependencies = { ...template.peerDependencies, react: '^18.0.0', 'react-dom': '^18.0.0' };
+    const installed = expectedValues().peerDependencies;
+    assert.deepEqual(templateProblems({ ...template, peerDependencies }), [
+      `peerDependencies.react: "^18.0.0", but package.json has ${installed.react.slice(1)}. Set it to "${installed.react}".`,
+      `peerDependencies.react-dom: "^18.0.0", but package.json has ${installed['react-dom'].slice(1)}. Set it to "${installed['react-dom']}".`,
+    ]);
   });
 
   test('reports a version, a public package, a license and exports that differ', () => {

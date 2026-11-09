@@ -2,6 +2,8 @@
 // The bundle checks of the Renderer (`delivery.2`, `delivery.5`, `delivery.6`, `renderer.9`, decision 4 of the plan).
 // Usage: node scripts/check-renderer-bundle.mjs [--no-build]
 // It builds the bundle with webpack stats, writes the manifest, then checks the files in `dist-renderer/`.
+// The `delivery.6` and `delivery.2` checks compare the manifest with the functions that wrote it. So they find a
+// difference only with --no-build, for example in the files of an earlier build.
 // With --no-build, it checks the files that are there and skips the checks that need the stats.
 // See docs/renderer.md. https://webpack.js.org/api/stats/
 import { spawnSync } from 'node:child_process';
@@ -68,6 +70,11 @@ function build() {
     if (result.status !== 0 || stats.errors.length > 0) {
       stats.errors.forEach((error) => console.error(error.message));
       console.error(`webpack failed (exit ${result.status})`);
+      return null;
+    }
+    // The bundle always has echarts. Without it, the checks of the bundled modules pass with no modules.
+    if (!modulePaths(stats).some((path) => packageOf(path)?.name === 'echarts')) {
+      console.error('webpack stats list no module of echarts, so the checks of the bundled modules cannot run');
       return null;
     }
     return stats;

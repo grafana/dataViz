@@ -3,7 +3,7 @@
 // version, next to the Renderer bundle.
 // Run it after the bundle build: `pnpm run build:renderer` runs both. See docs/renderer.md.
 import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
@@ -64,9 +64,20 @@ export function templateProblems(template = readTemplate(), expected = expectedV
   if (template.private !== true) {
     problems.push(`private: must be true, not ${JSON.stringify(template.private)}`);
   }
-  for (const field of ['license', 'exports', 'peerDependencies']) {
+  for (const field of ['license', 'exports']) {
     if (!isDeepStrictEqual(template[field], expected[field])) {
       problems.push(`${field}: ${JSON.stringify(template[field])}, expected ${JSON.stringify(expected[field])}`);
+    }
+  }
+  // A Renovate bump changes only package.json, so name the line to edit. The ranges are exact on purpose: a range
+  // that only accepts the installed version can claim an older version that the bundle was not built against.
+  for (const [name, range] of Object.entries(expected.peerDependencies)) {
+    const actual = template.peerDependencies?.[name];
+    if (actual !== range) {
+      problems.push(
+        `peerDependencies.${name}: ${JSON.stringify(actual)}, but package.json has ${range.slice(1)}. ` +
+          `Set it to ${JSON.stringify(range)}.`
+      );
     }
   }
   return problems;
@@ -90,7 +101,8 @@ export function writeRendererPackage() {
   return { manifest, packageJson };
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Node runs the real path of a symlinked script, so compare with the real path of argv[1].
+if (import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   const { manifest } = writeRendererPackage();
   console.log(`${MANIFEST_FILE}: version ${manifest.version}, sha256 ${manifest.sha256}`);
 }

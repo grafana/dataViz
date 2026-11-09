@@ -50,4 +50,13 @@ describe('build', () => {
     assert.match(result.stderr, /boom/);
     assert.deepEqual(left, []);
   });
+
+  test('fails when the stats list no echarts module', () => {
+    // A stats preset or a change of the module names can leave the module list empty.
+    const pnpm = 'for a; do f="$a"; done\necho \'{"errors":[],"modules":[]}\' > "${f#--json=}"';
+    const { result, left } = runWithFakePnpm(dir, pnpm);
+    assert.equal(result.status, 1, result.stderr);
+    assert.match(result.stderr, /webpack stats list no module of echarts/);
+    assert.deepEqual(left, []);
+  });
 });
