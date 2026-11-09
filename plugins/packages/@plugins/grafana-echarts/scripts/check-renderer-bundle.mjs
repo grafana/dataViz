@@ -18,6 +18,7 @@ import {
   PEER_PACKAGES,
   expectedValues,
   sha256,
+  templateProblems,
   writeRendererPackage,
 } from './renderer-manifest.mjs';
 import { bundleImports } from './bundle-imports.mjs';
@@ -129,6 +130,9 @@ for (const field of ['version', 'contractVersion', 'specVersions']) {
   );
 }
 check('delivery.2', packageJson.version === manifest.version, `package.json version ${packageJson.version}`);
+// renderer.9: the checked-in `src/renderer/renderer.package.json` agrees with the package `package.json`.
+const problems = templateProblems();
+check('renderer.9', problems.length === 0, `renderer.package.json ${problems.join('; ') || 'agrees with its sources'}`);
 
 // renderer.9: the bundle imports only the peers, and the generated package.json lists each one.
 // The bundle imports react, so no imports means that the scan did not find them.
