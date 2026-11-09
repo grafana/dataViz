@@ -26,7 +26,7 @@ command to re-render it is at the top of that file.
    `grafana-relations-panel-0.2.0.zip` with checksums, validates it, attests its provenance, and attaches the
    files to the draft.
 5. After the build passes, the `publish` job calls `cd.yml` with the release tag: it publishes the version to the
-   dev and ops catalogs and triggers Argo, whose deployment_tools PRs auto-merge (see below).
+   dev and ops catalogs and starts the Grafana Cloud rollout to dev and ops (see below).
 6. A maintainer checks the draft and publishes it. This no longer gates the deploy.
 
 **One plugin or all of them:** every plugin gets its own release PR. Merge one to release that plugin;
@@ -89,16 +89,12 @@ first; `cd.yml` then creates the dev or ops stub itself. It calls `grafana/plugi
 `grafana-canvas-panel` does: `cd.yml` builds, tests, signs and validates the plugin, uploads the zip to GCS
 and publishes it. It creates no tag or GitHub release.
 
-- **Publishing `main` deploys to Grafana Cloud.** The plugin is provisioned: every dev and ops stack has it
-  installed by stack-state-service. After the catalog publish, `cd.yml` triggers the plugins CD Argo
-  Workflow (`trigger-argo`, `grafana-cloud-deployment-type: provisioned`), which opens a deployment_tools PR
-  bumping `_catalog_version` in `provisioned-plugins/grafana-relations-panel/<wave>.libsonnet` (`dev` or
-  `staging`, the ops wave). For dev and ops that PR merges by itself once its CI passes, and the stacks
-  restart onto the new version. Notifications go to `#grafana-catalog-ci`, `cd.yml`'s default.
-- **A branch publish only reaches the catalog.** Argo is off for any ref but `main`, so a
-  `<version>+<commit>` build never rolls out to every stack. Try it on one stack with a gcom override,
-  `gcom /instances/<slug>/provisioned-plugins/grafana-relations-panel -d version=<version>`, and remove it
-  with `-d version=''`. Each override restarts the stack.
+- **Publishing `main` deploys to Grafana Cloud.** The plugin is provisioned on every dev and ops stack.
+  After the catalog publish, `cd.yml` starts Grafana's internal rollout (`trigger-argo`,
+  `grafana-cloud-deployment-type: provisioned`), which moves dev and ops onto the new version with no
+  further approval.
+- **A branch publish only reaches the catalog.** The rollout is off for any ref but `main`, so a
+  `<version>+<commit>` build never rolls out to every stack. Maintainers can try it on a single stack.
 
 - **`cd.yml` is pinned to a tag, not a hash**, the one such `uses:` in this repo. `cd.yml` fails a caller
   that pins it to a hash, and the Google workload identity in [Credentials](#credentials) trusts it only at
@@ -121,10 +117,9 @@ and publishes it. It creates no tag or GitHub release.
 - **The job that writes to the release builds nothing.** Building and signing run in a job that can only
   read the repo. A separate job holding `contents: write` only downloads that job's artifact and attaches
   it, the same split as the PR-comment jobs in Plugin CI.
-- **The signing token comes from Vault**, the same secret `plugin-ci-workflows` uses
-  (`plugins/sign-plugin-access-policy-token`), never from a repo secret. See [Credentials](#credentials).
-- **Release PRs and tags are made with a GitHub App token** (`grafana-plugins-platform-bot`, permission set
-  `release-please`, as upstream's action uses), so they trigger CI
+- **The signing token comes from Vault**, the same secret `plugin-ci-workflows` uses, never from a repo
+  secret. See [Credentials](#credentials).
+- **Release PRs and tags are made with a GitHub App token**, as upstream's action does, so they trigger CI
   and their commits are signed, which the repo requires on every branch.
 
 ## Credentials
@@ -146,26 +141,25 @@ The numbers in that subject are IDs, not secrets:
 GitHub uses this format for repositories created, renamed or transferred after July 15, 2026
 ([immutable subject claims](https://docs.github.com/en/actions/reference/security/oidc#immutable-subject-claims)).
 Names can be reused: a later repository with the same name would get the same `repo:grafana/dataViz:…`
-subject, while IDs are never reused, so a binding on the IDs trusts only this repository. The GATB grant's
-`oidc_subject` is `repo:grafana@7195757/dataViz@1301820546:*`; the trailing `*` does not widen it beyond the
-grant, because the same role also requires `workflow_ref` (the workflow file on `main`) and `event_name`.
+subject, while IDs are never reused, so a binding on the IDs trusts only this repository. The GitHub App
+grant is bound to `repo:grafana@7195757/dataViz@1301820546:*`; the trailing `*` does not widen it, because
+the grant also requires `workflow_ref` (the workflow file on `main`) and `event_name`.
 
-| credential | used by | obtained through | granted in | OIDC claims checked |
-|---|---|---|---|---|
-| GitHub App token, `grafana-plugins-platform-bot`, permission set `release-please` (contents, pull-requests, issues write) | `release-please.yml`, release-please job: release PRs, tags, draft releases | `grafana/shared-workflows` `create-github-app-token` → GATB, a per-repo Vault role | deployment_tools `terraform/repositories/dataViz/github-app-configs/config.yaml` | `sub` (the file's `oidc_subject`, set to the immutable form), `workflow_ref` (`.github/workflows/release-please.yml` on `main`), `event_name` (`push`, `workflow_dispatch`) |
-| Plugin signing token, `plugins/sign-plugin-access-policy-token` | `release-please.yml` build job (Sign and package); `plugin-publish.yml`, inside `cd.yml`'s CI | `get-vault-secrets` `common_secrets` → the shared `vault-github-actions` Vault role | deployment_tools `terraform/modules/vault_github_actions_auth/vault_secrets.tf`, for every `grafana` repo | `sub` matches `repo:grafana/*` or `repo:grafana@7195757/*` (both forms) |
-| Catalog publish token, `plugins/gcom-publish-token:dev` | `plugin-publish.yml`, inside `cd.yml`'s publish job | same as the signing token | same as the signing token | same as the signing token |
-| Google credentials, service account `github-plugin-ci-workflows` (GCS upload, IAP token for the dev and ops catalog APIs) | `plugin-publish.yml`, inside `cd.yml` | Google workload identity, provider `github-provider` | deployment_tools `terraform/modules/gcp_workload_identity_pool` and the service account's bindings | `repository_owner` is `grafana`, and attributes such as `repository_id` and `job_workflow_ref`; not `sub` |
-| `GITHUB_TOKEN`, `contents: write` | `release-please.yml` attach job (upload to the draft release) | GitHub | the job's `permissions:` | none |
+| credential | used by | obtained through | OIDC claims checked |
+|---|---|---|---|
+| GitHub App token (contents, pull-requests, issues write) | `release-please.yml`, release-please job: release PRs, tags, draft releases | `grafana/shared-workflows` `create-github-app-token` | `sub` (the immutable form), `workflow_ref` (`.github/workflows/release-please.yml` on `main`), `event_name` (`push`, `workflow_dispatch`) |
+| Plugin signing token | `release-please.yml` build job (Sign and package); `plugin-publish.yml`, inside `cd.yml`'s CI | `grafana/shared-workflows` `get-vault-secrets`, shared by every `grafana` repo | `sub` matches `repo:grafana/*` or `repo:grafana@7195757/*` (both forms) |
+| Catalog publish token | `plugin-publish.yml`, inside `cd.yml`'s publish job | same as the signing token | same as the signing token |
+| Google credentials (GCS upload, dev and ops catalog APIs) | `plugin-publish.yml`, inside `cd.yml` | Google workload identity | `repository_owner` is `grafana`, and attributes such as `repository_id` and `job_workflow_ref`; not `sub` |
+| `GITHUB_TOKEN`, `contents: write` | `release-please.yml` attach job (upload to the draft release) | GitHub | none |
 
 Only the GitHub App token checks `sub` against a value set for this repo, so it is the only credential the
 immutable subject affects. A token-step failure with `claim "sub" does not match any associated bound claim
-values` means that `oidc_subject` is missing or wrong; `role … could not be found` means the grant is not
+values` means the grant's subject is missing or wrong; `role … could not be found` means the grant is not
 applied yet.
 
 ## Before it can run
 
 - **Squash merge**, with the PR title as the commit message, so each PR is one changelog entry.
-- **The GitHub App grant** described under [Credentials](#credentials), including the `oidc_subject`
-  override for the immutable subject.
-- **`grafana-plugins-platform-bot` installed on this repo**, or the App token step fails even with the grant.
+- **The GitHub App grant** described under [Credentials](#credentials), bound to the immutable subject.
+- **The GitHub App installed on this repo**, or the App token step fails even with the grant.

@@ -52,13 +52,11 @@ plugin's code, so they cannot be mechanically ported:
    dataViz's OIDC identity. See `grafana-engineering:vault-add-secret`.
 
    **Only Frontend Platform can do this — ask in `#grafana-frontend-platform`.**
-   It is not clock-panel's token moved or copied. Per
-   [`deployment_tools/docs/grafana-frontend/plugin-internationalization.md`](https://github.com/grafana/deployment_tools/blob/main/docs/grafana-frontend/plugin-internationalization.md),
-   every repo gets its own token minted from the
-   `grafana-frontend-platform-crowdin-bot` Crowdin account (credentials in the
-   Frontend Platform 1Password vault), named `<repository-name>-github-actions`,
-   granted Languages: Read + Projects: Read and write, and scoped by granular
-   access to that repo's project only. The shared name
+   It is not clock-panel's token moved or copied. Following Frontend
+   Platform's internal plugin i18n doc, every repo gets its own Crowdin token,
+   named `<repository-name>-github-actions`, granted Languages: Read +
+   Projects: Read and write, and scoped by granular access to that repo's
+   project only. The shared name
    `grafana-frontend-crowdin-token` is a convention across ~20 single-plugin
    repos, not a shared value — so `get-vault-secrets`' `common_secrets` input
    (`ci/data/common/<path>`) is the wrong mechanism here; `repo_secrets` is

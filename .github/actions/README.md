@@ -212,7 +212,7 @@ In the Vault UI you type `repo/grafana/dataViz/...` into the `ci` secrets engine
 
 Other Grafana repos use the name `grafana-frontend-crowdin-token`. That name identifies the Crowdin bot account's owning team, not a project, so it can't tell several plugins apart here.
 
-Tokens come from the `grafana-frontend-platform-crowdin-bot` Crowdin account (Frontend Platform 1Password vault), per [`deployment_tools/docs/grafana-frontend/plugin-internationalization.md`](https://github.com/grafana/deployment_tools/blob/main/docs/grafana-frontend/plugin-internationalization.md). Engineers can write to `ci/repo/` but can't read it back, so do anything that needs the token locally before storing it.
+Grafana Labs' Frontend Platform team issues the tokens. Engineers can write to `ci/repo/` but can't read it back, so do anything that needs the token locally before storing it.
 
 There's deliberately no fallback for a missing secret. `get-vault-secrets` fails loudly instead of using `ignore_missing`, because a silently skipped sync is how clock-panel's locales went stale after the import.
 
