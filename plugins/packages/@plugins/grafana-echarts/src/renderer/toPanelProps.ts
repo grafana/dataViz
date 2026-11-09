@@ -3,33 +3,21 @@ import {
   applyFieldOverrides,
   createTheme,
   EventBusSrv,
-  type FieldConfigSource,
   getPanelOptionsWithDefaults,
   type GrafanaTheme2,
 } from '@grafana/data';
+import { seriesTypePath } from 'editor/constants';
+import { resolveSeriesType } from 'lib/echarts/charts/autoSeriesType';
+import { isMultiValueSeriesType } from 'lib/echarts/charts/narrowing';
 import { type PanelComponentProps } from 'lib/components/types';
 import { type PanelOptions } from 'types';
+import { withoutCallOuts } from './callOuts';
 import { isObject } from './parseSpec';
 import { type PanelEntry } from './panels';
 import { MAX_SERIES } from './registry';
 import { toSpecData } from './toPanelData';
 import { TRUNCATED_FAMILIES, truncateSeries } from './truncateSeries';
 import { type VizSpec } from './vizSpec';
-
-/** The field config properties that call out of the chart: data links and actions (`renderer.12`). */
-const CALL_OUT_PROPERTIES = new Set(['links', 'actions']);
-
-/** `fieldConfig` with no data links and no actions, in the defaults and in the overrides (`renderer.12`). */
-export function withoutCallOuts(fieldConfig: FieldConfigSource): FieldConfigSource {
-  const defaults = Object.fromEntries(
-    Object.entries(fieldConfig.defaults).filter(([key]) => !CALL_OUT_PROPERTIES.has(key))
-  );
-  const overrides = fieldConfig.overrides.map((override) => ({
-    ...override,
-    properties: (override.properties ?? []).filter((property) => !CALL_OUT_PROPERTIES.has(property.id)),
-  }));
-  return { defaults, overrides };
-}
 
 const themes = new Map<VizSpec['theme'], GrafanaTheme2>();
 
@@ -62,7 +50,7 @@ export type SpecPanelProps = Omit<PanelComponentProps, 'width' | 'height'>;
 /**
  * The options and field config get the defaults of the plugin, as in Grafana (`getPanelOptionsWithDefaults`).
  * Then the field overrides are applied to the frames, as `VizPanel.applyFieldConfig` does in Grafana.
- * The panel gets no data links, no ad-hoc filter (`onAddAdHocFilter` is not set) and a time range change that does
+ * The panel gets no data links (`toSpecData` also removes them from the frames), no ad-hoc filter (`onAddAdHocFilter` is not set) and a time range change that does
  * nothing (`renderer.12`, `renderer.14`).
  * https://github.com/grafana/grafana/blob/main/packages/grafana-data/src/panel/getPanelOptionsWithDefaults.ts
  * https://github.com/grafana/grafana/blob/main/packages/grafana-data/src/field/fieldOverrides.ts
@@ -71,7 +59,8 @@ export const toPanelProps = (spec: VizSpec, entry: PanelEntry): SpecPanelProps =
 
 /**
  * `toPanelProps`, and the number of series that the `series-truncated` cut leaves out (`state.10`). The cut runs
- * before the field overrides, only for the families of `TRUNCATED_FAMILIES`.
+ * before the field overrides, only for the families of `TRUNCATED_FAMILIES`. A candlestick or boxplot is not cut: it
+ * draws one series from several number fields of the first frame, as `PanelContent` resolves the series type.
  */
 export function preparePanel(spec: VizSpec, entry: PanelEntry): { props: SpecPanelProps; omittedSeries: number } {
   const theme = themeOf(spec.theme);
@@ -85,9 +74,11 @@ export function preparePanel(spec: VizSpec, entry: PanelEntry): { props: SpecPan
     throw new Error(`The options of ${spec.panel.type} are not an object`);
   }
   const data = toSpecData(spec, entry);
-  const cut = TRUNCATED_FAMILIES.has(entry.family)
-    ? truncateSeries(data.series, MAX_SERIES)
-    : { series: data.series, omitted: 0 };
+  const multiValue = isMultiValueSeriesType(resolveSeriesType(options[seriesTypePath], data.series, entry.family));
+  const cut =
+    TRUNCATED_FAMILIES.has(entry.family) && !multiValue
+      ? truncateSeries(data.series, MAX_SERIES)
+      : { series: data.series, omitted: 0 };
   const series = applyFieldOverrides({
     data: cut.series,
     fieldConfig,

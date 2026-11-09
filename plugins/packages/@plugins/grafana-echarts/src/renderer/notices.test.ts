@@ -45,6 +45,17 @@ describe('rendererNotices', () => {
     ]);
   });
 
+  // contract-rule: state.11
+  it('gives the geo notices for a geo panel only', () => {
+    const withOptions = (set: string) => {
+      const spec = fixtureSpec(set);
+      (spec.panel as Record<string, unknown>).options = { basemap: { type: 'xyz', name: 'Tiles' } };
+      return parse(spec);
+    };
+    expect(rendererNotices(withOptions('smoke-geomap'), 0).map((notice) => notice.code)).toEqual(['geo-map-tiles']);
+    expect(rendererNotices(withOptions('smoke-timeseries'), 0)).toEqual([]);
+  });
+
   // contract-rule: state.7
   it('puts the notices of the Renderer first, then the notices of the spec', () => {
     const app = { code: 'chart-changed', message: 'The XY chart does not fit the new data. The chart is now a pie.' };

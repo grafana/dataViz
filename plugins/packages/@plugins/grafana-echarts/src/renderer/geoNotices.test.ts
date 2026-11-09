@@ -41,6 +41,12 @@ describe('geoNotices', () => {
     ]);
   });
 
+  it('reads a GeoJSON src that is not text as the panel does: not the countries file', () => {
+    expect(geoNotices({ layers: [{ type: 'geojson', name: 'Bad', config: { src: 5 } }] })).toEqual([
+      { code: 'geo-offline-file', message: 'Map layer Bad: 5 is not available offline.' },
+    ]);
+  });
+
   it('gives geo-offline-file for a lookup gazetteer that is not bundled', () => {
     const lookup = (gazetteer: string) => ({ type: 'markers', name: 'L', location: { mode: 'lookup', gazetteer } });
     expect(geoNotices({ layers: [lookup('public/gazetteer/countries.json')] })).toEqual([]);

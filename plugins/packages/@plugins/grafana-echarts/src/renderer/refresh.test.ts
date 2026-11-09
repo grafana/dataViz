@@ -1,4 +1,5 @@
 import { RefreshController, type RefreshStatus } from './refresh';
+import { REFRESH_TIMEOUT_MS } from './registry';
 
 function controller(onRefresh = jest.fn()) {
   const statuses: RefreshStatus[] = [];
@@ -43,7 +44,7 @@ describe('RefreshController', () => {
   it('times out after refreshTimeoutMs', () => {
     const { refresh, last } = controller();
     refresh.request({ cause: 'refresh' });
-    jest.advanceTimersByTime(59_999);
+    jest.advanceTimersByTime(REFRESH_TIMEOUT_MS - 1);
     expect(last().busy).toBe(true);
     jest.advanceTimersByTime(1);
     expect(last()).toEqual({ busy: false, message: 'Refresh failed: no result in time.' });
@@ -61,7 +62,7 @@ describe('RefreshController', () => {
     expect(refresh.current.message).toBeUndefined();
 
     refresh.request({ cause: 'refresh' });
-    jest.advanceTimersByTime(60_000);
+    jest.advanceTimersByTime(REFRESH_TIMEOUT_MS);
     refresh.setRefreshed(true);
     expect(refresh.current.message).toBe('Refresh failed: no result in time.');
   });
@@ -78,7 +79,7 @@ describe('RefreshController', () => {
     refresh.request({ cause: 'refresh' });
     expect(last()).toEqual({ busy: false, message: 'Refresh failed: host gone' });
     expect(consoleError).toHaveBeenCalledWith('grafana-viz:', thrown);
-    jest.advanceTimersByTime(60_000);
+    jest.advanceTimersByTime(REFRESH_TIMEOUT_MS);
     expect(last().message).toBe('Refresh failed: host gone');
     consoleError.mockRestore();
   });
@@ -87,7 +88,7 @@ describe('RefreshController', () => {
     const { refresh, statuses } = controller();
     refresh.request({ cause: 'refresh' });
     refresh.dispose();
-    jest.advanceTimersByTime(60_000);
+    jest.advanceTimersByTime(REFRESH_TIMEOUT_MS);
     expect(statuses).toEqual([{ busy: true }]);
   });
 });

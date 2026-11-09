@@ -8,13 +8,15 @@ import { draw, fixtureSpec, fixtureState, type Message } from './harness';
 /**
  * CSP reports that the Renderer does not cause. The `@grafana/data` bundle of the App tests `new Function('')` in a
  * try/catch to see if eval works (a feature probe of a bundled schema library). The probe is blocked and caught:
- * nothing breaks. `check-renderer-bundle.mjs` makes sure that the Renderer bundle has no eval of its own.
+ * nothing breaks.
  */
 const isPeerEvalProbe = (m: Message) => m.directive === 'script-src' && m.blocked === 'eval';
 
 /**
- * KNOWN DEFECT (Phase 5 note of the plan, decision 7): `@grafana/ui` `Icon` fetches each SVG from
+ * KNOWN DEFECT (https://github.com/grafana/viz-contract/issues/1): `@grafana/ui` `Icon` fetches each SVG from
  * `public/build/img/icons/` with `react-inlinesvg`. `connect-src 'none'` blocks the fetch, and the icon is blank.
+ * The fix is on the App side: https://github.com/grafana/viz-contract/pull/11 adds `renderer.15`, which says that the
+ * App fills the icon cache before `render`. The harness App does not do that yet.
  * The test below with `test.fail` passes while the defect is there, and fails when the icons load with no network.
  */
 const isIconFetch = (m: Message) =>
@@ -88,7 +90,7 @@ test('a refresh asks the App, and the result shows in the sandbox', async ({ pag
     .toEqual([{ type: 'refresh', request: { cause: 'refresh' } }]);
   await page.evaluate(() =>
     document
-      .querySelector('iframe')!
+      .querySelector<HTMLIFrameElement>('#app')!
       .contentWindow!.postMessage({ type: 'setRefreshed', ok: false, error: 'boom' }, '*')
   );
   await expect(app.getByRole('status')).toHaveText('Refresh failed: boom');
@@ -97,9 +99,19 @@ test('a refresh asks the App, and the result shows in the sandbox', async ({ pag
 
 test('the icons load with no network request', async ({ page }) => {
   // contract-rule: renderer.7
-  test.fail(true, 'Known defect: @grafana/ui icons are fetched by URL (decision 7 of the plan).');
+  test.fail(true, 'Known defect: @grafana/ui icons are fetched by URL (grafana/viz-contract#1).');
   const { of } = await draw(page, fixtureSpec('smoke-timeseries'));
   expect(of('csp').filter(isIconFetch)).toEqual([]);
+});
+
+test('a label with HTML comment and script markup gets to the Renderer as text', async ({ page }) => {
+  // The page puts the spec in a `<script>` element, so its escapes must give back the same JSON.
+  const label = '<!-- </script><script>alert(5)</script> -->';
+  const spec = JSON.stringify(fixtureSpec('hostile-label')).replaceAll('<img src=x onerror=alert(1)>', label);
+  const { of, states } = await draw(page, JSON.parse(spec));
+  expect(of('error')).toEqual([]);
+  expect(states.at(-1)).toEqual(fixtureState('hostile-label'));
+  await expect(page.frameLocator('#app').locator('button', { hasText: label })).toHaveCount(1);
 });
 
 test('the text of the panel has the theme color, also in a button (a legend label)', async ({ page }) => {
