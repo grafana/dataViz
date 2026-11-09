@@ -3,7 +3,7 @@ import { act, screen, waitFor } from '@testing-library/react';
 import { getInstanceByDom } from 'lib/echarts/echarts';
 import { fixtureSpec, fixtureState } from 'test/rendererFixtures';
 import { type RenderState } from './contract/renderer-api';
-import { render } from './index';
+import { render, specVersions } from './index';
 
 /** An element with a size: jsdom has no layout, so `clientWidth` and `clientHeight` are 0. */
 function sizedElement(): HTMLElement {
@@ -50,6 +50,14 @@ describe('the state of a draw', () => {
     expect(states).toHaveLength(1);
     expect(el.getAttribute('data-viz-state')).toBe(expected.state);
     expect(el.getAttribute('data-viz-error')).toBe(expected.error?.code ?? null);
+  });
+
+  // contract-rule: delivery.3
+  it('shows unsupported-spec-version for a specVersion that is not in specVersions', async () => {
+    const spec = fixtureSpec('error-unsupported-spec-version') as { specVersion: number };
+    expect(specVersions).not.toContain(spec.specVersion);
+    const { el } = await draw(spec);
+    expect(el.getAttribute('data-viz-error')).toBe('unsupported-spec-version');
   });
 
   it('shows the error message in place of the chart, one line for each failed query', async () => {

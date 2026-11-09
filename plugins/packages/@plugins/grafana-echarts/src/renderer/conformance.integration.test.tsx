@@ -106,7 +106,7 @@ function markup(root: HTMLElement): string[] {
 }
 
 describe('hostile-label', () => {
-  // contract-rule: renderer.14
+  // No tag: `fixtures.4` names the set, and the Source owns that rule. The contract has no Renderer rule for it.
   it('shows the label values as text in the chart and the tooltip, and makes no element or script from them', async () => {
     const alert = jest.spyOn(window, 'alert').mockImplementation(() => {});
     const spec = fixtureSpec('hostile-label');
