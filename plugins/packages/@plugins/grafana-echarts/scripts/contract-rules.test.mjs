@@ -29,8 +29,8 @@ describe('contractRuleIds', () => {
 
 describe('CHAPTER', () => {
   test('matches the numbered chapters only', () => {
-    assert.equal(CHAPTER.test('contract/3-renderer.md'), true);
-    for (const path of ['contract/README.md', 'contract/CHANGELOG.md', 'contract/future.md', 'contract/x/1-a.md']) {
+    assert.equal(CHAPTER.test('3-renderer.md'), true);
+    for (const path of ['README.md', 'CHANGELOG.md', 'future.md', 'fixtures/1-a.md', 'contract/3-renderer.md']) {
       assert.equal(CHAPTER.test(path), false, path);
     }
   });

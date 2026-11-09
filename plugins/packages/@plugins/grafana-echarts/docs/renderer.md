@@ -2,7 +2,7 @@
 
 The Renderer is one ES module that draws a viz spec with the panels of this package. A viz spec is a JSON document that holds one panel and the data of its queries. The App of [grafana/mcp-grafana](https://github.com/grafana/mcp-grafana) loads the Renderer in an MCP Apps sandbox iframe. That iframe has no network and no Grafana server.
 
-The rules come from the viz contract 1.0.0. The package has a copy of the contract in `src/renderer/contract/`, from tag `contract-1.0.0` of grafana-experimental/grafana-beyond-docs (commit `aecc573f`). The contract is now in grafana/viz-contract. The source code is in `src/renderer/`.
+The rules come from the viz contract 1.0.0. The package has a copy of the contract in `src/renderer/contract/`, from commit `a3666ce2` of [grafana/viz-contract](https://github.com/grafana/viz-contract). The source code is in `src/renderer/`.
 
 ## The module
 
@@ -69,15 +69,13 @@ Each contract rule that the Renderer owns has a test or a check. The test or the
 - A comment names a rule that is not in `renderer`.
 - An id is in both lists, or a number is missing in a group of ids.
 
-The test reads the Jest tests, `tests-renderer/`, `scripts/check-renderer-bundle.mjs` and `scripts/contract-scan.test.mjs`. If you add a test for a rule, add the comment.
+The test reads the Jest tests, `tests-renderer/` and each `scripts/*.mjs` file. If you add a test for a rule, add the comment.
 
 ## Sync the contract
 
-Do not edit the files in `src/renderer/contract/`. To copy a new contract version, run `pnpm run sync:contract contract-<version>`, for example `contract-1.0.0`.
+Do not edit the files in `src/renderer/contract/`. To copy a new contract version, run `pnpm run sync:contract v<version>`, for example `v1.1.0`. The script reads the tag from [grafana/viz-contract](https://github.com/grafana/viz-contract). Contract 1.0.0 has no tag.
 
 The script reads the tag with `gh api`, so `gh auth status` must pass. It copies the registry files, the schema, `renderer-api.d.ts`, and the `spec.json` and `state.json` of each fixture set. If a fixture set has an `expected.png`, the script copies it too. Before it writes a file, it scans all the files for secrets, internal host names and URLs that are not on its allowed list. If it finds one, it stops and writes nothing (`fixtures.11`). The scan is in `scripts/contract-scan.mjs`, and `scripts/contract-scan.test.mjs` tests it. The sync writes and overwrites files, but it never deletes a file. If the contract removes a file, delete the copy yourself.
-
-The `REPO` constant of `scripts/sync-contract.mjs` names grafana-experimental/grafana-beyond-docs. The contract is now in grafana/viz-contract. Change `REPO` before the next sync.
 
 After a sync, update `contractRules.json` if the contract added or removed rules. Then run `pnpm run test:ci` and `pnpm run test:renderer-sandbox`.
 

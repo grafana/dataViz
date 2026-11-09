@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Copies the Renderer files of the viz contract into `src/renderer/contract/`, from one contract tag.
-// Usage: node scripts/sync-contract.mjs contract-1.0.0
+// Usage: node scripts/sync-contract.mjs v1.1.0
 // It reads with `gh api` (read only), so `gh auth status` must pass. See docs/renderer.md.
 // https://docs.github.com/en/rest/git/trees#get-a-tree https://docs.github.com/en/rest/git/blobs#get-a-blob
 import { execFileSync } from 'node:child_process';
@@ -10,16 +10,16 @@ import { fileURLToPath } from 'node:url';
 import { CHAPTER, contractRuleIds } from './contract-rules.mjs';
 import { scanContractFiles } from './contract-scan.mjs';
 
-const REPO = 'grafana-experimental/grafana-beyond-docs';
+const REPO = 'grafana/viz-contract';
 /** Files that the Renderer reads (contract README, "How to read"). The key is the path in the contract. */
 const FILES = {
-  'contract/renderer-api.d.ts': 'renderer-api.d.ts',
-  'contract/registry/panel-types.json': 'registry/panel-types.json',
-  'contract/registry/chart-types.json': 'registry/chart-types.json',
-  'contract/registry/states.json': 'registry/states.json',
-  'contract/registry/notices.json': 'registry/notices.json',
-  'contract/registry/constants.json': 'registry/constants.json',
-  'contract/schemas/bundled/viz-spec.schema.json': 'schemas/viz-spec.schema.json',
+  'renderer-api.d.ts': 'renderer-api.d.ts',
+  'registry/panel-types.json': 'registry/panel-types.json',
+  'registry/chart-types.json': 'registry/chart-types.json',
+  'registry/states.json': 'registry/states.json',
+  'registry/notices.json': 'registry/notices.json',
+  'registry/constants.json': 'registry/constants.json',
+  'schemas/bundled/viz-spec.schema.json': 'schemas/viz-spec.schema.json',
 };
 /** The fixture files of the Renderer test (`fixtures.10`). A set has them only when it is a Renderer set. */
 const FIXTURE_FILES = ['spec.json', 'state.json'];
@@ -29,8 +29,8 @@ const FIXTURE_IMAGE = 'expected.png';
 const encoding = (file) => (file.endsWith('.png') ? 'latin1' : 'utf8');
 
 const tag = process.argv[2];
-if (!/^contract-\d+\.\d+\.\d+$/.test(tag ?? '')) {
-  console.error('Usage: node scripts/sync-contract.mjs contract-<semver>');
+if (!/^v\d+\.\d+\.\d+$/.test(tag ?? '')) {
+  console.error('Usage: node scripts/sync-contract.mjs v<semver>');
   process.exit(2);
 }
 
@@ -53,12 +53,12 @@ const blobs = new Map(tree.tree.filter((entry) => entry.type === 'blob').map((en
 /** Contract path → local path, for each file to copy. */
 const copies = new Map(Object.entries(FILES));
 for (const path of blobs.keys()) {
-  const match = /^contract\/fixtures\/([^/]+)\/state\.json$/.exec(path);
+  const match = /^fixtures\/([^/]+)\/state\.json$/.exec(path);
   if (match) {
     for (const file of FIXTURE_FILES) {
-      copies.set(`contract/fixtures/${match[1]}/${file}`, `fixtures/${match[1]}/${file}`);
+      copies.set(`fixtures/${match[1]}/${file}`, `fixtures/${match[1]}/${file}`);
     }
-    const image = `contract/fixtures/${match[1]}/${FIXTURE_IMAGE}`;
+    const image = `fixtures/${match[1]}/${FIXTURE_IMAGE}`;
     if (blobs.has(image)) {
       copies.set(image, `fixtures/${match[1]}/${FIXTURE_IMAGE}`);
     }
@@ -75,7 +75,7 @@ for (const [from, to] of copies) {
 }
 
 // The rule ids of the chapters, for contractCoverage.test.ts. Chapters sort by their number prefix.
-const chapterNumber = (path) => Number.parseInt(path.slice('contract/'.length), 10);
+const chapterNumber = (path) => Number.parseInt(path, 10);
 const chapters = [...blobs.keys()]
   .filter((path) => CHAPTER.test(path))
   .sort((a, b) => chapterNumber(a) - chapterNumber(b));
@@ -97,7 +97,7 @@ for (const [file, text] of contents) {
   mkdirSync(dirname(join(root, file)), { recursive: true });
   writeFileSync(join(root, file), text, encoding(file));
 }
-const version = tag.slice('contract-'.length);
+const version = tag.slice('v'.length);
 writeFileSync(join(root, 'CONTRACT_VERSION'), `${version}\n`);
 writeFileSync(
   join(root, 'README.md'),

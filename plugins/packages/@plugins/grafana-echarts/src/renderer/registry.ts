@@ -1,5 +1,5 @@
 // Typed access to the contract registries in `contract/registry/`. Messages and constants come from here only
-// (design decision 2 of the plan). https://github.com/grafana-experimental/grafana-beyond-docs (tag in contract/README.md)
+// (design decision 2 of the plan). https://github.com/grafana/viz-contract (commit in contract/README.md)
 import constants from './contract/registry/constants.json';
 import panelTypes from './contract/registry/panel-types.json';
 

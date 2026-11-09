@@ -2,8 +2,8 @@
 // `src/renderer/contractRules.json`, so a rule that a new contract version adds or removes fails the test.
 // It is a module of its own, so `contract-rules.test.mjs` can test it with no `gh` call.
 
-/** A contract chapter, for example `contract/3-renderer.md`. */
-export const CHAPTER = /^contract\/\d+-[^/]+\.md$/;
+/** A contract chapter at the root of the contract repo, for example `3-renderer.md`. */
+export const CHAPTER = /^\d+-[^/]+\.md$/;
 
 /** A rule starts a list item with its id in backticks: "- `renderer.1` The Renderer is an ES module." */
 const RULE = /^[-*] `([a-z]+\.\d+)`/gm;
