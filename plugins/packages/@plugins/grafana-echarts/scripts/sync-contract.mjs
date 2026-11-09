@@ -7,6 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { CHAPTER, contractRuleIds } from './contract-rules.mjs';
 import { scanContractFiles } from './contract-scan.mjs';
 
 const REPO = 'grafana-experimental/grafana-beyond-docs';
@@ -64,6 +65,16 @@ for (const [from, to] of copies) {
   contents.set(to, blob(sha));
 }
 
+// The rule ids of the chapters, for contractCoverage.test.ts. Chapters sort by their number prefix.
+const chapterNumber = (path) => Number.parseInt(path.slice('contract/'.length), 10);
+const chapters = [...blobs.keys()]
+  .filter((path) => CHAPTER.test(path))
+  .sort((a, b) => chapterNumber(a) - chapterNumber(b));
+contents.set(
+  'rule-ids.json',
+  `${JSON.stringify(contractRuleIds(chapters.map((path) => blob(blobs.get(path)))), null, 2)}\n`
+);
+
 // `fixtures.11`: check each file before anything is written. A hit stops the sync.
 const hits = scanContractFiles(contents);
 if (hits.length > 0) {
@@ -83,7 +94,7 @@ writeFileSync(
   join(root, 'README.md'),
   `# Viz contract ${version}\n\n` +
     `Do not edit these files. \`scripts/sync-contract.mjs\` copies them from tag \`${tag}\` of ${REPO}, ` +
-    `commit \`${commit}\`.\n\n` +
+    `commit \`${commit}\`. \`rule-ids.json\` lists the rule ids of the contract chapters.\n\n` +
     'One file is local: `fixtures/prometheus-line/expected.png`. The sync does not write or delete it.\n'
 );
 const sets = [...copies.values()].filter((file) => file.endsWith('/state.json')).length;

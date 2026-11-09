@@ -1,5 +1,5 @@
 {
-  "description": "The rules of the viz contract, by owner. A Renderer test or check names a rule in a comment `contract-rule: <id>`. contractCoverage.test.ts fails when a rule of `renderer` has none. The rules of `notRenderer` belong to the Source or the App.",
+  "description": "The rules of the viz contract, by owner. A Renderer test or check names a rule in a comment `contract-rule: <id>`. contractCoverage.test.ts fails when a rule of `renderer` has none. The rules of `notRenderer` belong to the Source or the App. The two lists together must equal `contract/rule-ids.json`.",
   "contractVersion": "1.0.0",
   "renderer": [
     "spec.9",

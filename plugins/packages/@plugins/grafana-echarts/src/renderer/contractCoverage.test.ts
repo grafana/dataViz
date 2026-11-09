@@ -1,6 +1,7 @@
 // Each contract rule that the Renderer owns has a test or a check that names it (`contract-rule: <id>`).
 import fs from 'node:fs';
 import path from 'node:path';
+import contractIds from './contract/rule-ids.json';
 import rules from './contractRules.json';
 
 const PACKAGE_DIR = path.join(__dirname, '..', '..');
@@ -16,14 +17,12 @@ const sourceFiles = (): string[] => [
   path.join('scripts', 'contract-scan.test.mjs'),
 ];
 
-/** The rule ids that each file names, as `id → files`. Only ids with a contract prefix count. */
+/** The rule ids that each file names, as `id → files`. */
 function namedRules(): Map<string, string[]> {
   const named = new Map<string, string[]>();
   for (const file of sourceFiles()) {
     const text = fs.readFileSync(path.join(PACKAGE_DIR, file), 'utf8');
-    for (const [, id] of text.matchAll(
-      /contract-rule: ((?:tool|spec|renderer|state|refresh|delivery|fixtures|version)\.\d+)\b/g
-    )) {
+    for (const [, id] of text.matchAll(/contract-rule: ([a-z]+\.\d+)\b/g)) {
       named.set(id, [...(named.get(id) ?? []), file]);
     }
   }
@@ -39,18 +38,10 @@ describe('the contract rule coverage', () => {
     );
   });
 
-  it('gives each rule one owner, and no rule is missing from a group', () => {
+  it('gives one owner to each rule of the contract copy, and lists no other rule', () => {
     const all = [...rules.renderer, ...rules.notRenderer];
     expect(new Set(all).size).toBe(all.length);
-    const byGroup = new Map<string, number[]>();
-    for (const id of all) {
-      const [group, n] = id.split('.');
-      byGroup.set(group, [...(byGroup.get(group) ?? []), Number(n)]);
-    }
-    for (const [group, numbers] of byGroup) {
-      const sorted = [...numbers].sort((a, b) => a - b);
-      expect([group, sorted]).toEqual([group, sorted.map((_, i) => i + 1)]);
-    }
+    expect([...all].sort()).toEqual([...contractIds].sort());
   });
 
   it('has a test or a check for each rule that the Renderer owns', () => {
