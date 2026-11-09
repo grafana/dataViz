@@ -15,7 +15,6 @@ describe('Renderer module', () => {
     expect(renderer.version).toBe(require('../../package.json').version);
   });
 
-  // contract-rule: delivery.3
   it('supports the specVersion of the contract', () => {
     expect(renderer.specVersions).toContain(constants.specVersion.value);
   });
