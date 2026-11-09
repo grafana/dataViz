@@ -2,7 +2,9 @@
 // equals its `state.json`. It never looks at pixels.
 import { act, waitFor } from '@testing-library/react';
 import { getInstanceByDom } from 'lib/echarts/echarts';
+import { getChart } from 'test/canvas';
 import { fixtureSets, fixtureSpec, fixtureState } from 'test/rendererFixtures';
+import { dispatch, tooltipText } from 'test/tooltipPointer';
 import { type RenderHandle, type RenderState } from './contract/renderer-api';
 import { render } from './index';
 
@@ -81,34 +83,50 @@ describe('the fixture sets of the contract', () => {
   });
 });
 
-/** The label values of each field of a spec, once each. They are the hostile strings of `hostile-label`. */
-function labelValues(spec: Record<string, unknown>): string[] {
-  type Field = { labels?: Record<string, string> };
-  type Results = Record<string, { frames: Array<{ schema: { fields: Field[] } }> }>;
-  const results = (spec.data as { results: Results }).results;
-  const values = Object.values(results).flatMap((result) =>
-    result.frames.flatMap((frame) => frame.schema.fields.flatMap((field) => Object.values(field.labels ?? {})))
+/** One series of each frame of a spec: its label value and the time and value of its middle point. */
+function seriesPoints(spec: Record<string, unknown>): Array<{ text: string; point: [number, number] }> {
+  type Frame = { schema: { fields: Array<{ labels?: Record<string, string> }> }; data: { values: number[][] } };
+  const results = (spec.data as { results: Record<string, { frames: Frame[] }> }).results;
+  return Object.values(results).flatMap((result) =>
+    result.frames.map(({ schema, data }) => {
+      const [times, values] = data.values;
+      const middle = Math.floor(times.length / 2);
+      const text = schema.fields.flatMap((field) => Object.values(field.labels ?? {})).join();
+      return { text, point: [times[middle], values[middle]] as [number, number] };
+    })
   );
-  return [...new Set(values)];
+}
+
+/** The elements and the `on*` attributes in `root` that only markup in a label value can make. */
+function markup(root: HTMLElement): string[] {
+  return [...root.querySelectorAll('*')].flatMap((node) => [
+    ...(node.matches('script, img, iframe, object, embed') ? [node.tagName.toLowerCase()] : []),
+    ...[...node.attributes].filter((attribute) => attribute.name.startsWith('on')).map((attribute) => attribute.name),
+  ]);
 }
 
 describe('hostile-label', () => {
   // contract-rule: renderer.14
-  it('shows the label values as text, and makes no element or script from them', async () => {
+  it('shows the label values as text in the chart and the tooltip, and makes no element or script from them', async () => {
     const alert = jest.spyOn(window, 'alert').mockImplementation(() => {});
     const spec = fixtureSpec('hostile-label');
     const { el, states } = await draw(spec);
     await waitFor(() => expect(states.at(-1)).toEqual(fixtureState('hostile-label')));
-    const texts = labelValues(spec);
-    expect(texts.length).toBeGreaterThan(0);
-    for (const text of texts) {
+    const series = seriesPoints(spec);
+    expect(series.length).toBeGreaterThan(0);
+    for (const { text } of series) {
       expect(el.textContent).toContain(text);
     }
-    expect(el.querySelectorAll('script, img, iframe, object, embed')).toHaveLength(0);
-    const handlers = [...el.querySelectorAll('*')].flatMap((node) =>
-      [...node.attributes].filter((attribute) => attribute.name.startsWith('on')).map((attribute) => attribute.name)
-    );
-    expect(handlers).toEqual([]);
+    expect(markup(el)).toEqual([]);
+
+    // The tooltip is a portal on `document.body`, outside `el`. Series `i` is frame `i` of the spec.
+    const chart = getChart(el).chart!;
+    for (const [seriesIndex, { text, point }] of series.entries()) {
+      const [x, y] = chart.convertToPixel({ seriesIndex }, point) as number[];
+      await dispatch(chart, 'mousemove', x, y);
+      expect(tooltipText()).toContain(text);
+      expect(markup(document.body)).toEqual([]);
+    }
     expect(alert).not.toHaveBeenCalled();
     alert.mockRestore();
   });
