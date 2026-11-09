@@ -1,6 +1,6 @@
 // The test App of the Renderer sandbox test (`tests-renderer/`). Not shipped.
-// It plays the App of mcp-grafana: `webpack.renderer-harness.config.ts` bundles it with the contract peers and the
-// built Renderer (`dist-renderer/renderer.js`), as the App build adds the Renderer to `app.html` (`delivery.1`).
+// It stands in for the App of mcp-grafana: `webpack.renderer-harness.config.ts` bundles it with the contract peers and
+// the built Renderer (`dist-renderer/renderer.js`), as `delivery.1` says the App build adds the Renderer to `app.html`.
 // The page gives the viz spec in `<script type="application/json" id="viz-spec">` and reads the messages.
 import { render } from '../../dist-renderer/renderer.js';
 
