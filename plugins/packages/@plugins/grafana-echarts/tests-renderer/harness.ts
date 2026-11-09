@@ -36,8 +36,10 @@ export const fixtureState = (set: string): unknown =>
   );
 
 /**
- * Code in a `<script>` element: a `</script` in it would end the element. The escapes are legal in a JS string or
- * regular expression, which is where the App bundle has them.
+ * Code in a `<script>` element: a `</script` in it would end the element. The escapes are legal in a JS string and in
+ * a regular expression with no `u` or `v` flag, which is where the App bundle has them. With `u` or `v`, `\/` is legal
+ * but `\!` is not: `/<\!--/u` throws "Invalid escape". If the bundle gets one, the App script does not parse, and the
+ * `error` probe (which runs first, in its own script) reports the `SyntaxError`, so the sandbox tests fail.
  */
 const scriptText = (text: string) => text.replace(/<\/script/gi, '<\\/script').replace(/<!--/g, '<\\!--');
 
