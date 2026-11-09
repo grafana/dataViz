@@ -4,13 +4,10 @@ import { type ChartNotice } from 'lib/echarts/charts/types';
 import { type Notice } from './contract/renderer-api';
 import { geoNotices } from './geoNotices';
 import { fillPattern, noticeMessage } from './messages';
-import { MAX_SERIES } from './registry';
+import { MAX_SERIES, panelType } from './registry';
 import { orderedResults } from './results';
 import { isUnitId } from './units';
 import { type VizSpec } from './vizSpec';
-
-/** The panel of the geo notices (`state.11`). */
-const GEO_PANEL_ID = 'grafana-echartsgeo-panel';
 
 /**
  * The `series-truncated` message of the Renderer. It is not the `notices.json` message ("series with the smallest
@@ -49,7 +46,8 @@ export function rendererNotices(spec: VizSpec, omittedSeries: number): Notice[] 
     });
   }
 
-  if (spec.panel.type === GEO_PANEL_ID) {
+  // The geo notices (`state.11`).
+  if (panelType(spec.panel.type)?.family === 'geo') {
     notices.push(...geoNotices(spec.panel.options));
   }
 
