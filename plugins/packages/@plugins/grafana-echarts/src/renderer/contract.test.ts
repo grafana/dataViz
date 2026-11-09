@@ -29,6 +29,12 @@ describe('contract copy', () => {
     }
   });
 
+  // contract-rule: fixtures.10
+  it('has no expected.png, because the Renderer has no image test yet', () => {
+    // When a set has expected.png, add the image test of fixtures.10, then remove this test.
+    expect(sets.filter((set) => fs.existsSync(path.join(fixturesDir, set, 'expected.png')))).toEqual([]);
+  });
+
   // contract-rule: fixtures.12
   it('has one error set for each error that the spec checks give', () => {
     const errorSets = sets.filter((name) => name.startsWith('error-')).sort();
