@@ -209,11 +209,15 @@ export function getGeoJsonLayers(layers: MapLayerOptions[] | undefined, theme: G
 export const getGeoJsonSrcs = (layers: MapLayerOptions[] | undefined): string[] =>
   resolveLayers(layers).flatMap((layer) => (isGeoJsonLayer(layer) ? [getLayerSrc(layer)] : []));
 
-/** True for a `geojson` layer. */
-export const isGeoJsonLayer = (layer: MapLayerOptions): layer is MapLayerOptions<GeoJsonConfig> =>
+/** True for a `geojson` layer. It takes any object, so a layer of a viz spec that is not checked can use it too. */
+export const isGeoJsonLayer = (layer: { type?: unknown }): layer is MapLayerOptions<GeoJsonConfig> =>
   layer.type === GEOJSON_LAYER_TYPE;
 
-/** The `config.src` of a layer. An unset or empty value gives the core default. */
+/**
+ * The `config.src` of a layer, as text. An unset or empty value gives the core default. A layer of a viz spec is not
+ * checked, so `src` can be any JSON value, such as `5` or `true`.
+ */
 export function getLayerSrc(layer: Partial<MapLayerOptions<GeoJsonConfig>>): string {
-  return layer.config?.src || COUNTRIES_GEOJSON_SRC;
+  const src: unknown = layer.config?.src;
+  return src ? String(src) : COUNTRIES_GEOJSON_SRC;
 }

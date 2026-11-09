@@ -2,7 +2,8 @@ import { FieldType } from '@grafana/data';
 import { fixtureSets, fixtureSpec } from 'test/rendererFixtures';
 import { PANELS } from './panels';
 import { parseSpec } from './parseSpec';
-import { preparePanel, themeOf, toPanelProps, withoutCallOuts } from './toPanelProps';
+import { withoutCallOuts } from './callOuts';
+import { preparePanel, themeOf, toPanelProps } from './toPanelProps';
 import { type VizSpec } from './vizSpec';
 
 const parse = (input: unknown): VizSpec => {
@@ -80,6 +81,22 @@ describe('toPanelProps', () => {
     }
     // The ad-hoc filter buttons come from `PanelContext.onAddAdHocFilter`. The Renderer gives no `PanelContext`.
     expect(Object.keys(props)).not.toContain('onAddAdHocFilter');
+  });
+
+  // contract-rule: renderer.12
+  it('gives no data links for links that a data source puts in the frames', () => {
+    const spec = fixtureSpec('smoke-timeseries') as { data: { results: Record<string, { frames: unknown[] }> } };
+    for (const json of Object.values(spec.data.results).flatMap((result) => result.frames)) {
+      for (const field of (json as { schema: { fields: Array<{ config?: object }> } }).schema.fields) {
+        field.config = { ...field.config, links: [{ title: 't', url: 'https://evil.example/x' }] };
+      }
+    }
+    const fields = toPanelProps(parse(spec), cartesian).data.series.flatMap((f) => f.fields);
+    expect(fields.length).toBeGreaterThan(0);
+    for (const field of fields) {
+      expect(field.config.links).toBeUndefined();
+      expect(field.getLinks?.({ valueRowIndex: 0 })).toEqual([]);
+    }
   });
 
   it('removes call-out properties and keeps the rest', () => {
@@ -169,5 +186,40 @@ describe('preparePanel: the series-truncated cut', () => {
     expect(preparePanel(wide('grafana-echartsheatmap-panel', 60), heatmap).omittedSeries).toBe(0);
     const stream = PANELS['grafana-echartsstream-panel'];
     expect(preparePanel(wide('grafana-echartsstream-panel', 60), stream).omittedSeries).toBe(10);
+  });
+
+  // contract-rule: state.10
+  it('does not cut an Auto candlestick, which draws one series from the number fields of the first frame', () => {
+    const spec = wide('grafana-echartscartesian-panel', 0);
+    const ohlc = (refId: string) => ({
+      schema: {
+        refId,
+        fields: [
+          { name: 'time', type: FieldType.time },
+          ...['open', 'high', 'low', 'close', 'volume'].map((name) => ({ name, type: FieldType.number })),
+        ],
+      },
+      data: {
+        values: [
+          [1, 2],
+          [1, 2],
+          [3, 4],
+          [0, 1],
+          [2, 3],
+          [9, 9],
+        ],
+      },
+    });
+    const frames = Array.from({ length: 11 }, (_, i) => ohlc(`F${i}`));
+    const { props, omittedSeries } = preparePanel(
+      {
+        ...spec,
+        panel: { ...spec.panel, options: { ...spec.panel.options, seriesType: 'Auto' } },
+        data: { ...spec.data, results: { A: { frames } } },
+      },
+      cartesian
+    );
+    expect(omittedSeries).toBe(0);
+    expect(props.data.series).toHaveLength(11);
   });
 });

@@ -1,5 +1,6 @@
 import { act, waitFor } from '@testing-library/react';
 import { getInstanceByDom } from 'lib/echarts/echarts';
+import { withLayout } from 'test/layout';
 import { fixtureSpec } from 'test/rendererFixtures';
 import { render } from './index';
 
@@ -47,10 +48,22 @@ describe('render', () => {
 
   // contract-rule: renderer.10
   it('sets the height of an element with no height to defaultHeightPx', () => {
-    const el = document.createElement('div');
+    const el = withLayout(document.createElement('div'));
     document.body.appendChild(el);
-    render(el, fixtureSpec('smoke-timeseries'));
+    const handle = render(el, fixtureSpec('smoke-timeseries'));
     expect(el.style.height).toBe('400px');
+    act(() => handle.destroy());
+    expect(el.style.height).toBe('');
+  });
+
+  it('gives back the inline height of the element on destroy', () => {
+    const el = withLayout(document.createElement('div'));
+    el.style.height = '0px';
+    document.body.appendChild(el);
+    const handle = render(el, fixtureSpec('smoke-timeseries'));
+    expect(el.style.height).toBe('400px');
+    act(() => handle.destroy());
+    expect(el.style.height).toBe('0px');
   });
 
   // contract-rule: renderer.3
@@ -61,6 +74,23 @@ describe('render', () => {
     await waitFor(() => expect(el.getAttribute('data-viz-state')).toBe('error'));
     expect(el.getAttribute('data-viz-error')).toBe('invalid-spec');
     expect(error).toHaveBeenCalledWith('grafana-viz:', 'The viz spec is not correct: data is missing.');
+    error.mockRestore();
+  });
+
+  // contract-rule: state.5
+  it('shows render-error for a frame that matches the schema but cannot be read', async () => {
+    const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const spec = fixtureSpec('smoke-timeseries') as { data: { results: { A: { frames: unknown[] } } } };
+    spec.data.results.A.frames.push({ schema: { name: 'no fields' } });
+    const el = sizedElement();
+    render(el, spec);
+    await waitFor(() =>
+      expect([el.getAttribute('data-viz-state'), el.getAttribute('data-viz-error')]).toEqual(['error', 'render-error'])
+    );
+    expect(error).toHaveBeenCalledWith(
+      'grafana-viz:',
+      expect.objectContaining({ message: 'JSON needs a fields definition' })
+    );
     error.mockRestore();
   });
 });

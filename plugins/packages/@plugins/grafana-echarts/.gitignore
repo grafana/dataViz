@@ -73,8 +73,14 @@ scripts/*
 !scripts/sync-contract.mjs
 !scripts/renderer-manifest.mjs
 !scripts/check-renderer-bundle.mjs
+!scripts/bundle-imports.mjs
+!scripts/bundle-imports.test.mjs
+!scripts/check-renderer-bundle.test.mjs
 !scripts/contract-scan.mjs
 !scripts/contract-scan.test.mjs
+!scripts/contract-rules.mjs
+!scripts/contract-rules.test.mjs
+!scripts/tracked-imports.test.mjs
 !scripts/renderer-harness/
 !scripts/bench/
 scripts/bench/*

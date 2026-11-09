@@ -1,6 +1,7 @@
 // The geo notices (`state.11`). The geo panel always draws the vector basemap of the bundle, and the Renderer
 // fetches no file (`renderer.7`). So a layer that needs map tiles or a file from the network is drawn with no
 // network (the vector basemap) or left out, and the Renderer says so.
+import { getLayerSrc, isGeoJsonLayer } from 'lib/grafana/geo/geojson';
 import { COUNTRIES_GEOJSON_SRC } from 'lib/grafana/geo/geojsonSource';
 import { getGazetteer } from 'lib/grafana/geo/gazetteer';
 import { type Notice } from './contract/renderer-api';
@@ -33,10 +34,9 @@ export function geoNotices(options: Record<string, unknown>): Notice[] {
     if (TILE_LAYER_TYPES.has(type)) {
       notices.push({ code: 'geo-map-tiles', message: noticeMessage('geo-map-tiles', { name, type }) });
     }
-    // A GeoJSON file: only the core default (the countries) is in the bundle.
-    const config = isObject(layer.config) ? layer.config : {};
-    const src = text(config.src) ?? COUNTRIES_GEOJSON_SRC;
-    if (type === 'geojson' && src !== COUNTRIES_GEOJSON_SRC) {
+    // A GeoJSON file: only the core default (the countries) is in the bundle. The panel reads `src` the same way.
+    const src = isGeoJsonLayer(layer) ? getLayerSrc(layer) : COUNTRIES_GEOJSON_SRC;
+    if (src !== COUNTRIES_GEOJSON_SRC) {
       notices.push({ code: 'geo-offline-file', message: noticeMessage('geo-offline-file', { name, url: src }) });
     }
     // A gazetteer of the location lookup: only the bundled ones are available.

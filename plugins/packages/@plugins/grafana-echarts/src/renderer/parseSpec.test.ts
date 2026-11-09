@@ -44,6 +44,40 @@ describe('parseSpec', () => {
     });
   });
 
+  /** The spec with `frame` after the frames of result A, at index 2. */
+  const withFrame = (frame: unknown) => {
+    const spec = valid();
+    (spec.data as { results: { A: { frames: unknown[] } } }).results.A.frames.push(frame);
+    return spec;
+  };
+
+  // contract-rule: state.3
+  it.each([
+    ['a frame that is not an object', 'frame', ''],
+    ['a frame with no schema', {}, '.schema'],
+    ['schema.fields that is not an array', { schema: { fields: {} } }, '.schema.fields'],
+    ['a field that is not an object', { schema: { fields: [null] } }, '.schema.fields.0'],
+    ['a field with no name', { schema: { fields: [{ name: 'a' }, { type: 'number' }] } }, '.schema.fields.1.name'],
+    ['data that is not an object', { schema: {}, data: [] }, '.data'],
+    ['data.values that is not an array', { schema: {}, data: { values: {} } }, '.data.values'],
+    ['a values entry that is not an array', { schema: {}, data: { values: [[1], 2] } }, '.data.values.1'],
+  ])('gives invalid-spec for %s, with the path of the frame', (_, frame, path) => {
+    expect(errorOf(withFrame(frame))).toEqual({
+      code: 'invalid-spec',
+      message: `The viz spec is not correct: data.results.A.frames.2${path} is missing.`,
+    });
+  });
+
+  it('accepts a frame that matches the frame schema, also with no fields or no data', () => {
+    expect(parseSpec(withFrame({ schema: { name: 'no fields' } })).ok).toBe(true);
+  });
+
+  it('checks the frames before the spec version', () => {
+    const spec = withFrame({});
+    spec.specVersion = 99;
+    expect(errorOf(spec)?.code).toBe('invalid-spec');
+  });
+
   it('checks the fields in the order of the schema', () => {
     const spec = without('data');
     delete (spec.panel as Record<string, unknown>).type;

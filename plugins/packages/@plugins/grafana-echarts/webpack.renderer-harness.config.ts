@@ -1,5 +1,7 @@
 // Webpack config of the test App of the Renderer sandbox test (`scripts/renderer-harness/app.mjs`). Not shipped.
-// It bundles the contract peers with the built Renderer, as the App of mcp-grafana does (`delivery.1`).
+// It stands in for the App build of mcp-grafana, which uses Vite and `vite-plugin-singlefile`, not webpack, and does not
+// bundle the Renderer yet. It bundles the contract peers with the built Renderer, as `delivery.1` says. The minified
+// output of the real App build can differ: escaping, CSS injection, and the `eval` check of `@grafana/data`.
 import path from 'path';
 import { type Configuration } from 'webpack';
 
