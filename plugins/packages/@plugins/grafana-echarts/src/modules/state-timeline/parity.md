@@ -70,8 +70,6 @@ so a panel switched from core keeps its settings.
   of its lane covers. Thus a lane has at most about one element per pixel. See the "Dense lanes"
   panels of `timeline-core-parity`.
 
-The open items are in [#211](https://github.com/grafana-experimental/grafana-beyond/issues/211).
-
 [canvas]: ../../lib/components/timeline.canvas.test.tsx
 [integration]: ../../lib/components/timeline.integration.test.tsx
 [prepare]: ../../lib/grafana/timeline/prepareTimeline.test.ts

@@ -11,7 +11,6 @@
         "type": "grafana-testdata-datasource",
         "uid": "trlxrdZVk"
       },
-      "description": "https://github.com/grafana-experimental/grafana-beyond/issues/930",
       "fieldConfig": {
         "defaults": {},
         "overrides": []
@@ -44,7 +43,6 @@
         "type": "grafana-testdata-datasource",
         "uid": "trlxrdZVk"
       },
-      "description": "https://github.com/grafana-experimental/grafana-beyond/issues/930",
       "fieldConfig": {
         "defaults": {},
         "overrides": []
@@ -77,7 +75,6 @@
         "type": "grafana-testdata-datasource",
         "uid": "trlxrdZVk"
       },
-      "description": "https://github.com/grafana-experimental/grafana-beyond/issues/930",
       "fieldConfig": {
         "defaults": {},
         "overrides": []
@@ -131,7 +128,6 @@
         "type": "grafana-testdata-datasource",
         "uid": "trlxrdZVk"
       },
-      "description": "https://github.com/grafana-experimental/grafana-beyond/issues/930",
       "fieldConfig": {
         "defaults": {},
         "overrides": []
@@ -185,7 +181,6 @@
         "type": "grafana-testdata-datasource",
         "uid": "trlxrdZVk"
       },
-      "description": "https://github.com/grafana-experimental/grafana-beyond/issues/930",
       "fieldConfig": {
         "defaults": {},
         "overrides": []
@@ -231,7 +226,6 @@
         "type": "grafana-testdata-datasource",
         "uid": "trlxrdZVk"
       },
-      "description": "https://github.com/grafana-experimental/grafana-beyond/issues/930",
       "fieldConfig": {
         "defaults": {},
         "overrides": []

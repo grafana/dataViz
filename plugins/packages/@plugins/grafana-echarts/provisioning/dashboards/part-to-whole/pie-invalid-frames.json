@@ -11,7 +11,7 @@
         "type": "grafana-testdata-datasource",
         "uid": "trlxrdZVk"
       },
-      "description": "The #921 frame. The value column has text, so no field is a number. https://github.com/grafana-experimental/grafana-beyond/issues/924",
+      "description": "The value column has text, so no field is a number.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -62,7 +62,7 @@
         "type": "grafana-testdata-datasource",
         "uid": "trlxrdZVk"
       },
-      "description": "The #921 frame. The value column has text, so no field is a number. https://github.com/grafana-experimental/grafana-beyond/issues/924",
+      "description": "The value column has text, so no field is a number.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -113,7 +113,7 @@
         "type": "grafana-testdata-datasource",
         "uid": "trlxrdZVk"
       },
-      "description": "The value field is a string field with numbers as text. https://github.com/grafana-experimental/grafana-beyond/issues/924",
+      "description": "The value field is a string field with numbers as text.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -177,7 +177,7 @@
         "type": "grafana-testdata-datasource",
         "uid": "trlxrdZVk"
       },
-      "description": "The value field is a string field with numbers as text. https://github.com/grafana-experimental/grafana-beyond/issues/924",
+      "description": "The value field is a string field with numbers as text.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -241,7 +241,7 @@
         "type": "grafana-testdata-datasource",
         "uid": "trlxrdZVk"
       },
-      "description": "No slice is above zero. https://github.com/grafana-experimental/grafana-beyond/issues/924",
+      "description": "No slice is above zero.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -292,7 +292,7 @@
         "type": "grafana-testdata-datasource",
         "uid": "trlxrdZVk"
       },
-      "description": "No slice is above zero. https://github.com/grafana-experimental/grafana-beyond/issues/924",
+      "description": "No slice is above zero.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -343,7 +343,7 @@
         "type": "grafana-testdata-datasource",
         "uid": "trlxrdZVk"
       },
-      "description": "All values mode with many rows for each name. https://github.com/grafana-experimental/grafana-beyond/issues/924",
+      "description": "All values mode with many rows for each name.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -394,7 +394,7 @@
         "type": "grafana-testdata-datasource",
         "uid": "trlxrdZVk"
       },
-      "description": "All values mode with many rows for each name. https://github.com/grafana-experimental/grafana-beyond/issues/924",
+      "description": "All values mode with many rows for each name.",
       "fieldConfig": {
         "defaults": {
           "color": {

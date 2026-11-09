@@ -95,8 +95,7 @@ only when a field's `seriesType` override is `bar`.
   label (union of labels in first-appearance order; a category a frame has no row
   for renders as a gap). That is what lets a scatter overlay come from its own
   query rather than a joined column. See
-  [the multiple-frames note](https://github.com/grafana-experimental/grafana-beyond/blob/1612131378118a6c44a72976694d2aae7256fcb1/todo/multiple-frames.md) for the contract,
-  and [#198](https://github.com/grafana-experimental/grafana-beyond/issues/198) for the part still open (matrix heatmap).
+  [#73](https://github.com/grafana/dataViz/issues/73) for the part still open (matrix heatmap).
 
 ## ECharts API support
 
