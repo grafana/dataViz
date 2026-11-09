@@ -2,6 +2,8 @@
 // The bundle checks of the Renderer (`delivery.2`, `delivery.5`, `delivery.6`, `renderer.9`, decision 4 of the plan).
 // Usage: node scripts/check-renderer-bundle.mjs [--no-build]
 // It builds the bundle with webpack stats, writes the manifest, then checks the files in `dist-renderer/`.
+// The `delivery.6` and `delivery.2` checks compare the manifest with the functions that wrote it. So they find a
+// difference only with --no-build, for example in the files of an earlier build.
 // With --no-build, it checks the files that are there and skips the checks that need the stats.
 // See docs/renderer.md. https://webpack.js.org/api/stats/
 import { spawnSync } from 'node:child_process';
@@ -18,6 +20,7 @@ import {
   PEER_PACKAGES,
   expectedValues,
   sha256,
+  templateProblems,
   writeRendererPackage,
 } from './renderer-manifest.mjs';
 import { bundleImports } from './bundle-imports.mjs';
@@ -67,6 +70,11 @@ function build() {
     if (result.status !== 0 || stats.errors.length > 0) {
       stats.errors.forEach((error) => console.error(error.message));
       console.error(`webpack failed (exit ${result.status})`);
+      return null;
+    }
+    // The bundle always has echarts. Without it, the checks of the bundled modules pass with no modules.
+    if (!modulePaths(stats).some((path) => packageOf(path)?.name === 'echarts')) {
+      console.error('webpack stats list no module of echarts, so the checks of the bundled modules cannot run');
       return null;
     }
     return stats;
@@ -129,6 +137,9 @@ for (const field of ['version', 'contractVersion', 'specVersions']) {
   );
 }
 check('delivery.2', packageJson.version === manifest.version, `package.json version ${packageJson.version}`);
+// renderer.9: the checked-in `src/renderer/renderer.package.json` agrees with the package `package.json`.
+const problems = templateProblems();
+check('renderer.9', problems.length === 0, `renderer.package.json ${problems.join('; ') || 'agrees with its sources'}`);
 
 // contract-rule: renderer.9. The bundle imports only the peers, and the generated package.json lists each one.
 // The bundle imports react, so no imports means that the scan did not find them.
