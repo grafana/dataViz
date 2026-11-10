@@ -19,6 +19,8 @@ export const CONTRACT_DIR = dirname(createRequire(import.meta.url).resolve('@gra
 export const DIST_DIR = join(PACKAGE_DIR, 'dist-renderer');
 export const BUNDLE_FILE = 'renderer.js';
 export const MANIFEST_FILE = 'renderer.manifest.json';
+/** The SVG of each icon, for the icon cache of the App (`delivery.9`). `renderer-icons.mjs` writes it. */
+export const ICONS_FILE = 'icons.json';
 
 /**
  * The checked-in `package.json` of the Renderer, without `version`. The build copies it next to the bundle and adds
@@ -54,7 +56,11 @@ export function expectedValues() {
     // `parseSpec.ts` reads the same file, so the manifest and the `specVersions` export agree.
     specVersions: readJson(join(PACKAGE_DIR, 'src/renderer/specVersions.json')),
     license: pkg.license,
-    exports: { '.': `./${BUNDLE_FILE}`, [`./${MANIFEST_FILE}`]: `./${MANIFEST_FILE}` },
+    exports: {
+      '.': `./${BUNDLE_FILE}`,
+      [`./${MANIFEST_FILE}`]: `./${MANIFEST_FILE}`,
+      [`./${ICONS_FILE}`]: `./${ICONS_FILE}`,
+    },
     peerDependencies,
   };
 }

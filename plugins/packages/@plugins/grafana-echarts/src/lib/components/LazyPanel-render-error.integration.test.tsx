@@ -1,10 +1,11 @@
-import { FieldType, toDataFrame } from '@grafana/data';
+import { FieldType, type PanelProps, toDataFrame } from '@grafana/data';
 import { LegendDisplayMode } from '@grafana/schema';
 import { render, screen } from '@testing-library/react';
 import { type ChartFamily } from 'lib/echarts/charts/autoSeriesType';
 import { type ChartModule } from 'lib/echarts/charts/types';
 import React, { type ReactElement } from 'react';
 import { getComponent } from 'test/panel';
+import { type PanelOptions } from 'types';
 import { makeLazyPanel } from './LazyPanel';
 import { renderErrorMessage } from './renderErrorMessage';
 
@@ -32,7 +33,8 @@ const frame = (name: string) => toDataFrame({ name, fields: [{ name: 'value', ty
 
 // The props of the Grafana panel, from the test panel element.
 const panelProps = (name: string) =>
-  (getComponent([frame(name)], 'line') as ReactElement<{ children: ReactElement }>).props.children.props;
+  (getComponent([frame(name)], 'line') as ReactElement<{ children: ReactElement<PanelProps<PanelOptions>> }>).props
+    .children.props;
 
 const families: ChartFamily[] = [
   'cartesian',

@@ -1,3 +1,17 @@
 {
-  "extends": "./.config/tsconfig.json"
+  "extends": "./.config/tsconfig.json",
+  "compilerOptions": {
+    // `paths` replaces the `paths` of `.config/tsconfig.json`, so `*` is here again.
+    // The `.d.ts` files of `@grafana/ui` and `@grafana/data` import `react` but do not declare `@types/react`.
+    // Without these entries, tsc gives them the hoisted `@types/react` of another workspace package (React 18),
+    // and their types do not match the React 19 types of this package.
+    // Only tsc reads `paths`. Webpack and Jest do not.
+    "paths": {
+      "*": ["./src/*"],
+      "react": ["./node_modules/@types/react"],
+      "react/*": ["./node_modules/@types/react/*"],
+      "react-dom": ["./node_modules/@types/react-dom"],
+      "react-dom/*": ["./node_modules/@types/react-dom/*"]
+    }
+  }
 }

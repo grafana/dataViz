@@ -73,6 +73,8 @@ scripts/*
 !scripts/check-contract-rules.mjs
 !scripts/renderer-manifest.mjs
 !scripts/renderer-manifest.test.mjs
+!scripts/renderer-icons.mjs
+!scripts/renderer-icons.test.mjs
 !scripts/check-renderer-bundle.mjs
 !scripts/bundle-imports.mjs
 !scripts/bundle-imports.test.mjs

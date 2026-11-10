@@ -1,7 +1,7 @@
 import { type EChartsType } from 'lib/echarts/echarts';
 import { type AnnotationDraft, draftFromRange, isAnnotationGesture, timeAtPixel } from 'lib/echarts/annotationGestures';
 import { type BrushEndEvent, brushEndToTimeRange } from 'lib/echarts/timeBrush';
-import { type MutableRefObject, type RefObject, useEffect, useRef } from 'react';
+import { type RefObject, useEffect, useRef } from 'react';
 
 /** A draft and the window position where its editor opens. */
 export interface PlacedAnnotationDraft extends AnnotationDraft {
@@ -33,7 +33,7 @@ export function useAnnotationGestures(
   chart: EChartsType | null,
   containerRef: RefObject<HTMLElement | null>,
   onDraft: ((draft: PlacedAnnotationDraft) => void) | null
-): MutableRefObject<boolean> {
+): RefObject<boolean> {
   const gestureRef = useRef(false);
   const onDraftRef = useRef(onDraft);
   useEffect(() => {

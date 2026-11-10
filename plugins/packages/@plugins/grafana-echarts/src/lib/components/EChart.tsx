@@ -8,7 +8,7 @@ import { type EChartsType, init } from 'lib/echarts/echarts';
 import { hasTimeAxis, hasTimeBrush } from 'lib/echarts/options/panelOption';
 import { collectProximitySeries } from 'lib/echarts/tooltip/proximity';
 import React, {
-  type MutableRefObject,
+  type RefObject,
   useCallback,
   useContext,
   useEffect,
@@ -55,9 +55,9 @@ interface Props {
    * legend is rendered by `VizLayout`, outside this component, and its hover
    * emphasis has to dispatch onto this chart (see `useLegendHighlight`).
    */
-  instanceRef?: MutableRefObject<EChartsType | null>;
+  instanceRef?: RefObject<EChartsType | null>;
   /** Keeps an interacted Relations view while empty states replace this chart. */
-  relationsViewRef: MutableRefObject<InteractedRelationsView | undefined>;
+  relationsViewRef: RefObject<InteractedRelationsView | undefined>;
 }
 
 /**
