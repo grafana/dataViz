@@ -13,7 +13,7 @@ import { restoreTreemapRoot } from 'lib/echarts/treemapDrillDown';
 import { ENABLE_TIME_BRUSH_ACTION } from 'lib/echarts/timeBrush';
 import { getTooltipTrigger } from 'lib/echarts/tooltip/option';
 import { type TooltipSink } from 'lib/echarts/tooltip/types';
-import { type MutableRefObject, useEffect, useRef } from 'react';
+import { type RefObject, useEffect, useRef } from 'react';
 import { type EChartsTooltipController } from '../tooltip/types';
 
 interface Options {
@@ -28,9 +28,9 @@ interface Options {
   /** Told the resolved `trigger` after each rebuild, which drives hide behavior. */
   reportTooltipTrigger: EChartsTooltipController['reportTrigger'];
   /** Keeps an interacted Relations view while empty states replace the chart. */
-  relationsViewRef: MutableRefObject<InteractedRelationsView | undefined>;
+  relationsViewRef: RefObject<InteractedRelationsView | undefined>;
   /** The node id of the treemap view root after a drill down (`useTreemapDrillDown`). */
-  treemapRootRef?: MutableRefObject<string | undefined>;
+  treemapRootRef?: RefObject<string | undefined>;
 }
 
 type ViewVariant = InteractedRelationsView['variant'];

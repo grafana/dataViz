@@ -4,7 +4,7 @@ import { readLiveGeoView } from 'lib/echarts/geo/liveView';
 import { toLiveMapView } from 'lib/echarts/geo/view';
 import { type GeoInstanceState } from 'lib/grafana/geo/view';
 import { usePanelContext } from '@grafana/ui';
-import { type MutableRefObject, useEffect } from 'react';
+import { type RefObject, useEffect } from 'react';
 
 /**
  * Give the view editor the live map view of a geo panel, as core Geomap gives its OpenLayers map. The panel
@@ -12,10 +12,7 @@ import { type MutableRefObject, useEffect } from 'react';
  * https://github.com/grafana/grafana/blob/main/public/app/plugins/panel/geomap/GeomapPanel.tsx
  * https://developers.grafana.com/ui/latest/index.html?path=/docs/overview-panelchrome--docs
  */
-export function useGeoInstanceState(
-  chartRef: MutableRefObject<EChartsType | null>,
-  family: ChartFamily | undefined
-): void {
+export function useGeoInstanceState(chartRef: RefObject<EChartsType | null>, family: ChartFamily | undefined): void {
   const { onInstanceStateChange } = usePanelContext();
   useEffect(() => {
     if (family !== 'geo' || !onInstanceStateChange) {

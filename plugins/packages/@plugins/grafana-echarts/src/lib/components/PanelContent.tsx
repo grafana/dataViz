@@ -6,7 +6,7 @@ import { resolveChartModule } from 'lib/echarts/charts/registry';
 import { type ChartContext } from 'lib/echarts/charts/types';
 import { isLegendVisible, resolveLegendOptions } from 'lib/echarts/options/legend';
 import { getRepresentativeFormatter } from 'lib/grafana/formatter';
-import React, { type MutableRefObject, useMemo, useState } from 'react';
+import React, { type RefObject, useMemo, useState } from 'react';
 import { type InteractedRelationsView } from 'lib/echarts/relations/options/view';
 import { ChartContent } from './ChartContent';
 import { DataIssueView } from './DataIssueView';
@@ -14,7 +14,7 @@ import { resolveTimelineIndex } from './ChartTimeSlider';
 import { type PanelComponentProps } from './types';
 
 interface Props extends PanelComponentProps {
-  relationsViewRef: MutableRefObject<InteractedRelationsView | undefined>;
+  relationsViewRef: RefObject<InteractedRelationsView | undefined>;
 }
 
 export const PanelContent: React.FC<Props> = ({

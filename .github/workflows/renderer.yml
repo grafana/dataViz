@@ -73,8 +73,9 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: pnpm run check:contract-rules
 
-      # Builds the bundle with webpack stats, writes the manifest and the package.json, and checks them:
-      # delivery.2, delivery.5 (reports the gzip size), delivery.6, renderer.9, and the @grafana/runtime modules.
+      # Builds the bundle with webpack stats, writes the manifest, the package.json and icons.json, and checks them:
+      # delivery.2, delivery.5 (reports the gzip size), delivery.6, delivery.9, delivery.11 (reports the gzip size of
+      # icons.json), renderer.9, and the @grafana/runtime modules.
       - name: Bundle checks
         run: pnpm run check:renderer
 
