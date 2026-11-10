@@ -1,7 +1,8 @@
-import { type DataFrame, FieldType, toDataFrame } from '@grafana/data';
+import { type DataFrame, FieldType, type PanelProps, toDataFrame } from '@grafana/data';
 import { render, screen } from '@testing-library/react';
 import React, { type ReactElement } from 'react';
 import { getComponent } from 'test/panel';
+import { type PanelOptions } from 'types';
 import { makeLazyPanel } from './LazyPanel';
 
 // The real cartesian chart module gives the data issue. The Grafana error view shows the message (#923).
@@ -14,7 +15,8 @@ jest.mock('@grafana/runtime', () => ({
 }));
 
 const panelProps = (frames: DataFrame[]) =>
-  (getComponent(frames, 'line') as ReactElement<{ children: ReactElement }>).props.children.props;
+  (getComponent(frames, 'line') as ReactElement<{ children: ReactElement<PanelProps<PanelOptions>> }>).props.children
+    .props;
 
 const cases: Array<[string, DataFrame, string]> = [
   [

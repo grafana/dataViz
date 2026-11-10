@@ -21,7 +21,7 @@ export function useChartResize(
   height: number,
   { enabled = true, strategy = 'immediate', getSettledOption }: Options = {}
 ): void {
-  const priorIdentity = useRef<{ chart: EChartsType | null; strategy: ChartResizeStrategy }>();
+  const priorIdentity = useRef<{ chart: EChartsType | null; strategy: ChartResizeStrategy }>(undefined);
 
   useEffect(() => {
     const identityChanged = priorIdentity.current?.chart !== chart || priorIdentity.current.strategy !== strategy;

@@ -4,7 +4,7 @@ import { type SeriesType } from 'editor/types';
 import { type ChartFamily } from 'lib/echarts/charts/autoSeriesType';
 import { type ChartContext, type ChartModule } from 'lib/echarts/charts/types';
 import { type InteractedRelationsView } from 'lib/echarts/relations/options/view';
-import { type MutableRefObject } from 'react';
+import { type RefObject } from 'react';
 import { type PanelOptions } from 'types';
 
 export interface PanelComponentProps extends PanelProps<PanelOptions> {
@@ -29,5 +29,5 @@ export interface ChartContentProps {
   onChangeTimeRange: PanelComponentProps['onChangeTimeRange'];
   onFieldConfigChange: PanelComponentProps['onFieldConfigChange'];
   onOptionsChange: PanelComponentProps['onOptionsChange'];
-  relationsViewRef: MutableRefObject<InteractedRelationsView | undefined>;
+  relationsViewRef: RefObject<InteractedRelationsView | undefined>;
 }

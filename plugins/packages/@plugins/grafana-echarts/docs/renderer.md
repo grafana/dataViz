@@ -34,7 +34,7 @@ The build writes a `package.json` next to the bundle. Its `peerDependencies` lis
 
 Run these commands in `plugins/packages/@plugins/grafana-echarts`. Install the workspace first with `pnpm install` in `plugins/`.
 
-1. Run `pnpm run build:renderer`. Webpack writes `dist-renderer/renderer.js`, then `scripts/renderer-manifest.mjs` writes `renderer.manifest.json` and `package.json` next to it.
+1. Run `pnpm run build:renderer`. Webpack writes `dist-renderer/renderer.js`, then `scripts/renderer-manifest.mjs` writes `renderer.manifest.json` and `package.json` next to it, and `scripts/renderer-icons.mjs` writes `icons.json`.
 2. Run `pnpm run check:renderer`. The script builds the bundle again with webpack stats, and then makes sure that the bundle and the manifest obey the contract.
 
 The bundle is one file with no chunks, because the sandbox iframe cannot load a second file. `webpack.renderer.config.ts` is the webpack configuration. It does not extend `.config/webpack`, because that configuration makes an AMD plugin bundle.
@@ -49,11 +49,33 @@ The manifest has `version`, `sha256` (the hash of `renderer.js`), `contractVersi
 
 The script also reports the gzip size of the bundle. The contract constant `maxBundleGzipBytes` has no value yet, so the size does not fail the check. If the constant gets a value, the check fails when the bundle is larger. Use `node scripts/check-renderer-bundle.mjs --no-build` to check the files that are in `dist-renderer/` now. That mode skips the two checks that need the webpack stats.
 
+### Icons
+
+`@grafana/ui` `Icon` gets each SVG file from the network, and the sandbox blocks the request. So the App fills the icon cache of its `@grafana/ui` before it calls `render` (`renderer.15`), from `icons.json` (`delivery.9`). Grafana core does the same when it starts.
+
+`icons.json` is a JSON object. A key is `<dir>/<name>`, for example `unicons/sync`. A value is the SVG content of the icon. `scripts/renderer-icons.mjs` writes it from these sources:
+
+- `src/renderer/iconList.json`: the list of the keys. It is a checked-in list, not a scan of the code.
+- The SVG files that `@grafana/ui` ships, in `dist/public/img/icons/`. The script reads these first.
+- `src/renderer/icons/<dir>/<name>.svg`: copies of the icons that `@grafana/ui` does not ship, from the `svg/line` folder of the `@iconscout/unicons` package, version 4.0.1. That package is the source of the `unicons` icons of Grafana. Version 4.0.1 is the last version under Apache-2.0, the license of this repository. Version 4.0.2 and later use the IconScout Simple License, which does not agree with Apache-2.0.
+
+The build fails if a listed icon has no SVG file. `renderer-icons.test.mjs` fails if a copy is an icon that `@grafana/ui` now ships, or is not in the list. Then delete the copy.
+
+To add an icon:
+
+1. Add its key to `src/renderer/iconList.json`.
+2. If `@grafana/ui` does not ship it, copy the SVG file from `@iconscout/unicons@4.0.1` (`svg/line/<name>.svg`) to `src/renderer/icons/<dir>/<name>.svg`. Do not copy it from a later version. If version 4.0.1 does not have the icon, ask for a license decision before you add it.
+3. Run `pnpm run test:renderer-sandbox`.
+
+`check:renderer` makes sure that `icons.json` has the key and value shape of the contract (`delivery.9`). It also reports the gzip size of `icons.json` (`delivery.11`). The size never fails the check, and `maxBundleGzipBytes` does not include it.
+
 ## Tests
 
 The Jest tests are in `src/renderer/`, and `pnpm run test:ci` runs them. They read the fixture sets from the installed contract package. A Renderer set is a fixture set that has a `state.json`. `conformance.integration.test.tsx` draws each Renderer set. It makes sure that the last `onState` value is equal to the `state.json` of the set.
 
 The sandbox test is in `tests-renderer/`. It draws the Renderer in `<iframe sandbox="allow-scripts">` with the default content security policy of MCP Apps, and Playwright blocks all network requests. The test App in `scripts/renderer-harness/app.mjs` bundles the peers with the built Renderer, as the App of mcp-grafana does. Run it with `pnpm run test:renderer-sandbox`. It needs Playwright Chromium (`pnpm exec playwright install chromium`) and no Grafana server.
+
+The test App fills the icon cache from `icons.json` before `render`, as the App does. Then the test draws each fixture set in the states of `delivery.8`: with and with no `onRefresh`, 480 px wide, with a tooltip open and pinned, with the color picker of a legend series open, and with the time picker open. The zoom controls show with no interaction. The test fails on each icon request, and names the icon: add it to `src/renderer/iconList.json`. The test finds only the icons of these states.
 
 `pnpm run renderer:shots` writes a PNG of each fixture set to `.renderer-shots/`. Use it to look at the charts. It is not a test.
 
@@ -91,13 +113,11 @@ The contract package has no contract chapters, so it does not give the rule ids.
 
 The Renderer does not obey all of the contract yet.
 
-The rules in `pending` of `contractRules.json` came with contract 1.2.0. The Renderer does none of them yet, and no test covers them:
+The rule in `pending` of `contractRules.json` came with contract 1.2.0. The Renderer does not obey it yet, and no test covers it:
 
 - Title (`renderer.17`): the Renderer does not show `panel.title`. The `title` fixture set draws, and its state equals its `state.json`, but there is no title above the chart.
-- Icons (`delivery.8`, `delivery.9`, `delivery.11`, [#162](https://github.com/grafana/dataViz/issues/162)): the build does not write `icons.json` next to the manifest. So no CI check fills the icon cache from it and draws the fixtures with no icon request, and no check reports its gzip size. The App rules `renderer.15` and `renderer.16` use this file.
 
 Each of these differences has a test that fails when the difference is fixed:
 
 - `series-truncated` (`state.10`): The contract draws the series with the largest peak values. The Renderer draws the first 50 series, in the order of the frames and fields. It does this only for the `cartesian` and `stream` families. Its message is "`<omitted>` series are not shown. The first `<maxSeries>` series are drawn." The registry message is not used, because it names the peak values. The constant is `SERIES_TRUNCATED_PATTERN` in `src/renderer/notices.ts`.
-- Icons (`renderer.7`, [grafana/viz-contract#1](https://github.com/grafana/viz-contract/issues/1)): `@grafana/ui` `Icon` gets each SVG file from the network. The sandbox blocks the request, so the icons are blank. Grafana core fills the icon cache of `react-inlinesvg` when it starts. Contract 1.2.0 makes the App do the same for its copy of `@grafana/ui` (`renderer.15`), from the `icons.json` of the Renderer build (`delivery.9`, pending). The sandbox test "the icons load with no network request" is marked `test.fail` until the sandbox test fills the icon cache from `icons.json` (`delivery.8`, pending).
 - Radar and parallel ([#148](https://github.com/grafana/dataViz/issues/148)): the multivariate panel reads each row as one axis, but the contract reads each number field as one axis. `smoke-radar` gives `panel-error`, and `smoke-parallel` draws its axes transposed. `KNOWN_MISMATCHES` in `conformance.integration.test.tsx` records both.

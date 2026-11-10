@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { type ChartZoomAction } from 'lib/echarts/charts/types';
 import { type EChartsType } from 'lib/echarts/echarts';
-import React, { type MutableRefObject } from 'react';
+import React, { type RefObject } from 'react';
 import { ChartZoomControls } from './ChartZoomControls';
 
 /**
@@ -24,7 +24,7 @@ const stubChart = () => {
   const dispatchAction = jest.fn();
   const setOption = jest.fn();
   const chart = { dispatchAction, setOption } as unknown as EChartsType;
-  return { dispatchAction, setOption, ref: { current: chart } as MutableRefObject<EChartsType | null> };
+  return { dispatchAction, setOption, ref: { current: chart } as RefObject<EChartsType | null> };
 };
 
 const renderControls = (
@@ -133,7 +133,7 @@ describe('ChartZoomControls', () => {
   // The ref is `null` before mount and after dispose, and a click can land in between —
   // the panel unmounts while the button still has focus, for instance.
   it('does nothing when the chart is gone', () => {
-    const ref = { current: null } as MutableRefObject<EChartsType | null>;
+    const ref = { current: null } as RefObject<EChartsType | null>;
     render(<ChartZoomControls action={action} chartRef={ref} width={400} height={300} />);
 
     click('Zoom in');

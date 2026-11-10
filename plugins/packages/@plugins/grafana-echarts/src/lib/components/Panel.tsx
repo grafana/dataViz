@@ -8,7 +8,7 @@ import { type PanelComponentProps } from './types';
 
 const PanelComponent: React.FC<PanelComponentProps> = (props) => {
   const { data, fieldConfig, id } = props;
-  const relationsViewRef = useRef<InteractedRelationsView>();
+  const relationsViewRef = useRef<InteractedRelationsView>(undefined);
 
   if (data.state === LoadingState.Streaming) {
     return null;

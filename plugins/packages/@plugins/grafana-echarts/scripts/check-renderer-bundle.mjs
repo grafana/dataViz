@@ -17,6 +17,7 @@ import {
   BUNDLE_FILE,
   CONTRACT_DIR,
   DIST_DIR,
+  ICONS_FILE,
   MANIFEST_FILE,
   PEER_PACKAGES,
   expectedValues,
@@ -25,6 +26,7 @@ import {
   writeRendererPackage,
 } from './renderer-manifest.mjs';
 import { bundleImports } from './bundle-imports.mjs';
+import { iconProblems, writeIcons } from './renderer-icons.mjs';
 
 const PACKAGE_DIR = join(dirname(fileURLToPath(import.meta.url)), '..');
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
@@ -116,6 +118,7 @@ if (stats === null) {
 }
 if (!noBuild) {
   writeRendererPackage();
+  writeIcons();
 }
 
 const bundlePath = join(DIST_DIR, BUNDLE_FILE);
@@ -173,6 +176,23 @@ if (typeof limit === 'number') {
 } else {
   check('delivery.5', true, `${sizeText}, maxBundleGzipBytes has no value, so the size only reports`);
 }
+
+// contract-rule: delivery.9. `icons.json` is next to the manifest, with `<dir>/<name>` keys and SVG values.
+const iconsPath = join(DIST_DIR, ICONS_FILE);
+const iconIssues = iconProblems(readJson(iconsPath));
+check(
+  'delivery.9',
+  iconIssues.length === 0,
+  `${ICONS_FILE} ${iconIssues.join('; ') || 'has the shape of the contract'}`
+);
+
+// contract-rule: delivery.11. Report the gzip size of `icons.json`. It never fails, and `delivery.5` does not count it.
+const iconsGzipBytes = gzipSync(readFileSync(iconsPath)).length;
+check(
+  'delivery.11',
+  true,
+  `${ICONS_FILE} gzip size ${iconsGzipBytes} bytes (${(iconsGzipBytes / 1024).toFixed(1)} KiB), not in maxBundleGzipBytes`
+);
 
 // The bundle uses no eval. The sandbox test excuses an eval report only for the peer probe of the App.
 const evals = code.match(/(?<![\w$.])eval\s*\(/g) ?? [];
