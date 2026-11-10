@@ -76,7 +76,7 @@ Each contract rule that the Renderer owns has a test or a check. The test or the
 
 The test reads the Jest tests, `tests-renderer/` and each `scripts/*.mjs` file. If you add a test for a rule, add the comment.
 
-The contract package has no contract chapters, so it does not give the rule ids. `pnpm run check:contract-rules` (`scripts/check-contract-rules.mjs`) reads the chapters from the tag of the package version in grafana/viz-contract. It fails if `contractRules.json` does not list each rule id of the chapters, or lists an id that the chapters do not have. It needs network access and no token.
+The contract package has no contract chapters, so it does not give the rule ids. `pnpm run check:contract-rules` (`scripts/check-contract-rules.mjs`) reads the chapters from the tag of the package version in grafana/viz-contract. It fails if `contractRules.json` does not list each rule id of the chapters, or lists an id that the chapters do not have. It needs network access. It needs no token, but it sends `GITHUB_TOKEN` if it is set, because the GitHub API limits calls with no token to 60 an hour for each IP address. The `Renderer` workflow sets it.
 
 `fixtures.11` is in `notRenderer`: this repository copies no fixture set, so the rule does not apply to it.
 

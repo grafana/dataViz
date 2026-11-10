@@ -66,8 +66,11 @@ jobs:
           package: '@plugins/grafana-echarts'
 
       # contractRules.json lists the rules of the installed @grafana/viz-contract version. The package has no
-      # contract chapters, so the script reads them from the public grafana/viz-contract tag. It needs no token.
+      # contract chapters, so the script reads them from the public grafana/viz-contract tag. The token (contents:
+      # read) only raises the GitHub API rate limit: with no token, runners that share an IP address can get a 403.
       - name: Contract rules
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: pnpm run check:contract-rules
 
       # Builds the bundle with webpack stats, writes the manifest and the package.json, and checks them:
