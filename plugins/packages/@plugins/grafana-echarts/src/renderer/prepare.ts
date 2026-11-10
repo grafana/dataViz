@@ -17,6 +17,8 @@ export type Prepared = {
   /** `data.range` of the viz spec. A viz spec that is not correct has none. */
   timeRange?: TimeRange;
   timeZone: string;
+  /** `panel.title` of the viz spec (`renderer.17`). A viz spec that is not correct has none. */
+  title?: string;
 } & (
   | { kind: 'error'; error: RenderError }
   | { kind: 'no-data'; notices: Notice[]; noValue?: string }
@@ -32,7 +34,12 @@ export function prepare(input: unknown): Prepared {
     return { kind: 'error', error: parsed.error, theme, timeZone: 'browser' };
   }
   const { spec } = parsed;
-  const base = { theme: themeOf(spec.theme), timeRange: toTimeRange(spec.data.range), timeZone: spec.timeZone };
+  const base = {
+    theme: themeOf(spec.theme),
+    timeRange: toTimeRange(spec.data.range),
+    timeZone: spec.timeZone,
+    title: spec.panel.title,
+  };
   // `state.6`: `<panelName>` is the `name` of the panel row.
   const panelName = panelType(spec.panel.type)?.name ?? spec.panel.type;
   try {

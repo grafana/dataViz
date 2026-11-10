@@ -93,7 +93,6 @@ The Renderer does not obey all of the contract yet.
 
 The rules in `pending` of `contractRules.json` came with contract 1.2.0. The Renderer does none of them yet, and no test covers them:
 
-- Title (`renderer.17`): the Renderer does not show `panel.title`. The `title` fixture set draws, and its state equals its `state.json`, but there is no title above the chart.
 - Icons (`delivery.8`, `delivery.9`, `delivery.11`, [#162](https://github.com/grafana/dataViz/issues/162)): the build does not write `icons.json` next to the manifest. So no CI check fills the icon cache from it and draws the fixtures with no icon request, and no check reports its gzip size. The App rules `renderer.15` and `renderer.16` use this file.
 
 Each of these differences has a test that fails when the difference is fixed:

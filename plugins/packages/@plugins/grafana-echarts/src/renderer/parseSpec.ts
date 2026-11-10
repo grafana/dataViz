@@ -220,6 +220,7 @@ export function parseSpec(input: unknown): ParseResult {
       specVersion,
       panel: {
         type,
+        title: typeof panel.title === 'string' && panel.title !== '' ? panel.title : undefined,
         options: isObject(panel.options) ? panel.options : {},
         fieldConfig: toFieldConfig(panel.fieldConfig),
         targetRefIds,
