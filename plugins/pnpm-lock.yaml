@@ -244,20 +244,20 @@ importers:
         specifier: 11.10.6
         version: 11.10.6(supports-color@8.1.1)
       '@grafana/data':
-        specifier: 13.2.2
-        version: 13.2.2(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)
+        specifier: 13.3.0
+        version: 13.3.0(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)
       '@grafana/i18n':
-        specifier: 13.2.2
-        version: 13.2.2(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)
+        specifier: 13.3.0
+        version: 13.3.0(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)
       '@grafana/runtime':
-        specifier: 13.2.2
-        version: 13.2.2(@babel/runtime@8.0.5)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.2)(@codemirror/theme-one-dark@6.1.3)(@types/react@18.3.0)(codemirror@6.0.2)(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)
+        specifier: 13.3.0
+        version: 13.3.0(@babel/runtime@8.0.5)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.2)(@codemirror/theme-one-dark@6.1.3)(@types/react@18.3.0)(codemirror@6.0.2)(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)
       '@grafana/schema':
-        specifier: 13.2.2
-        version: 13.2.2
+        specifier: 13.3.0
+        version: 13.3.0
       '@grafana/ui':
-        specifier: 13.2.2
-        version: 13.2.2(@babel/runtime@8.0.5)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.2)(@codemirror/theme-one-dark@6.1.3)(@types/react@18.3.0)(codemirror@6.0.2)(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)
+        specifier: 13.3.0
+        version: 13.3.0(@babel/runtime@8.0.5)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.2)(@codemirror/theme-one-dark@6.1.3)(@types/react@18.3.0)(codemirror@6.0.2)(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)
       echarts:
         specifier: 6.1.0
         version: 6.1.0
@@ -850,6 +850,9 @@ packages:
   '@codemirror/language@6.12.4':
     resolution: {integrity: sha512-1q4PaT+o6PbgpkJt4Q8Fv5XJxTy4FUZ4MWETtyiDw3J0Pyr9E2vqcKL+k9wcvjNTIsauxvE7OfmWj3FRPHQ76A==}
 
+  '@codemirror/legacy-modes@6.5.5':
+    resolution: {integrity: sha512-9ltT214oMb3Y1w5eAZMSigzrjzZnMI2Wa3Feq73rU/i4C56MkwrpfswfQYOr28C5pXr6dWwspNTMyeHXlzWMxg==}
+
   '@codemirror/lint@6.9.7':
     resolution: {integrity: sha512-28/+iWLYxKxsvGYhSYL7zaCZqLz5+FFFDq9tVsvGv9kv8RY4fFAchJ5WX9M3YrrRlTIsECjsXPqeNgnSmNP2dg==}
 
@@ -858,6 +861,9 @@ packages:
 
   '@codemirror/state@6.7.5':
     resolution: {integrity: sha512-QjLbZmY1Au3JiRrDVYFLRD0BZ3SOKS9pR3yjIkd7u27YY8TFD9/Q9fhPnLV5l1mHFSo3hHU/N31vpwEJOx4owQ==}
+
+  '@codemirror/streamparser@6.0.0':
+    resolution: {integrity: sha512-JTFPF6xrfjt0mnfGPgzcLiMwYmvIyNaoizp8BYzv8FE8KrT6GBGDZ190rtt+O7Wke3gG/MFHyiY9YGNeimof4w==}
 
   '@codemirror/theme-one-dark@6.1.3':
     resolution: {integrity: sha512-NzBdIvEJmx6fjeremiGp3t/okrLPYT0d9orIc7AFun8oZcRk58aejkqhv6spnz4MLAevrKNPMQYXEWMg4s+sKA==}
@@ -1460,11 +1466,17 @@ packages:
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
 
+  '@formatjs/bigdecimal@0.2.7':
+    resolution: {integrity: sha512-B4+XY/e4u5v261r3a37Kq2ax91gPZSKGyVpx8X5dygAggLlUz+6MeBpmAhaBFGB8WQ4JB1qD+QtKHk9aJkEb9Q==}
+
   '@formatjs/ecma402-abstract@2.3.6':
     resolution: {integrity: sha512-HJnTFeRM2kVFVr5gr5kH1XP6K0JcJtE7Lzvtr3FS/so5f1kpsqqqxy5JF+FRaO6H2qmcMfAUIox7AJteieRtVw==}
 
   '@formatjs/fast-memoize@2.2.7':
     resolution: {integrity: sha512-Yabmi9nSvyOMrlSeGGWDiH7rf3a7sIwplbvo/dlz9WCIjzIQAfy1RMf4S0X3yG724n5Ghu2GmEl5NJIV6O9sZQ==}
+
+  '@formatjs/fast-memoize@3.1.7':
+    resolution: {integrity: sha512-zXfhLpvA6T7+efdt9JLbBwZ00tT7NsBMDVnDu8rpHeNNv8KfRZAMo2gkG0k9lK/Nzc//3kJ9pImsfuJxk3KhUA==}
 
   '@formatjs/icu-messageformat-parser@2.11.4':
     resolution: {integrity: sha512-7kR78cRrPNB4fjGFZg3Rmj5aah8rQj9KPzuLsmcSn4ipLXQvC04keycTI1F7kJYDwIXtT2+7IDEto842CfZBtw==}
@@ -1472,11 +1484,17 @@ packages:
   '@formatjs/icu-skeleton-parser@1.8.16':
     resolution: {integrity: sha512-H13E9Xl+PxBd8D5/6TVUluSpxGNvFSlN/b3coUp0e0JpuWXXnQDiavIpY3NnvSp4xhEMoXyyBvVfdFX8jglOHQ==}
 
+  '@formatjs/intl-durationformat@0.11.1':
+    resolution: {integrity: sha512-Mkuc+Q8/96Hb0w4Pwa9sqkKVQVl75TCaqaXIXHgsVsLDko+FKQhw9n/7BnbonueqPxkQkGYvn8/G2IKzT970og==}
+
   '@formatjs/intl-durationformat@0.7.6':
     resolution: {integrity: sha512-jatAN3E84X6aP2UOGK1jTrwD1a7BiG3qWUSEDAhtyNd1BgYeS5wQPtXlnuGF1QRx0DjnwwNOIssyd7oQoRlQeg==}
 
   '@formatjs/intl-localematcher@0.6.2':
     resolution: {integrity: sha512-XOMO2Hupl0wdd172Y06h6kLpBz6Dv+J4okPLl4LPtzbr8f66WbIoy4ev98EBuZ6ZK4h5ydTN6XneT4QVpD7cdA==}
+
+  '@formatjs/intl-localematcher@0.9.0':
+    resolution: {integrity: sha512-Z7TD3ssNry1Av1dVDoq/mzpxGyxqWwU0ClWEo+BB3k0JQTeQvUGmeK9WZGYvlqStS0UqkaKXk3dfjsb6NaHAxw==}
 
   '@grafana/data@11.6.16':
     resolution: {integrity: sha512-Ua50gXYACJ0BuEl0I5BBj/eAmuITrdJjYHMFICpFOCriSYnS52+2WJ7ryVmY8FPQ1vlAG98DpNHtvf6Co9IPZA==}
@@ -1490,8 +1508,8 @@ packages:
       react: ^18.0.0
       react-dom: ^18.0.0
 
-  '@grafana/data@13.2.2':
-    resolution: {integrity: sha512-h1SLL4nunluqc0Rkmmv3IwUdCtBY7gIkOkbc8ymUr8HMXEXCmDonQekXUbipLQQa2ZEMQOe7LY+pmH3Qeb536w==}
+  '@grafana/data@13.3.0':
+    resolution: {integrity: sha512-w3GGGQZroR/FGxVId6UP+RFp7C3kR6sCh0fDvjLwDn88EkbjRWRzrNimlogy03KN/JarLXJID9CrZJeQeWTS/Q==}
     peerDependencies:
       react: '>=19'
       react-dom: '>=19'
@@ -1505,8 +1523,8 @@ packages:
   '@grafana/e2e-selectors@13.2.0-30594044109':
     resolution: {integrity: sha512-CRN0CTsSkAC3qQvufbR7duUzSX2Jfgc/g5ap+eSrjcFcS+vAVUDGfQVLK6y5ojN+B0gATNIbmVlCGngQxmm+eA==}
 
-  '@grafana/e2e-selectors@13.2.2':
-    resolution: {integrity: sha512-4MW47IQwhWX41gUWB4VV1eg2qIXQ2E6/TZr6M3DfPnLN3tBl2512OO1Pcw6nchZl0dg4KjoNeT8C9MG7EXnXHg==}
+  '@grafana/e2e-selectors@13.3.0':
+    resolution: {integrity: sha512-WEEwaTlbyMyrAkkKsHCxboi4TD5xxZ3pGnkMLPy4Fh++59YoyV1dHpqhtF9gchpLyCl4zk/BGAd1JRvMXUKENQ==}
 
   '@grafana/eslint-config@10.0.0':
     resolution: {integrity: sha512-KdPghPTEkpT1bfph/HLRe0rWJuAEeQMy3wF8xXOHkwhqf/o9IS4d0GT3K/tW0TxXHD0AKZB/OQBo7mZwvvaq7Q==}
@@ -1562,8 +1580,8 @@ packages:
     peerDependencies:
       react: '>=18'
 
-  '@grafana/i18n@13.2.2':
-    resolution: {integrity: sha512-5GVerea8w/+ozBsoJBFQcoazHZncOwwYhBsQY9lTj7GCTARXLcrRIhaWmvc+pi/e+cosh6F1Xenw8qF5E8NsnQ==}
+  '@grafana/i18n@13.3.0':
+    resolution: {integrity: sha512-cEuLooRVaVBG5j8OFhR8Eo9ex0+/WZgtxlPpFWSkFcV4bB4qcveGBShm3WAKrDLSH/nuQUFXNlfTZXtiJWjTcA==}
     peerDependencies:
       react: '>=19'
 
@@ -1598,6 +1616,12 @@ packages:
       react: ^18.0 || ^19.0
       react-dom: ^18.0 || ^19.0
 
+  '@grafana/react-data-grid@7.0.0-beta.60':
+    resolution: {integrity: sha512-i/IyHgORMLJHwA7KeqhB0zOzIOFyfltoycNDzdG9089SKH62A1hTQyLl7Vxd68nWzsBbu+suB9SWwKCsomHEjg==}
+    peerDependencies:
+      react: ^19.2
+      react-dom: ^19.2
+
   '@grafana/runtime@11.6.16':
     resolution: {integrity: sha512-/j1W2JjRpN1Q0DSt4QalVnN7DgRbUYOsBA7/uRroqwzUomSvLCaoqPhhexpNufa7HaZUfVkjJ0pg1AWqe7uTzA==}
     peerDependencies:
@@ -1610,8 +1634,8 @@ packages:
       react: ^18.0.0
       react-dom: ^18.0.0
 
-  '@grafana/runtime@13.2.2':
-    resolution: {integrity: sha512-c8gfbK5WywIH2kLZ8B+WRMVB3f9Fa2a85dqoPZd8+qHUr51CoQaGZj1jyKs49Nbx1G8y6OUV6LaueRrvhOevJg==}
+  '@grafana/runtime@13.3.0':
+    resolution: {integrity: sha512-Kmtc4jdBVoEuoBqJy6R65yNuf+P7CLyeeT00UzQOFJCjPQ6Ey2YIFYWJPeUlBdR3kDjlTlbv4FgVDRDDY+/p1g==}
     peerDependencies:
       react: '>=19'
       react-dom: '>=19'
@@ -1622,8 +1646,8 @@ packages:
   '@grafana/schema@12.2.10':
     resolution: {integrity: sha512-pD101v9aack0jXr9X3buwgyMYJwOy4CrqxLlMezqpdd4woCwzAYb8iylNm4OP58wU0d3PmO8IroEfUVvtDLZlA==}
 
-  '@grafana/schema@13.2.2':
-    resolution: {integrity: sha512-ja0kI6L4eA09MnBbtDl3ajOg+SJD2/QQMpMZT81OTjshzAc7opgiEJbdfNIwVAS/V/XHVtdxZiXAUgR41uROhg==}
+  '@grafana/schema@13.3.0':
+    resolution: {integrity: sha512-IkxSmRiOOnc8GXg3vPlWshtcxPd0SHv8AbPQi04PIb05v/5LjiIQCpeYXemtIAlRg6IhklzF2u7LQcDGHQElJg==}
 
   '@grafana/sign-plugin@3.2.2':
     resolution: {integrity: sha512-nZ+y56RJkrcH7hZTdEnY3WVEh5mCy4RZclUosOLr1Em1yLMXmlicGZkDsCGr2UmkruJlxOQXM6EBOILQAzQynQ==}
@@ -1653,8 +1677,8 @@ packages:
       react: ^18.0.0
       react-dom: ^18.0.0
 
-  '@grafana/ui@13.2.2':
-    resolution: {integrity: sha512-iEtiNhw8vye8HZ3u2t+Wv1cXIhaVBp6zc4gSf/o15Q8Q7bQ+rL4+zh2aCRuyoNy+jRycxoB8/itbJx+OSVdvng==}
+  '@grafana/ui@13.3.0':
+    resolution: {integrity: sha512-1jC8T7ua4EMgRySupuO8h7v9uhQXlBrjFDdcrU5g8u73acLGZL8tKtxQsh/oCe65IPQFMwSCH6WGyFlcXRgC4g==}
     peerDependencies:
       react: '>=19'
       react-dom: '>=19'
@@ -1992,8 +2016,8 @@ packages:
   '@lezer/go@1.0.1':
     resolution: {integrity: sha512-xToRsYxwsgJNHTgNdStpcvmbVuKxTapV0dM0wey1geMMRc9aggoVyKgzYp41D2/vVOx+Ii4hmE206kvxIXBVXQ==}
 
-  '@lezer/highlight@1.2.3':
-    resolution: {integrity: sha512-qXdH7UqTvGfdVBINrgKhDsVTJTxactNNxLk7+UMwZhU13lMHaOBlJe9Vqp907ya56Y3+ed2tlqzys7jDkTmW0g==}
+  '@lezer/highlight@1.2.5':
+    resolution: {integrity: sha512-O1GMVKgtf5YspFaRzpmqkVgMtIk2HG9uMAbH6wdAIdNh3TVzCsch/+cRi+6l2//UGDKe6NB9BW3cvuR5ezMQ0w==}
 
   '@lezer/html@1.3.13':
     resolution: {integrity: sha512-oI7n6NJml729m7pjm9lvLvmXbdoMoi2f+1pwSDJkl9d68zGr7a9Btz8NdHTGQZtW2DA25ybeuv/SyDb9D5tseg==}
@@ -2987,6 +3011,12 @@ packages:
   '@types/lodash@4.17.20':
     resolution: {integrity: sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==}
 
+  '@types/lodash@4.17.27':
+    resolution: {integrity: sha512-VenMRv/eKNrspX9v3H4dbmjsrnCOYdYBG3kxXKk3dG6X+urBGcj2Prww3xw1U5K4FV/mE4h5GbWd0szEKf+9ew==}
+
+  '@types/luxon@3.7.6':
+    resolution: {integrity: sha512-6KSjliQAXK8ZLgFQO4B7iE4Rpf/B3rItzCFuXezBY/XIAGxOdLd7vRNK9/StRPwiS/yJsVbB7HKpW46B8tcEuQ==}
+
   '@types/node@24.0.0':
     resolution: {integrity: sha512-yZQa2zm87aRVcqDyH5+4Hv9KYgSdgwX1rFnGvpbzMaC7YAljmhBET93TPiTd3ObwTL+gSpIzPKg5BqVxdCvxKg==}
 
@@ -3038,6 +3068,9 @@ packages:
 
   '@types/systemjs@6.15.3':
     resolution: {integrity: sha512-STyj2LUevlyVqEQ1wjOORLQTJbNnM2V1DNzmemxVHlOovdKBKqccALDbR9aCcTRThhcXzew88SMbN4SMm6JOcw==}
+
+  '@types/systemjs@6.15.4':
+    resolution: {integrity: sha512-GUosUMKBP5ZH2xvB6bqSccmjcX0Jz0SMM9i+AjefCucIQQ8Hi0yWIGLLuyuvTF6kgFJkLXxldD31DSu4R5Eq0w==}
 
   '@types/topojson-client@3.1.5':
     resolution: {integrity: sha512-C79rySTyPxnQNNguTZNI1Ct4D7IXgvyAs3p9HPecnl6mNrJ5+UhvGNYcZfpROYV2lMHI48kJPxwR+F9C6c7nmw==}
@@ -8202,7 +8235,7 @@ snapshots:
       '@codemirror/language': 6.12.4
       '@codemirror/state': 6.7.5
       '@lezer/common': 1.5.2
-      '@lezer/highlight': 1.2.3
+      '@lezer/highlight': 1.2.5
       '@lezer/lr': 1.4.10
 
   '@codemirror/lang-xml@6.1.0':
@@ -8220,7 +8253,7 @@ snapshots:
       '@codemirror/language': 6.12.4
       '@codemirror/state': 6.7.5
       '@lezer/common': 1.5.2
-      '@lezer/highlight': 1.2.3
+      '@lezer/highlight': 1.2.5
       '@lezer/lr': 1.4.10
       '@lezer/yaml': 1.0.4
 
@@ -8229,9 +8262,13 @@ snapshots:
       '@codemirror/state': 6.7.5
       '@codemirror/view': 6.43.12
       '@lezer/common': 1.5.2
-      '@lezer/highlight': 1.2.3
+      '@lezer/highlight': 1.2.5
       '@lezer/lr': 1.4.10
       style-mod: 4.1.4
+
+  '@codemirror/legacy-modes@6.5.5':
+    dependencies:
+      '@codemirror/streamparser': 6.0.0
 
   '@codemirror/lint@6.9.7':
     dependencies:
@@ -8249,12 +8286,14 @@ snapshots:
     dependencies:
       '@marijn/find-cluster-break': 1.0.4
 
+  '@codemirror/streamparser@6.0.0': {}
+
   '@codemirror/theme-one-dark@6.1.3':
     dependencies:
       '@codemirror/language': 6.12.4
       '@codemirror/state': 6.7.5
       '@codemirror/view': 6.43.12
-      '@lezer/highlight': 1.2.3
+      '@lezer/highlight': 1.2.5
 
   '@codemirror/view@6.43.12':
     dependencies:
@@ -8848,6 +8887,8 @@ snapshots:
 
   '@floating-ui/utils@0.2.12': {}
 
+  '@formatjs/bigdecimal@0.2.7': {}
+
   '@formatjs/ecma402-abstract@2.3.6':
     dependencies:
       '@formatjs/fast-memoize': 2.2.7
@@ -8858,6 +8899,8 @@ snapshots:
   '@formatjs/fast-memoize@2.2.7':
     dependencies:
       tslib: 2.8.1
+
+  '@formatjs/fast-memoize@3.1.7': {}
 
   '@formatjs/icu-messageformat-parser@2.11.4':
     dependencies:
@@ -8870,6 +8913,11 @@ snapshots:
       '@formatjs/ecma402-abstract': 2.3.6
       tslib: 2.8.1
 
+  '@formatjs/intl-durationformat@0.11.1':
+    dependencies:
+      '@formatjs/bigdecimal': 0.2.7
+      '@formatjs/intl-localematcher': 0.9.0
+
   '@formatjs/intl-durationformat@0.7.6':
     dependencies:
       '@formatjs/ecma402-abstract': 2.3.6
@@ -8879,6 +8927,10 @@ snapshots:
   '@formatjs/intl-localematcher@0.6.2':
     dependencies:
       tslib: 2.8.1
+
+  '@formatjs/intl-localematcher@0.9.0':
+    dependencies:
+      '@formatjs/fast-memoize': 3.1.7
 
   '@grafana/data@11.6.16(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
@@ -8946,16 +8998,17 @@ snapshots:
       - supports-color
       - typescript
 
-  '@grafana/data@13.2.2(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)':
+  '@grafana/data@13.3.0(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)':
     dependencies:
       '@braintree/sanitize-url': 7.0.1
-      '@grafana/i18n': 13.2.2(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)
-      '@grafana/schema': 13.2.2
+      '@grafana/i18n': 13.3.0(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)
+      '@grafana/schema': 13.3.0
       '@leeoniya/ufuzzy': 1.0.19
       '@react-hookz/web': 25.3.0(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@types/d3-interpolate': 3.0.4
+      '@types/luxon': 3.7.6
       '@types/string-hash': 1.1.3
-      '@types/systemjs': 6.15.3
+      '@types/systemjs': 6.15.4
       d3-interpolate: 3.0.1
       d3-scale-chromatic: 3.1.0
       date-fns: 4.1.0
@@ -8965,8 +9018,7 @@ snapshots:
       lodash: 4.18.1
       marked: 16.3.0
       marked-mangle: 1.1.12(marked@16.3.0)
-      moment: 2.30.1
-      moment-timezone: 0.5.47
+      moment-timezone: 0.6.3
       ol: 10.7.0
       papaparse: 5.5.3
       react: 19.2.7
@@ -9002,7 +9054,7 @@ snapshots:
     dependencies:
       semver: 7.8.5
 
-  '@grafana/e2e-selectors@13.2.2':
+  '@grafana/e2e-selectors@13.3.0':
     dependencies:
       semver: 7.8.5
 
@@ -9099,9 +9151,9 @@ snapshots:
       - supports-color
       - typescript
 
-  '@grafana/i18n@13.2.2(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)':
+  '@grafana/i18n@13.3.0(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)':
     dependencies:
-      '@formatjs/intl-durationformat': 0.7.6
+      '@formatjs/intl-durationformat': 0.11.1
       '@typescript-eslint/utils': 8.67.0(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.2)
       fast-deep-equal: 3.1.3
       i18next: 26.3.6(typescript@5.9.2)
@@ -9149,9 +9201,8 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@grafana/react-data-grid@7.0.0-beta.57(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+  '@grafana/react-data-grid@7.0.0-beta.60(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
     dependencies:
-      clsx: 2.1.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
@@ -9205,22 +9256,21 @@ snapshots:
       - supports-color
       - typescript
 
-  '@grafana/runtime@13.2.2(@babel/runtime@8.0.5)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.2)(@codemirror/theme-one-dark@6.1.3)(@types/react@18.3.0)(codemirror@6.0.2)(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)':
+  '@grafana/runtime@13.3.0(@babel/runtime@8.0.5)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.2)(@codemirror/theme-one-dark@6.1.3)(@types/react@18.3.0)(codemirror@6.0.2)(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)':
     dependencies:
-      '@grafana/data': 13.2.2(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)
-      '@grafana/e2e-selectors': 13.2.2
+      '@grafana/data': 13.3.0(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)
+      '@grafana/e2e-selectors': 13.3.0
       '@grafana/faro-web-sdk': 2.12.0
-      '@grafana/schema': 13.2.2
-      '@grafana/ui': 13.2.2(@babel/runtime@8.0.5)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.2)(@codemirror/theme-one-dark@6.1.3)(@types/react@18.3.0)(codemirror@6.0.2)(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)
+      '@grafana/schema': 13.3.0
+      '@grafana/ui': 13.3.0(@babel/runtime@8.0.5)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.2)(@codemirror/theme-one-dark@6.1.3)(@types/react@18.3.0)(codemirror@6.0.2)(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)
       '@openfeature/core': 1.12.0
       '@openfeature/localstorage-provider': 0.1.2(@openfeature/web-sdk@1.10.0(@openfeature/core@1.12.0))
       '@openfeature/ofrep-web-provider': 0.4.3(@openfeature/core@1.12.0)(@openfeature/web-sdk@1.10.0(@openfeature/core@1.12.0))
       '@openfeature/react-sdk': 1.4.1(@openfeature/web-sdk@1.10.0(@openfeature/core@1.12.0))(react@19.2.7)
       '@openfeature/web-sdk': 1.10.0(@openfeature/core@1.12.0)
-      '@types/systemjs': 6.15.3
+      '@types/systemjs': 6.15.4
       fast-json-patch: 3.1.1
       history: 4.10.1
-      immutable: 5.1.9
       lodash: 4.18.1
       lru-cache: 11.5.2
       react: 19.2.7
@@ -9249,7 +9299,7 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@grafana/schema@13.2.2': {}
+  '@grafana/schema@13.3.0': {}
 
   '@grafana/sign-plugin@3.2.2(supports-color@8.1.1)':
     dependencies:
@@ -9432,7 +9482,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@grafana/ui@13.2.2(@babel/runtime@8.0.5)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.2)(@codemirror/theme-one-dark@6.1.3)(@types/react@18.3.0)(codemirror@6.0.2)(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)':
+  '@grafana/ui@13.3.0(@babel/runtime@8.0.5)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.2)(@codemirror/theme-one-dark@6.1.3)(@types/react@18.3.0)(codemirror@6.0.2)(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)':
     dependencies:
       '@codemirror/autocomplete': 6.20.3
       '@codemirror/lang-go': 6.0.1
@@ -9444,20 +9494,21 @@ snapshots:
       '@codemirror/lang-xml': 6.1.0
       '@codemirror/lang-yaml': 6.1.3
       '@codemirror/language': 6.12.4
+      '@codemirror/legacy-modes': 6.5.5
       '@codemirror/state': 6.7.5
       '@codemirror/view': 6.43.12
       '@emotion/css': 11.13.5(supports-color@8.1.1)
       '@emotion/react': 11.14.0(@types/react@18.3.0)(react@19.2.7)(supports-color@8.1.1)
       '@emotion/serialize': 1.3.3
       '@floating-ui/react': 0.27.19(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@grafana/data': 13.2.2(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)
-      '@grafana/e2e-selectors': 13.2.2
+      '@grafana/data': 13.3.0(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)
+      '@grafana/e2e-selectors': 13.3.0
       '@grafana/faro-web-sdk': 2.12.0
-      '@grafana/i18n': 13.2.2(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)
-      '@grafana/react-data-grid': 7.0.0-beta.57(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@grafana/schema': 13.2.2
+      '@grafana/i18n': 13.3.0(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.2)
+      '@grafana/react-data-grid': 7.0.0-beta.60(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@grafana/schema': 13.3.0
       '@hello-pangea/dnd': 18.0.1(@types/react@18.3.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@lezer/highlight': 1.2.3
+      '@lezer/highlight': 1.2.5
       '@monaco-editor/react': 4.7.0(monaco-editor@0.34.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@popperjs/core': 2.11.8
       '@rc-component/cascader': 1.9.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -9469,7 +9520,7 @@ snapshots:
       '@react-aria/overlays': 3.32.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@tanstack/react-virtual': 3.14.9(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@types/jquery': 3.5.33
-      '@types/lodash': 4.17.20
+      '@types/lodash': 4.17.27
       '@types/react-table': 7.7.20
       '@uiw/react-codemirror': 4.25.9(@babel/runtime@8.0.5)(@codemirror/autocomplete@6.20.3)(@codemirror/language@6.12.4)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.2)(@codemirror/state@6.7.5)(@codemirror/theme-one-dark@6.1.3)(@codemirror/view@6.43.12)(codemirror@6.0.2)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       calculate-size: 1.1.1
@@ -10042,35 +10093,35 @@ snapshots:
   '@lezer/css@1.3.8':
     dependencies:
       '@lezer/common': 1.5.2
-      '@lezer/highlight': 1.2.3
+      '@lezer/highlight': 1.2.5
       '@lezer/lr': 1.4.10
 
   '@lezer/go@1.0.1':
     dependencies:
       '@lezer/common': 1.5.2
-      '@lezer/highlight': 1.2.3
+      '@lezer/highlight': 1.2.5
       '@lezer/lr': 1.4.10
 
-  '@lezer/highlight@1.2.3':
+  '@lezer/highlight@1.2.5':
     dependencies:
       '@lezer/common': 1.5.2
 
   '@lezer/html@1.3.13':
     dependencies:
       '@lezer/common': 1.5.2
-      '@lezer/highlight': 1.2.3
+      '@lezer/highlight': 1.2.5
       '@lezer/lr': 1.4.10
 
   '@lezer/javascript@1.5.6':
     dependencies:
       '@lezer/common': 1.5.2
-      '@lezer/highlight': 1.2.3
+      '@lezer/highlight': 1.2.5
       '@lezer/lr': 1.4.10
 
   '@lezer/json@1.0.3':
     dependencies:
       '@lezer/common': 1.5.2
-      '@lezer/highlight': 1.2.3
+      '@lezer/highlight': 1.2.5
       '@lezer/lr': 1.4.10
 
   '@lezer/lr@1.4.10':
@@ -10080,18 +10131,18 @@ snapshots:
   '@lezer/markdown@1.7.2':
     dependencies:
       '@lezer/common': 1.5.2
-      '@lezer/highlight': 1.2.3
+      '@lezer/highlight': 1.2.5
 
   '@lezer/xml@1.0.6':
     dependencies:
       '@lezer/common': 1.5.2
-      '@lezer/highlight': 1.2.3
+      '@lezer/highlight': 1.2.5
       '@lezer/lr': 1.4.10
 
   '@lezer/yaml@1.0.4':
     dependencies:
       '@lezer/common': 1.5.2
-      '@lezer/highlight': 1.2.3
+      '@lezer/highlight': 1.2.5
       '@lezer/lr': 1.4.10
 
   '@mapbox/jsonlint-lines-primitives@2.0.3': {}
@@ -10511,7 +10562,7 @@ snapshots:
 
   '@react-aria/dialog@3.5.21(@react-spectrum/provider@3.11.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@react-aria/focus': 3.21.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@react-aria/focus': 3.21.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@react-aria/overlays': 3.32.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@react-aria/utils': 3.27.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@react-types/dialog': 3.6.0(@react-spectrum/provider@3.11.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -10569,6 +10620,16 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
+  '@react-aria/focus@3.21.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@react-aria/interactions': 3.28.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@react-aria/utils': 3.34.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@react-types/shared': 3.36.1(react@18.3.1)
+      '@swc/helpers': 0.5.23
+      clsx: 2.1.1
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
   '@react-aria/focus@3.21.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
     dependencies:
       '@react-aria/interactions': 3.28.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -10607,7 +10668,7 @@ snapshots:
 
   '@react-aria/overlays@3.25.0(@react-spectrum/provider@3.11.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@react-aria/focus': 3.21.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@react-aria/focus': 3.21.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@react-aria/i18n': 3.13.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@react-aria/interactions': 3.28.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@react-aria/ssr': 3.10.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -10625,7 +10686,7 @@ snapshots:
 
   '@react-aria/overlays@3.28.0(@react-spectrum/provider@3.11.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@react-aria/focus': 3.21.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@react-aria/focus': 3.21.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@react-aria/i18n': 3.13.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@react-aria/interactions': 3.28.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@react-aria/ssr': 3.10.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -10682,6 +10743,14 @@ snapshots:
       clsx: 2.1.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
+
+  '@react-aria/utils@3.34.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@swc/helpers': 0.5.23
+      react: 18.3.1
+      react-aria: 3.51.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-dom: 18.3.1(react@18.3.1)
+      react-stately: 3.49.0(react@18.3.1)
 
   '@react-aria/utils@3.34.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
     dependencies:
@@ -11181,6 +11250,10 @@ snapshots:
 
   '@types/lodash@4.17.20': {}
 
+  '@types/lodash@4.17.27': {}
+
+  '@types/luxon@3.7.6': {}
+
   '@types/node@24.0.0':
     dependencies:
       undici-types: 7.8.0
@@ -11234,6 +11307,8 @@ snapshots:
   '@types/string-hash@1.1.3': {}
 
   '@types/systemjs@6.15.3': {}
+
+  '@types/systemjs@6.15.4': {}
 
   '@types/topojson-client@3.1.5':
     dependencies:
