@@ -21,7 +21,7 @@ export const UI_ICONS_DIR = join(
 
 /**
  * The checked-in SVG files of the icons that `@grafana/ui` does not ship, in `<dir>/<name>.svg`. They are copies from
- * the `@iconscout/unicons` package, the source of the `unicons` icons of Grafana.
+ * `@iconscout/unicons@4.0.1`, the source of the `unicons` icons of Grafana. 4.0.1 is the last Apache-2.0 version.
  */
 export const LOCAL_ICONS_DIR = join(PACKAGE_DIR, 'src/renderer/icons');
 
@@ -79,7 +79,7 @@ export function readIcons(keys = readIconList()) {
   if (missing.length > 0) {
     throw new Error(
       `@grafana/ui does not ship these icons, and ${LOCAL_ICONS_DIR} has no copy: ${missing.join(', ')}. ` +
-        'Copy each SVG from the @iconscout/unicons package into it (docs/renderer.md, Icons).'
+        'Copy each SVG from @iconscout/unicons@4.0.1 into it (docs/renderer.md, Icons).'
     );
   }
   return icons;

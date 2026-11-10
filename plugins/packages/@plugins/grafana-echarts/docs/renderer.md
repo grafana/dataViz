@@ -57,14 +57,14 @@ The script also reports the gzip size of the bundle. The contract constant `maxB
 
 - `src/renderer/iconList.json`: the list of the keys. It is a checked-in list, not a scan of the code.
 - The SVG files that `@grafana/ui` ships, in `dist/public/img/icons/`. The script reads these first.
-- `src/renderer/icons/<dir>/<name>.svg`: copies of the icons that `@grafana/ui` does not ship, from the `@iconscout/unicons` package (the `svg/line` folder, the source of the `unicons` icons of Grafana). The license of that package is the IconScout Simple License.
+- `src/renderer/icons/<dir>/<name>.svg`: copies of the icons that `@grafana/ui` does not ship, from the `svg/line` folder of the `@iconscout/unicons` package, version 4.0.1. That package is the source of the `unicons` icons of Grafana. Version 4.0.1 is the last version under Apache-2.0, the license of this repository. Version 4.0.2 and later use the IconScout Simple License, which does not agree with Apache-2.0.
 
 The build fails if a listed icon has no SVG file. `renderer-icons.test.mjs` fails if a copy is an icon that `@grafana/ui` now ships, or is not in the list. Then delete the copy.
 
 To add an icon:
 
 1. Add its key to `src/renderer/iconList.json`.
-2. If `@grafana/ui` does not ship it, copy the SVG file from `@iconscout/unicons` to `src/renderer/icons/<dir>/<name>.svg`.
+2. If `@grafana/ui` does not ship it, copy the SVG file from `@iconscout/unicons@4.0.1` (`svg/line/<name>.svg`) to `src/renderer/icons/<dir>/<name>.svg`. Do not copy it from a later version. If version 4.0.1 does not have the icon, ask for a license decision before you add it.
 3. Run `pnpm run test:renderer-sandbox`.
 
 `check:renderer` makes sure that `icons.json` has the key and value shape of the contract (`delivery.9`). It also reports the gzip size of `icons.json` (`delivery.11`). The size never fails the check, and `maxBundleGzipBytes` does not include it.
