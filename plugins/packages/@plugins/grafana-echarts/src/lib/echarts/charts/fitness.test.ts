@@ -25,6 +25,7 @@ import {
   ALL_VALUES_MAX_ROWS,
   CATEGORY_MAX_ROWS,
   MULTIVARIATE_MAX_AXES,
+  MULTIVARIATE_MAX_SERIES,
   SLICE_MAX,
   STATUS_HISTORY_MAX_ROWS,
   STREAM_MAX_LAYERS,
@@ -674,23 +675,31 @@ describe('scoreHierarchy', () => {
 });
 
 describe('scoreMultivariate', () => {
+  // Each number field is one axis, each row one polygon.
   it('scores Good for several metrics over a bounded set of rows', () => {
-    expect(scoreMultivariate(summaryOf(categoryFrame(3, 5)))).toBe(VisualizationSuggestionScore.Good);
+    expect(scoreMultivariate(summaryOf(categoryFrame(5, 3)))).toBe(VisualizationSuggestionScore.Good);
   });
 
-  it('does not fit with fewer than two numeric fields', () => {
-    expect(scoreMultivariate(summaryOf(categoryFrame(1, 5)))).toBeUndefined();
+  it('does not fit fewer than three number fields, which is a line and not a polygon', () => {
+    expect(scoreMultivariate(summaryOf(categoryFrame(2, 5)))).toBeUndefined();
   });
 
-  it('does not fit fewer than three rows, which is a line and not a polygon', () => {
-    expect(scoreMultivariate(summaryOf(categoryFrame(3, 2)))).toBeUndefined();
+  it('does not fit one row, which has nothing to be compared against', () => {
+    expect(scoreMultivariate(summaryOf(categoryFrame(5, 1)))).toBeUndefined();
   });
 
   it(`fits at ${MULTIVARIATE_MAX_AXES} axes and withholds at ${MULTIVARIATE_MAX_AXES + 1}`, () => {
-    expect(scoreMultivariate(summaryOf(categoryFrame(2, MULTIVARIATE_MAX_AXES)))).toBe(
+    expect(scoreMultivariate(summaryOf(categoryFrame(MULTIVARIATE_MAX_AXES, 2)))).toBe(
       VisualizationSuggestionScore.Good
     );
-    expect(scoreMultivariate(summaryOf(categoryFrame(2, MULTIVARIATE_MAX_AXES + 1)))).toBeUndefined();
+    expect(scoreMultivariate(summaryOf(categoryFrame(MULTIVARIATE_MAX_AXES + 1, 2)))).toBeUndefined();
+  });
+
+  it(`fits at ${MULTIVARIATE_MAX_SERIES} rows and withholds at ${MULTIVARIATE_MAX_SERIES + 1}`, () => {
+    expect(scoreMultivariate(summaryOf(categoryFrame(3, MULTIVARIATE_MAX_SERIES)))).toBe(
+      VisualizationSuggestionScore.Good
+    );
+    expect(scoreMultivariate(summaryOf(categoryFrame(3, MULTIVARIATE_MAX_SERIES + 1)))).toBeUndefined();
   });
 
   // Defect 2: the old gate was `fieldCountByType(number) >= 2` and nothing else,
@@ -699,12 +708,13 @@ describe('scoreMultivariate', () => {
     expect(scoreMultivariate(summaryOf(timeFrame(3, 500, DataFrameType.TimeSeriesWide)))).toBeUndefined();
   });
 
-  it('counts axes per frame rather than across frames', () => {
-    // `frameToCategorical` reads a single frame, so two 30-row frames are 30 axes,
-    // not 60 — `rowCountTotal` would withhold this.
-    expect(scoreMultivariate(summaryOf(categoryFrame(2, 30), categoryFrame(2, 30)))).toBe(
-      VisualizationSuggestionScore.Good
-    );
+  // A Prometheus instant response of 500 series as one wide frame: 500 number fields.
+  it('does not fit a wide frame of hundreds of series', () => {
+    expect(scoreMultivariate(summaryOf(categoryFrame(500, 1)))).toBeUndefined();
+  });
+
+  it('does not fit several frames with number fields, because the chart reads one frame', () => {
+    expect(scoreMultivariate(summaryOf(categoryFrame(3, 3), categoryFrame(3, 3)))).toBeUndefined();
   });
 });
 

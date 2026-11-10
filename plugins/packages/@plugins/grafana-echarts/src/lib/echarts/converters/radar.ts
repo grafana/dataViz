@@ -1,5 +1,5 @@
-import { type DataFrame, type GrafanaTheme2 } from '@grafana/data';
-import { frameToCategorical } from 'lib/echarts/converters/categorical';
+import { type DataFrame, type FieldConfigSource, type GrafanaTheme2 } from '@grafana/data';
+import { frameToMultivariate, type MultivariateItem } from 'lib/echarts/converters/multivariate';
 
 /**
  * A single radar axis.
@@ -21,9 +21,6 @@ export interface RadarIndicator {
  * `value` is positional: `value[i]` corresponds to `indicator[i]`. A `null`
  * entry leaves a gap on that axis rather than plotting a zero.
  *
- * `itemStyle.color` is resolved from the field's standard Color scheme config so
- * each polygon matches Grafana.
- *
  * See https://echarts.apache.org/en/option.html#series-radar.data
  */
 export interface RadarPolygon {
@@ -34,53 +31,52 @@ export interface RadarPolygon {
 
 /**
  * The two data-dependent pieces a radar chart needs: the shared axis definition
- * (`indicator`) and the polygons drawn against it (`data`). The caller merges
- * these into a base radar option.
+ * (`indicator`) and the polygons drawn against it (`data`). `items` holds the
+ * source row of each polygon, in the same order as `data`, so the tooltip can map
+ * a `dataIndex` back to its row. The caller merges these into a base radar option.
  */
 export interface RadarData {
   indicator: RadarIndicator[];
   data: RadarPolygon[];
+  items: MultivariateItem[];
 }
 
 /**
- * Convert Grafana data frames into the pieces required by an ECharts radar
- * chart.
+ * Convert Grafana data frames into the pieces required by an ECharts radar chart.
  *
- * This is a thin adapter over the shared categorical model
- * (see echarts/converters/categorical.ts):
- * - Categories become the radar axes (indicators).
- * - Each categorical series becomes one polygon (its values map positionally to
- *   the indicators).
- * - Each indicator's `max` is the largest value any polygon takes on that axis,
- *   so the outer ring fits the data; left undefined when there is no numeric
- *   data for that axis (ECharts then auto-scales).
+ * A thin adapter over the multivariate model (see `converters/multivariate.ts`):
+ * - Each number field is one axis (indicator).
+ * - Each visible row is one polygon. A row hidden by the legend toggle draws no polygon.
+ * - The `max` of each indicator is the largest value of the visible polygons on that axis,
+ *   so the outer ring fits the data. It is not set when the axis has no value (ECharts then auto-scales).
  *
- * Inherits the categorical model's trade-offs (single frame, time fields
- * ignored, positional alignment). See https://echarts.apache.org/en/option.html#radar
+ * See https://echarts.apache.org/en/option.html#radar
  *
- * Returns `null` when no usable categorical data can be derived.
+ * Returns `null` when no usable data can be derived.
  */
-export function radarToEChartsOption(series: DataFrame[], theme: GrafanaTheme2): RadarData | null {
-  const categorical = frameToCategorical(series, theme);
+export function radarToEChartsOption(
+  series: DataFrame[],
+  theme: GrafanaTheme2,
+  fieldConfig?: FieldConfigSource
+): RadarData | null {
+  const model = frameToMultivariate(series, theme, fieldConfig);
 
-  if (!categorical) {
+  if (!model) {
     return null;
   }
 
-  const { categories, series: polygonSeries } = categorical;
+  const items = model.items.filter((item) => !item.hidden);
 
-  const data: RadarPolygon[] = polygonSeries.map((polygon) => ({
-    name: polygon.name,
-    value: polygon.values,
-    itemStyle: { color: polygon.color },
+  const data: RadarPolygon[] = items.map((item) => ({
+    name: item.name,
+    value: item.values,
+    itemStyle: { color: item.color },
   }));
 
-  const indicator: RadarIndicator[] = categories.map((name, row) => {
-    // Per-axis max = the largest value any polygon takes on this axis. Undefined
-    // when no polygon has a numeric value here so ECharts can auto-scale.
+  const indicator: RadarIndicator[] = model.axes.map(({ name }, axis) => {
     let max: number | undefined = undefined;
-    for (const polygon of polygonSeries) {
-      const value = polygon.values[row];
+    for (const item of items) {
+      const value = item.values[axis];
       if (value !== null && (max === undefined || value > max)) {
         max = value;
       }
@@ -89,5 +85,5 @@ export function radarToEChartsOption(series: DataFrame[], theme: GrafanaTheme2):
     return max === undefined ? { name } : { name, max };
   });
 
-  return { indicator, data };
+  return { indicator, data, items };
 }

@@ -18,8 +18,8 @@ import { describeCommonOptions } from './describe-common-options';
  *
  * `singleTooltipOnly` (default `false`) drops the "All" tooltip choice, leaving
  * Single/Hidden. Pass `true` for a family whose hover already carries the whole
- * item — the multivariate one, where a single formatter param holds every
- * indicator/axis value, so "All" would repeat one row rather than list the axes.
+ * item — the multivariate one, where a hover already lists every axis of one
+ * polygon/polyline, so "All" has nothing to add.
  * It must agree with the chart module's own `singleTooltipOnly`, which clamps
  * Multi to Single at render time (see `buildPanelTooltip`); this only hides the
  * choice in the editor.

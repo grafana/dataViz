@@ -127,6 +127,32 @@ describe('pinned tooltip data links', () => {
     expect(screen.getByText(LINK_TITLE)).toBeInTheDocument();
   });
 
+  // Each number field is one axis, each row one polygon. The link is on one axis
+  // field and resolves at the row of the pinned polygon.
+  it('resolves a radar polygon back to its axis fields at its row', async () => {
+    const frame = withLink(
+      toDataFrame({
+        fields: [
+          { name: 'team', type: FieldType.string, values: ['A', 'B'] },
+          { name: 'Speed', type: FieldType.number, values: [80, 60] },
+          { name: 'Power', type: FieldType.number, values: [70, 90] },
+          { name: 'Range', type: FieldType.number, values: [60, 50] },
+        ],
+      }),
+      'Speed'
+    );
+    const chart = await renderPanel([frame], 'radar', 'multivariate');
+    // The filled polygons cover the middle of the web.
+    await hoverAndPin(chart, [
+      [200, 120],
+      [200, 100],
+      [210, 130],
+      [190, 110],
+    ]);
+
+    expect(screen.getByText(LINK_TITLE)).toBeInTheDocument();
+  });
+
   it('resolves a matrix heatmap cell back to its own column field and row', async () => {
     const frame = withLink(
       toDataFrame({

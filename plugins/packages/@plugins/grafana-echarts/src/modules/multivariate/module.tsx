@@ -29,7 +29,7 @@ declare const __PLUGIN_ID__: string;
 initPluginTranslations(__PLUGIN_ID__);
 
 // Multivariate family panel: radar and parallel coordinates, both built from the
-// shared categorical model (categories -> axes, each numeric field -> one series).
+// multivariate model (each number field -> one axis, each row -> one polygon or line).
 // The "Chart type" picker toggles between them over the same frames; the shared
 // Panel resolves the multivariate chart module, which dispatches on the selected
 // seriesType.
@@ -37,9 +37,8 @@ export const plugin = new PanelPlugin<PanelOptions, EChartsFieldConfig>(makeLazy
   .useFieldConfig({
     standardOptions: STANDARD_FIELD_OPTIONS,
     // Register `custom.hideFrom` so the legend visibility toggle's `byName`
-    // override is applied by Grafana. Each radar polygon is a numeric field, so
-    // the chart strips fields flagged `hideFrom.viz` (see
-    // `lib/grafana/fields/seriesConfig.ts`).
+    // override is saved. Each polygon or line is a row, so the chart reads the
+    // hidden row names from that override (see `lib/grafana/fields/seriesConfig.ts`).
     useCustomConfig: (builder) => {
       commonOptionsBuilder.addHideFrom(builder);
     },
@@ -88,10 +87,11 @@ export const plugin = new PanelPlugin<PanelOptions, EChartsFieldConfig>(makeLazy
     // (whose Show points / Downsampling levers would be inert here).
     addAnimationOption(builder);
 
-    // Single/Hidden only: one formatter param carries the whole polygon/polyline,
-    // so "All" has no extra rows to list. Matches `singleTooltipOnly` on
+    // Single/Hidden only: a hover already lists every axis of one polygon/polyline,
+    // so "All" has nothing to add. Matches `singleTooltipOnly` on
     // `multivariateChartModule`, which clamps the mode at render time.
-    addCommonLegendAndTooltip(builder, { singleTooltipOnly: true });
+    // No legend calcs: a calc over the axes of one row mixes their units.
+    addCommonLegendAndTooltip(builder, { includeLegendCalcs: false, singleTooltipOnly: true });
     return builder;
   })
   // Advertise fitness for multi-metric numeric data (opts in via `"suggestions": true`).

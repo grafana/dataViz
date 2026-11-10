@@ -5,9 +5,9 @@ import { getComponent, getSeriesCanvasEvents, height, width } from 'test/panel';
 import { type PanelOptions } from 'types';
 
 // Multivariate canvas snapshots, mirroring `part-to-whole.canvas.test.tsx`.
-// Both render types share the categorical model — each category is one
-// `parallelAxis` / radar indicator, each numeric field one polyline / polygon
-// (colored by the field color) — so they share the render options below and
+// Both render types share the multivariate model — each number field is one
+// `parallelAxis` / radar indicator, each row one polyline / polygon (colored by
+// the row's palette color) — so they share the render options below and
 // differ only in the seriesType the panel resolves. Most cases exercise
 // parallel, whose options are the richer set; the radar block at the bottom
 // covers the other branch. Series are placed on SERIES_ZLEVEL, so only that
@@ -49,20 +49,21 @@ const renderParallel = async (
 };
 
 describe('multivariate (parallel) canvas renders', () => {
-  // Each category is one axis; each numeric field is one polyline crossing them.
+  // Each number field is one axis; each row is one polyline crossing them.
   const teamsFrame = toDataFrame({
     fields: [
-      { name: 'category', type: FieldType.string, values: ['Speed', 'Power', 'Range', 'Durability'] },
-      { name: 'Team A', type: FieldType.number, values: [80, 70, 60, 90], config: { displayName: 'Team A' } },
-      { name: 'Team B', type: FieldType.number, values: [60, 90, 50, 70], config: { displayName: 'Team B' } },
-      { name: 'Team C', type: FieldType.number, values: [70, 50, 85, 60], config: { displayName: 'Team C' } },
+      { name: 'team', type: FieldType.string, values: ['Team A', 'Team B', 'Team C'] },
+      { name: 'Speed', type: FieldType.number, values: [80, 60, 70] },
+      { name: 'Power', type: FieldType.number, values: [70, 90, 50] },
+      { name: 'Range', type: FieldType.number, values: [60, 50, 85] },
+      { name: 'Durability', type: FieldType.number, values: [90, 70, 60] },
     ],
   });
 
   describe('base', () => {
-    // One axis per category, one polyline per numeric field — the default render
-    // the other cases build on.
-    it('one axis per category, one polyline per field', async () => {
+    // One axis per number field, one polyline per row — the default render the
+    // other cases build on.
+    it('one axis per number field, one polyline per row', async () => {
       const { defaultEvents, seriesEvents } = await renderParallel([teamsFrame]);
 
       expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, {
@@ -122,8 +123,8 @@ describe('multivariate (parallel) canvas renders', () => {
   });
 
   describe('color', () => {
-    // A byName fixed-color override pins line 'Team B' — applied to the frames via
-    // the harness `fieldConfig` (as real Grafana does)
+    // A byName fixed-color override pins line 'Team B'. It names a row, so the
+    // chart reads it from the `fieldConfig` by name, as pie slices do.
     it('byName fixed-color override', async () => {
       const fieldConfig: FieldConfigSource = {
         defaults: {},
@@ -148,9 +149,11 @@ describe('multivariate (parallel) canvas renders', () => {
     const narrowWidth = 240;
     const hostsFrame = toDataFrame({
       fields: [
-        { name: 'resource', type: FieldType.string, values: ['CPU %', 'Memory %', 'Disk %', 'Network Mbit/s'] },
-        { name: 'web-01', type: FieldType.number, values: [62, 71, 34, 410] },
-        { name: 'db-01', type: FieldType.number, values: [81, 88, 77, 220] },
+        { name: 'host', type: FieldType.string, values: ['web-01', 'db-01'] },
+        { name: 'CPU %', type: FieldType.number, values: [62, 81] },
+        { name: 'Memory %', type: FieldType.number, values: [71, 88] },
+        { name: 'Disk %', type: FieldType.number, values: [34, 77] },
+        { name: 'Network Mbit/s', type: FieldType.number, values: [410, 220] },
       ],
     });
 
@@ -179,12 +182,15 @@ describe('multivariate (parallel) canvas renders', () => {
   });
 
   describe('edge cases', () => {
-    // One numeric field → a single polyline across the axes.
-    it('single line (one numeric field)', async () => {
+    // One row → a single polyline across the axes.
+    it('single line (one row)', async () => {
       const singleFrame = toDataFrame({
         fields: [
-          { name: 'category', type: FieldType.string, values: ['Speed', 'Power', 'Range', 'Durability'] },
-          { name: 'Team A', type: FieldType.number, values: [80, 70, 60, 90], config: { displayName: 'Team A' } },
+          { name: 'team', type: FieldType.string, values: ['Team A'] },
+          { name: 'Speed', type: FieldType.number, values: [80] },
+          { name: 'Power', type: FieldType.number, values: [70] },
+          { name: 'Range', type: FieldType.number, values: [60] },
+          { name: 'Durability', type: FieldType.number, values: [90] },
         ],
       });
 
@@ -201,9 +207,11 @@ describe('multivariate (parallel) canvas renders', () => {
     it('null gap (a missing value breaks the polyline)', async () => {
       const gapFrame = toDataFrame({
         fields: [
-          { name: 'category', type: FieldType.string, values: ['Speed', 'Power', 'Range', 'Durability'] },
-          { name: 'Team A', type: FieldType.number, values: [80, null, 60, 90], config: { displayName: 'Team A' } },
-          { name: 'Team B', type: FieldType.number, values: [60, 90, 50, 70], config: { displayName: 'Team B' } },
+          { name: 'team', type: FieldType.string, values: ['Team A', 'Team B'] },
+          { name: 'Speed', type: FieldType.number, values: [80, 60] },
+          { name: 'Power', type: FieldType.number, values: [null, 90] },
+          { name: 'Range', type: FieldType.number, values: [60, 50] },
+          { name: 'Durability', type: FieldType.number, values: [90, 70] },
         ],
       });
 
@@ -224,13 +232,15 @@ describe('multivariate (parallel) canvas renders', () => {
 describe('multivariate (radar) canvas renders', () => {
   const teamsFrame = toDataFrame({
     fields: [
-      { name: 'category', type: FieldType.string, values: ['Speed', 'Power', 'Range', 'Durability'] },
-      { name: 'Team A', type: FieldType.number, values: [80, 70, 60, 90], config: { displayName: 'Team A' } },
-      { name: 'Team B', type: FieldType.number, values: [60, 90, 50, 70], config: { displayName: 'Team B' } },
+      { name: 'team', type: FieldType.string, values: ['Team A', 'Team B'] },
+      { name: 'Speed', type: FieldType.number, values: [80, 60] },
+      { name: 'Power', type: FieldType.number, values: [70, 90] },
+      { name: 'Range', type: FieldType.number, values: [60, 50] },
+      { name: 'Durability', type: FieldType.number, values: [90, 70] },
     ],
   });
 
-  it('one polygon per numeric field, filling the canvas', async () => {
+  it('one polygon per row, filling the canvas', async () => {
     const { container } = render(
       getComponent([teamsFrame], 'radar', canvasOptions(), undefined, undefined, 'multivariate', undefined)
     );

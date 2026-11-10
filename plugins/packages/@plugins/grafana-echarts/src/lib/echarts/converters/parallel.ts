@@ -1,5 +1,5 @@
-import { type DataFrame, type GrafanaTheme2 } from '@grafana/data';
-import { frameToCategorical } from 'lib/echarts/converters/categorical';
+import { type DataFrame, type FieldConfigSource, type GrafanaTheme2 } from '@grafana/data';
+import { frameToMultivariate, type MultivariateItem } from 'lib/echarts/converters/multivariate';
 
 /**
  * A single parallel-coordinates axis.
@@ -16,14 +16,13 @@ export interface ParallelAxis {
 }
 
 /**
- * A single parallel-coordinates polyline (one series/line crossing every axis).
+ * A single parallel-coordinates polyline (one line crossing every axis).
  *
  * `value` is positional: `value[i]` corresponds to `axes[i]` (dimension `i`). A
  * `null` entry leaves a gap on that axis rather than plotting a zero.
  *
- * `lineStyle.color` is resolved from the field's standard Color scheme config so
- * each line matches Grafana. Parallel colors the line through its data item's
- * `lineStyle` (where radar colors the polygon through `itemStyle`).
+ * Parallel colors the line through its data item's `lineStyle` (where radar
+ * colors the polygon through `itemStyle`).
  *
  * See https://echarts.apache.org/en/option.html#series-parallel.data
  */
@@ -35,50 +34,53 @@ export interface ParallelLine {
 
 /**
  * The two data-dependent pieces a parallel-coordinates chart needs: the axis
- * definitions (`axes`) and the polylines drawn against them (`data`). The caller
- * merges these into a base parallel option, adding each axis's positional `dim`
- * and value `type`.
+ * definitions (`axes`) and the polylines drawn against them (`data`). `items`
+ * holds the source row of each line, in the same order as `data`, so the tooltip
+ * can map a `dataIndex` back to its row. The caller merges these into a base
+ * parallel option, adding each axis's positional `dim` and value `type`.
  */
 export interface ParallelData {
   axes: ParallelAxis[];
   data: ParallelLine[];
+  items: MultivariateItem[];
 }
 
 /**
  * Convert Grafana data frames into the pieces required by an ECharts parallel
  * coordinates chart.
  *
- * A thin adapter over the shared categorical model (see
- * echarts/converters/categorical.ts), structurally identical to
- * `radarToEChartsOption` so the multivariate family can toggle radar↔parallel
- * over the *same* frames without re-mapping the data:
- * - Categories become the parallel axes.
- * - Each numeric field becomes one polyline (its values map positionally to the
- *   axes).
+ * A thin adapter over the multivariate model (see `converters/multivariate.ts`),
+ * structurally identical to `radarToEChartsOption`, so the multivariate family can
+ * toggle radar↔parallel over the same frames:
+ * - Each number field is one axis.
+ * - Each visible row is one polyline. A row hidden by the legend toggle draws no line.
  *
  * Unlike radar, no per-axis `max` is derived — each parallel axis auto-scales.
  *
- * Inherits the categorical model's trade-offs (single frame, time fields ignored,
- * positional alignment). See https://echarts.apache.org/en/option.html#series-parallel
+ * See https://echarts.apache.org/en/option.html#series-parallel
  *
- * Returns `null` when no usable categorical data can be derived.
+ * Returns `null` when no usable data can be derived.
  */
-export function parallelToEChartsOption(series: DataFrame[], theme: GrafanaTheme2): ParallelData | null {
-  const categorical = frameToCategorical(series, theme);
+export function parallelToEChartsOption(
+  series: DataFrame[],
+  theme: GrafanaTheme2,
+  fieldConfig?: FieldConfigSource
+): ParallelData | null {
+  const model = frameToMultivariate(series, theme, fieldConfig);
 
-  if (!categorical) {
+  if (!model) {
     return null;
   }
 
-  const { categories, series: lineSeries } = categorical;
+  const items = model.items.filter((item) => !item.hidden);
 
-  const data: ParallelLine[] = lineSeries.map((line) => ({
-    name: line.name,
-    value: line.values,
-    lineStyle: { color: line.color },
+  const data: ParallelLine[] = items.map((item) => ({
+    name: item.name,
+    value: item.values,
+    lineStyle: { color: item.color },
   }));
 
-  const axes: ParallelAxis[] = categories.map((name) => ({ name }));
+  const axes: ParallelAxis[] = model.axes.map(({ name }) => ({ name }));
 
-  return { axes, data };
+  return { axes, data, items };
 }

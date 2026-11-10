@@ -2,7 +2,7 @@
 
 Covers the ECharts **Multivariate** module ([module.tsx](./module.tsx)), which
 renders `seriesType: radar` or `seriesType: parallel` — chosen via the "Chart
-type" picker — from the shared categorical model.
+type" picker — from the shared multivariate model.
 
 ## No core Grafana equivalent
 
@@ -12,44 +12,71 @@ compares against ECharts semantics rather than a core panel.
 
 ## Shared data model
 
-Both render types reuse the categorical converter (the same source model as pie):
-the first string field's rows become the **axes** (radar indicators / parallel
-axes) and each numeric field becomes one **series** (a radar polygon / a parallel
-polyline). Because one numeric field maps to one series in both, the legend
-(`buildRadarLegendItems`) and tooltip (`dataIndex` → field) are shared unchanged,
-and toggling radar↔parallel on a panel re-renders the same data coherently.
+Both render types read the multivariate model (`converters/multivariate.ts`):
 
-Radar derives a per-indicator `max` (each axis's outer bound); parallel omits it
-so every axis auto-scales independently (each `parallelAxis` is a value axis).
+- Each **number field** is one **axis** (a radar indicator / a parallel axis).
+- Each **row** is one **polygon** (radar) or one **polyline** (parallel). The first
+  string field gives its name. With no string field, the name is the row index.
+
+This is the usual shape of a query result: one row for each item, one number field
+for each metric. ECharts uses the same shape
+([`radar.indicator`](https://echarts.apache.org/en/option.html#radar.indicator),
+[`series-parallel.data`](https://echarts.apache.org/en/option.html#series-parallel.data)),
+and so does the viz contract (`registry/chart-types.json`). The data plane calls it
+[numeric long](https://grafana.com/developers/dataplane/numeric). Only the first
+frame with a number field is read.
+
+Because both render types draw the same rows over the same axes, the legend
+(`buildRadarLegendItems`, one item for each row) and the tooltip (`dataIndex` → row,
+`dimensionIndex` → axis) are shared, and toggling radar↔parallel on a panel draws the
+same data.
+
+Radar derives a per-indicator `max` (each axis's outer bound) from the visible rows;
+parallel omits it so every axis auto-scales independently (each `parallelAxis` is a
+value axis).
+
+### Shaping your query
+
+| Query                                                                  | Route                                                                                   |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| SQL `GROUP BY service`, Elasticsearch terms + metrics, a JSON array    | Works as returned                                                                       |
+| Prometheus / Loki instant queries, Format: Table, one query per metric | Add the **Merge** (or **Join by field**) transformation, so the queries share one frame |
+| Key/value data (`metric,value`) for one item                           | Add the **Transpose** transformation. The data issue names it                           |
+
+The panel does not transpose data by itself: the shape alone cannot show the
+orientation (3 rows × 3 number fields are valid either way), and a wrong guess draws
+the wrong chart with no error.
 
 ## Editor options
 
-| Area                                                                              | ECharts Multivariate                                                                                  | Notes                                                                                                                                               |
-| --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Chart type                                                                        | "Chart type" picker (Radar / Parallel)                                                                | Panel-level `seriesType`; the radar and parallel option groups gate on the selection (`isRadarSelected` / `isParallelSelected`)                     |
-| Legend                                                                            | Grafana legend via `addLegendOptions`                                                                 | Governs the series (polygons / polylines); interactive show/hide (`hideSeriesFrom`) + color (`byName`) persist as field-config overrides            |
-| Tooltip: mode                                                                     | `tooltip.mode` (Single/Hidden)                                                                        | Maps to the ECharts tooltip trigger. **All is withdrawn** for both render types — see the TODO below                                                |
-| Axes                                                                              | derived from the categorical converter                                                                | Categories become radar indicators / parallel axes; numeric fields become polygons / polylines                                                      |
-| Radar shape (Default: Fill area; Advanced: Shape, Line width, Symbol size, Rings) | `series.areaStyle`, `radar.shape`, `series.lineStyle.width`, `series.symbolSize`, `radar.splitNumber` | Each omitted at its default; shown only when Radar is selected                                                                                      |
-| Parallel style (Default: Smooth; Advanced: Layout, Line width, Line opacity)      | `series.smooth`, `parallel.layout`, `series.lineStyle.width`, `series.lineStyle.opacity`              | Shown only when Parallel is selected. Omitted at their defaults except Line opacity, which defaults to fully opaque rather than ECharts' faint 0.45 |
-| Animation                                                                         | `animation.enabled` (Advanced)                                                                        | **Off by default** for every family; opt in via the Advanced switch or panel JSON                                                                   |
+| Area                                                                              | ECharts Multivariate                                                                                  | Notes                                                                                                                                                                                                                        |
+| --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Chart type                                                                        | "Chart type" picker (Radar / Parallel)                                                                | Panel-level `seriesType`; the radar and parallel option groups gate on the selection (`isRadarSelected` / `isParallelSelected`)                                                                                              |
+| Legend                                                                            | Grafana legend via `addLegendOptions` (no Values)                                                     | One item for each row (polygon / polyline); interactive show/hide (`hideSeriesFrom`) + color (`byName`) persist as field-config overrides on the row name. No calc values: a calc over the axes of one row mixes their units |
+| Tooltip: mode                                                                     | `tooltip.mode` (Single/Hidden)                                                                        | Maps to the ECharts tooltip trigger. A hover lists every axis of one row, each with the unit of its own field. **All is withdrawn**: it would add nothing to that                                                            |
+| Axes                                                                              | derived from the multivariate model                                                                   | Number fields become radar indicators / parallel axes; rows become polygons / polylines                                                                                                                                      |
+| Radar shape (Default: Fill area; Advanced: Shape, Line width, Symbol size, Rings) | `series.areaStyle`, `radar.shape`, `series.lineStyle.width`, `series.symbolSize`, `radar.splitNumber` | Each omitted at its default; shown only when Radar is selected                                                                                                                                                               |
+| Parallel style (Default: Smooth; Advanced: Layout, Line width, Line opacity)      | `series.smooth`, `parallel.layout`, `series.lineStyle.width`, `series.lineStyle.opacity`              | Shown only when Parallel is selected. Omitted at their defaults except Line opacity, which defaults to fully opaque rather than ECharts' faint 0.45                                                                          |
+| Animation                                                                         | `animation.enabled` (Advanced)                                                                        | **Off by default** for every family; opt in via the Advanced switch or panel JSON                                                                                                                                            |
 
 ## Standard (field-config) options
 
 Keeps the full standard field-config set (Color, Unit, Decimals, Min, Max,
 Display name, No value, Thresholds, Value mappings, Data links), customizing only
-Color (PaletteClassic, byValue + bySeries). Most standard options (Min/Max,
-Thresholds) have limited meaning for the categorical axes.
+Color (PaletteClassic, byValue + bySeries). Unit and Decimals apply to each axis,
+because each axis is one field. Min/Max do not set the axis range yet. Each row
+takes the classic palette color of its row index, or a `byName` fixed-color override
+on its name.
 
 ## Notes / gaps
 
 - Data model: see [Shared data model](#shared-data-model) — radar and parallel
-  share the categorical converter, so a panel toggles between them on one dataset.
+  share the multivariate model, so a panel toggles between them on one dataset.
 - Editor mode: each type's Advanced options reset to their defaults in Default
   editor mode (`applyRadarEditorModeDefaults` / `applyParallelEditorModeDefaults`),
   so an untouched panel renders unchanged.
 - Parallel per-line color rides on each data item's `lineStyle.color` (ECharts has
-  no per-line `itemStyle` for parallel), resolved from the field's Color config.
+  no per-line `itemStyle` for parallel), resolved from the row's palette color.
 - **No proximity hover** for either render type — hovering _near_ a polygon or
   polyline does nothing; you must be on it. This is by design, not a gap. The
   proximity gate (`tooltip/proximity.ts`) admits only `line` / `scatter` /
@@ -58,7 +85,7 @@ Thresholds) have limited meaning for the categorical axes.
   coordinate system builds a `grid`; ECharts' `Parallel` implements no
   `convertToPixel` / `convertFromPixel` (and `Radar`'s are `Not implemented.`
   stubs), which the snap and the y-distance test both call; and proximity keys on
-  `seriesIndex`-per-field, while this family emits _one_ series whose polygons /
+  `seriesIndex`-per-series, while this family emits _one_ series whose polygons /
   polylines are `dataIndex` entries. The "snap on x, pick on y" rule is also
   meaningless here — a parallel cursor sits _between_ N axes, so the honest hit
   test is perpendicular distance to a polyline segment, a different algorithm.
@@ -116,17 +143,17 @@ High-level [ECharts option](https://echarts.apache.org/en/option.html) component
 used by this module. See [echarts.ts](../../lib/echarts/echarts.ts) for the
 registered runtime surface.
 
-| ECharts API                                                                       | Status          | Notes                                                                                                                                                                                |
-| --------------------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `series` (radar)                                                                  | Supported       | `seriesType: radar`; Advanced area / line width / symbol size.                                                                                                                       |
-| `series` (parallel)                                                               | Supported       | `seriesType: parallel`; Default smooth + Advanced line width / opacity; per-line color via each data item's `lineStyle`.                                                             |
-| `radar` (coordinate system)                                                       | Supported       | Indicators derived from the categorical converter; web radius sized past ECharts' default and themed indicator names. No box layout — see Notes.                                     |
-| `parallel` / `parallelAxis` (coordinate system)                                   | Supported       | One value axis per category (auto-scaling); Advanced `parallel.layout` (Horizontal / Vertical). Layout box and themed axis labels/names via `parallel.parallelAxisDefault`.          |
-| `legend`                                                                          | Supported       | Grafana DOM legend (`addLegendOptions`); native legend hidden. Interactive show/hide + color persist as field-config overrides.                                                      |
-| `tooltip`                                                                         | Supported       | Rendered by a React `@grafana/ui` `VizTooltip` overlay; `dataIndex` selects the series' field formatter and its data-link footer (shared by radar and parallel). Single/Hidden only. |
-| `animation`                                                                       | Supported       | Off by default for every family; opt in via the Advanced switch or `animation.enabled` in panel JSON.                                                                                |
-| `color` / `textStyle`                                                             | Supported       | Derived from the Grafana theme.                                                                                                                                                      |
-| `grid` / `xAxis` / `yAxis`                                                        | Not implemented | Radar and parallel use their own coordinate systems, not cartesian.                                                                                                                  |
-| `visualMap` / `markLine` / `markArea` / `axisPointer` / `brush` / `dataZoom`      | Not implemented | Cartesian-oriented components; N/A here.                                                                                                                                             |
-| `toolbox` / `dataset` / `title` / `graphic` / `timeline` / `aria`                 | Not implemented | Not registered.                                                                                                                                                                      |
-| Other coordinate systems (`polar` / `singleAxis` / `geo` / `calendar` / `matrix`) | Not implemented | —                                                                                                                                                                                    |
+| ECharts API                                                                       | Status          | Notes                                                                                                                                                                                           |
+| --------------------------------------------------------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `series` (radar)                                                                  | Supported       | `seriesType: radar`; Advanced area / line width / symbol size.                                                                                                                                  |
+| `series` (parallel)                                                               | Supported       | `seriesType: parallel`; Default smooth + Advanced line width / opacity; per-line color via each data item's `lineStyle`.                                                                        |
+| `radar` (coordinate system)                                                       | Supported       | One indicator per number field; web radius sized past ECharts' default and themed indicator names. No box layout — see Notes.                                                                   |
+| `parallel` / `parallelAxis` (coordinate system)                                   | Supported       | One value axis per number field (auto-scaling); Advanced `parallel.layout` (Horizontal / Vertical). Layout box and themed axis labels/names via `parallel.parallelAxisDefault`.                 |
+| `legend`                                                                          | Supported       | Grafana DOM legend (`addLegendOptions`); native legend hidden. One item per row. Interactive show/hide + color persist as field-config overrides on the row name.                               |
+| `tooltip`                                                                         | Supported       | Rendered by a React `@grafana/ui` `VizTooltip` overlay; one row per axis, each with its field's formatter and data links at the hovered row (shared by radar and parallel). Single/Hidden only. |
+| `animation`                                                                       | Supported       | Off by default for every family; opt in via the Advanced switch or `animation.enabled` in panel JSON.                                                                                           |
+| `color` / `textStyle`                                                             | Supported       | Derived from the Grafana theme.                                                                                                                                                                 |
+| `grid` / `xAxis` / `yAxis`                                                        | Not implemented | Radar and parallel use their own coordinate systems, not cartesian.                                                                                                                             |
+| `visualMap` / `markLine` / `markArea` / `axisPointer` / `brush` / `dataZoom`      | Not implemented | Cartesian-oriented components; N/A here.                                                                                                                                                        |
+| `toolbox` / `dataset` / `title` / `graphic` / `timeline` / `aria`                 | Not implemented | Not registered.                                                                                                                                                                                 |
+| Other coordinate systems (`polar` / `singleAxis` / `geo` / `calendar` / `matrix`) | Not implemented | —                                                                                                                                                                                               |

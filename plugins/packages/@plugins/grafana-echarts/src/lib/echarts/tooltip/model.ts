@@ -126,18 +126,21 @@ function getHeaderText(items: TooltipParam[], formatHeaderValue?: (item: Tooltip
 /**
  * One row per packed dimension of a multi-value item (candlestick / boxplot).
  *
- * ECharts prefixes these items' `value` with the data index, so the dimensions
- * start at offset 1: candlestick reports `[dataIndex, open, close, low, high]`
- * and boxplot `[dataIndex, min, q1, median, q3, max]`.
+ * ECharts prefixes candlestick and boxplot items' `value` with the data index, so
+ * their dimensions start at offset 1: candlestick reports
+ * `[dataIndex, open, close, low, high]` and boxplot
+ * `[dataIndex, min, q1, median, q3, max]`. Radar and parallel items hold only the
+ * axis values, at offset 0.
  *
  * Each dimension comes from its own Grafana field, so each row resolves its own
- * `source` (by `dimensionIndex`) and the footer surfaces the links of whichever
- * of those fields define them.
+ * formatter and `source` (by `dimensionIndex`), and the footer surfaces the links
+ * of whichever of those fields define them.
  */
 function expandMultiValueRows(
   item: TooltipParam,
   dimensions: string[],
-  valueFormatter: ValueFormatter,
+  offset: number,
+  resolveValueFormatter: TooltipValueFormatterResolver,
   color: string | undefined,
   resolveField: TooltipFieldResolver | undefined
 ): TooltipRow[] {
@@ -145,7 +148,10 @@ function expandMultiValueRows(
   return dimensions.map((label, dimension) => ({
     color,
     label,
-    value: formatEChartsValue(packed[dimension + 1] ?? null, valueFormatter),
+    value: formatEChartsValue(
+      packed[dimension + offset] ?? null,
+      resolveValueFormatter({ seriesIndex: item.seriesIndex, dataIndex: item.dataIndex, dimensionIndex: dimension })
+    ),
     seriesIndex: item.seriesIndex,
     source: resolveField?.({ seriesIndex: item.seriesIndex, dataIndex: item.dataIndex, dimensionIndex: dimension }),
   }));
@@ -181,7 +187,7 @@ function getLabel(item: TooltipParam, headerText: string): string {
 export function buildTooltipModel(
   params: TopLevelFormatterParams,
   resolveValueFormatter: TooltipValueFormatterResolver,
-  { rowOptions, resolveField, formatHeaderValue, multiValueDimensions }: TooltipModelOptions = {}
+  { rowOptions, resolveField, formatHeaderValue, multiValueDimensions, multiValueOffset = 1 }: TooltipModelOptions = {}
 ): TooltipModel {
   const items = Array.isArray(params) ? params : [params];
 
@@ -198,7 +204,8 @@ export function buildTooltipModel(
       expandMultiValueRows(
         item,
         multiValueDimensions,
-        resolveValueFormatter({ seriesIndex: item.seriesIndex, dataIndex: item.dataIndex }),
+        multiValueOffset,
+        resolveValueFormatter,
         tooltipColor(item.color),
         resolveField
       )

@@ -5,10 +5,12 @@
  *
  * The payloads are written by `toMatchCanvasSnapshot` into `.jest-canvas-mock-compare/`
  * (add `GEN_CANVAS_OUTPUT_ON_PASS=1` to also emit them for passing tests). This script
- * drives the already-running `jest-canvas-mock-compare` viewer — which owns the replay
- * logic — and screenshots the canvases it paints:
+ * drives the already-running `jest-canvas-mock-compare-viewer` — which owns the replay
+ * logic — and screenshots the canvases it paints. The viewer is its own npm package; a
+ * bare `npx jest-canvas-mock-compare` resolves the installed matcher package instead,
+ * which has no executable:
  *
- *   npx jest-canvas-mock-compare            # start the viewer (http://localhost:5173)
+ *   npx jest-canvas-mock-compare-viewer     # start the viewer (http://localhost:5173)
  *   node scripts/canvas-shots.mjs           # every payload -> one PNG each
  *   node scripts/canvas-shots.mjs --failing # only the ones whose snapshot changed
  *   node scripts/canvas-shots.mjs <basename.json> ...
@@ -52,7 +54,7 @@ const listUrl = `${viewer}${PAYLOAD_API}?payloadRoot=${encodeURIComponent(root)}
 const index = await fetch(listUrl)
   .then((res) => res.json())
   .catch(() => {
-    throw new Error(`No viewer at ${viewer} — start it with \`npx jest-canvas-mock-compare\`.`);
+    throw new Error(`No viewer at ${viewer} — start it with \`npx jest-canvas-mock-compare-viewer\`.`);
   });
 
 const passed = (file) => index.meta?.[file]?.snapshotAssertionPassed !== false;

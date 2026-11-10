@@ -11,8 +11,8 @@
  *
  * - **Gates** (`*_MIN`/`*_MAX`) decide whether a family is suggested at all. Above
  *   the ceiling the chart is unreadable or unbuildable, so the card is withheld
- *   rather than shown and left to fail — a 500-row Prometheus response would give
- *   `radarToEChartsOption` 500 axes.
+ *   rather than shown and left to fail — a 500-series Prometheus instant response
+ *   as one wide frame would give `radarToEChartsOption` 500 axes.
  * - **Preview caps** (`PREVIEW_*`) never change what the suggestion *builds*.
  *   Grafana applies them only to the data behind the card (`maxSeries` slices
  *   `data.series`, `maxRows` truncates each field's `values`), so the panel the
@@ -46,23 +46,23 @@ export const MULTIVARIATE_MIN_AXES = 3;
 
 /**
  * Most axes radar/parallel can place before the indicator ring is illegible.
- * `frameToCategorical` turns one *row* into one axis, so this bounds rows — and it
- * is the gate that stops a dense time series from reaching radar at all.
+ * `frameToMultivariate` turns one *number field* into one axis, so this bounds
+ * number fields — and it is the gate that stops a wide Prometheus response of
+ * hundreds of series from reaching radar at all.
  */
 export const MULTIVARIATE_MAX_AXES = 50;
 
 /**
- * Rows kept in a multivariate *preview*, i.e. indicators drawn on the card. Well
- * below `MULTIVARIATE_MAX_AXES`: 50 axis labels around a 350px card are a grey
- * smear, while 25 still reads as the right shape.
- */
-export const MULTIVARIATE_PREVIEW_MAX_ROWS = 25;
-
-/**
- * Most numeric fields (polygons/polylines) a multivariate chart can overlay before
- * the fills stop being separable.
+ * Most rows (polygons/polylines) a multivariate chart can overlay before the fills
+ * stop being separable.
  */
 export const MULTIVARIATE_MAX_SERIES = 12;
+
+/**
+ * Rows kept in a multivariate *preview*, i.e. polygons drawn on the card. The gate
+ * already bounds rows at `MULTIVARIATE_MAX_SERIES`, so the cap is the same.
+ */
+export const MULTIVARIATE_PREVIEW_MAX_ROWS = MULTIVARIATE_MAX_SERIES;
 
 /** Fewest slices that show a part-to-whole relationship. One slice is always 100%. */
 export const SLICE_MIN = 2;

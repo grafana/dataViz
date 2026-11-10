@@ -207,7 +207,7 @@ degradation never leaks into the panel the user creates from the card.**
 | Mechanism         | What Grafana does with it                        | This plugin's value                                                                                 |
 | ----------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
 | `maxSeries`       | `data.series.slice(0, n)`                        | `PREVIEW_MAX_SERIES` (20), every card                                                               |
-| `maxRows`         | truncates each field's `values` to the first `n` | `PREVIEW_MAX_ROWS` (500) cartesian/stream; `MULTIVARIATE_PREVIEW_MAX_ROWS` (25) radar/parallel      |
+| `maxRows`         | truncates each field's `values` to the first `n` | `PREVIEW_MAX_ROWS` (500) cartesian/stream; `MULTIVARIATE_PREVIEW_MAX_ROWS` (12) radar/parallel      |
 | `previewModifier` | runs against a `cloneDeep` of the suggestion     | hides the legend, forces `showPoints: 'never'` + `downsampling: true`, suppresses per-family labels |
 
 Why those degradations specifically:

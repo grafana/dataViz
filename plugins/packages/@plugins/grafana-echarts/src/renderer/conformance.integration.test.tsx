@@ -8,23 +8,6 @@ import { dispatch, tooltipText } from 'test/tooltipPointer';
 import { type RenderHandle, type RenderState } from './contract/renderer-api';
 import { render } from './index';
 
-/**
- * The sets that do not give their `state.json` yet. Each one has the state that it gives now, so the test fails when
- * the cause is fixed, and then the set moves back to the normal list.
- * The multivariate panel reads each row as one axis, and the contract reads each number field as one axis.
- * Follow-up issue: https://github.com/grafana/dataViz/issues/148
- */
-const KNOWN_MISMATCHES: Record<string, RenderState> = {
-  'smoke-radar': {
-    state: 'error',
-    error: {
-      code: 'panel-error',
-      message: 'Radar needs 3 or more axes. Each row is one axis. Add rows to the query.',
-    },
-    notices: [],
-  },
-};
-
 /** An element with an inline size: the jsdom shim of `jest-setup.js` reads `clientWidth` from the style. */
 function sizedElement(): HTMLElement {
   const el = document.createElement('div');
@@ -60,7 +43,7 @@ const sets = fixtureSets();
 
 describe('the fixture sets of the contract', () => {
   // contract-rule: fixtures.10
-  it.each(sets.filter((set) => !(set in KNOWN_MISMATCHES)))('%s gives the state of its state.json', async (set) => {
+  it.each(sets)('%s gives the state of its state.json', async (set) => {
     const expected = fixtureState(set);
     const { el, states } = await draw(fixtureSpec(set));
     await waitFor(() => expect(states.at(-1)).toEqual(expected));
@@ -68,18 +51,16 @@ describe('the fixture sets of the contract', () => {
     expect(el.getAttribute('data-viz-error')).toBe(expected.error?.code ?? null);
   });
 
-  it.each(Object.keys(KNOWN_MISMATCHES))('%s gives its known state, not its state.json', async (set) => {
-    const { states } = await draw(fixtureSpec(set));
-    await waitFor(() => expect(states.at(-1)).toEqual(KNOWN_MISMATCHES[set]));
-    expect(KNOWN_MISMATCHES[set]).not.toEqual(fixtureState(set));
-  });
-
-  it('smoke-parallel draws one axis for each row, not one axis for each number field (known mismatch)', async () => {
-    // The same cause as smoke-radar. The state is `ready`, so only the axis names show the mismatch.
+  // The contract reads each number field as one axis (`registry/chart-types.json`). The state is `ready` either way,
+  // so only the axis names show the orientation.
+  it('smoke-parallel draws one axis for each number field and one line for each row', async () => {
     const { el } = await draw(fixtureSpec('smoke-parallel'));
     const chart = getInstanceByDom(el.querySelector<HTMLElement>('[_echarts_instance_]')!)!;
-    const axes = chart.getOption().parallelAxis as Array<{ name: string }>;
-    expect(axes.map((axis) => axis.name)).toEqual(['h0', 'h1', 'h2']);
+    const option = chart.getOption();
+    const axes = option.parallelAxis as Array<{ name: string }>;
+    const [series] = option.series as Array<{ data: Array<{ name: string }> }>;
+    expect(axes.map((axis) => axis.name)).toEqual(['cpu', 'memory', 'load']);
+    expect(series.data.map((line) => line.name)).toEqual(['h0', 'h1', 'h2']);
   });
 });
 

@@ -473,6 +473,13 @@ export interface ChartModule {
   getTooltipDimensions?(ctx: ChartContext): string[] | undefined;
 
   /**
+   * Where the dimensions of {@link getTooltipDimensions} start in an item's `value`.
+   * Default `1` (candlestick and boxplot items start with the data index); see
+   * {@link TooltipModelOptions.multiValueOffset}.
+   */
+  tooltipDimensionOffset?: number;
+
+  /**
    * The panel `tooltip` of the family, in place of the one of `buildPanelTooltip`. With `undefined`, the panel
    * uses the one of `buildPanelTooltip`. The geo family sets it: its tooltip modes are the core Geomap modes.
    * The timeline family sets it for the "All" mode, which needs one row per lane at the hovered time.

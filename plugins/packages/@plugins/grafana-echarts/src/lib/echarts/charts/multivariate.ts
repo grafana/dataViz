@@ -1,7 +1,6 @@
 import { getMultivariateIssue } from './multivariateIssue';
-import { type Field } from '@grafana/data';
 import { PARALLEL_LINE_OPACITY_DEFAULT, PARALLEL_SMOOTH_DEFAULT } from 'editor/parallel';
-import { findCategoricalFrame, mapNumericFields } from 'lib/echarts/converters/frames';
+import { frameToMultivariate, type MultivariateModel } from 'lib/echarts/converters/multivariate';
 import { parallelToEChartsOption } from 'lib/echarts/converters/parallel';
 import { radarToEChartsOption } from 'lib/echarts/converters/radar';
 import { DEFAULT_CHART_LEGEND, resolveEChartsLegend } from 'lib/echarts/options/legend';
@@ -15,7 +14,6 @@ import {
   radarDefaultOptions,
 } from 'lib/echarts/options/radar';
 import { getFieldValueFormatters } from 'lib/echarts/style';
-import { indexedFormatterResolver } from 'lib/echarts/tooltip/model';
 import {
   type BaseOptionParts,
   type ChartContext,
@@ -26,18 +24,18 @@ import {
 
 /**
  * Multivariate chart family: radar and parallel coordinates, built from the
- * *same* shared categorical model (categories -> axes, each numeric field -> one
- * series). `buildOption` dispatches on `ctx.seriesType` (mirrors
- * `hierarchyChartModule`) to pick the coordinate system. Because both render
- * types map one numeric field to one series, the shared `buildLegendItems` and
- * `getTooltipValueFormatter` (`dataIndex` -> field) serve both unchanged. See
+ * same multivariate model (each number field -> one axis, each row -> one
+ * polygon or line; see `converters/multivariate.ts`). `buildOption` dispatches on
+ * `ctx.seriesType` (mirrors `hierarchyChartModule`) to pick the coordinate
+ * system. Both render types draw the visible rows as the data items of one
+ * series, so the legend and the tooltip resolvers serve both unchanged. See
  * `modules/multivariate/parity.md`.
  */
 
-/** Radar render: indicators from the categories, one polygon per numeric field. */
+/** Radar render: one indicator for each number field, one polygon for each visible row. */
 function buildRadarOption(ctx: ChartContext, isGrafanaLegend: boolean): EChartRadarSeriesOption | null {
-  const { frames, theme, options } = ctx;
-  const radar = radarToEChartsOption(frames, theme);
+  const { frames, theme, options, fieldConfig } = ctx;
+  const radar = radarToEChartsOption(frames, theme, fieldConfig);
 
   if (!radar) {
     return null;
@@ -81,13 +79,13 @@ function buildRadarOption(ctx: ChartContext, isGrafanaLegend: boolean): EChartRa
 }
 
 /**
- * Parallel-coordinates render: one `parallelAxis` per category (a value axis that
- * auto-scales to its own data), one polyline per numeric field, colored by the
- * field's color via each data item's `lineStyle`.
+ * Parallel-coordinates render: one `parallelAxis` for each number field (a value
+ * axis that auto-scales to its own data), one polyline for each visible row,
+ * colored through each data item's `lineStyle`.
  */
 function buildParallelOption(ctx: ChartContext, isGrafanaLegend: boolean): EChartParallelSeriesOption | null {
-  const { frames, theme, options } = ctx;
-  const parallel = parallelToEChartsOption(frames, theme);
+  const { frames, theme, options, fieldConfig } = ctx;
+  const parallel = parallelToEChartsOption(frames, theme, fieldConfig);
 
   if (!parallel) {
     return null;
@@ -112,7 +110,7 @@ function buildParallelOption(ctx: ChartContext, isGrafanaLegend: boolean): EChar
     ),
     // The `parallel` coordinate component carries the Advanced layout, the
     // layout box and the shared axis styling; the axes are their own top-level
-    // `parallelAxis` array — one value axis per category, positioned by `dim`.
+    // `parallelAxis` array — one value axis per number field, positioned by `dim`.
     parallel: getParallelComponent(
       options.parallelLayout,
       theme,
@@ -150,33 +148,33 @@ export const multivariateChartModule: ChartModule = {
     return getMultivariateIssue(ctx.frames, ctx.theme, ctx.seriesType === 'parallel' ? 'parallel' : 'radar');
   },
 
-  // @todo restore "All" once a hover expands into one row per indicator/axis.
-  // ECharts hands the formatter a single param whose `value` is the whole
-  // indicator/axis array for that polygon or polyline, so today an All tooltip
-  // would repeat that one row rather than list the axes. True of both render
-  // types, so the family-wide flag is correct. Expanding it needs a dedicated
-  // family model builder rather than `getTooltipDimensions`, whose
-  // `expandMultiValueRows` assumes ECharts' index-prefixed multi-value packing.
-  // See `modules/multivariate/parity.md`.
+  // A hover is one item (a polygon or a line), whose rows are its axes (see
+  // `getTooltipDimensions`). "All" would add nothing to that, so the family is Single/Hidden only.
   singleTooltipOnly: true,
 
+  // One tooltip row for each axis. Radar and parallel items hold only the axis values.
+  getTooltipDimensions(ctx) {
+    return multivariateModel(ctx)?.axes.map(({ name }) => name);
+  },
+  tooltipDimensionOffset: 0,
+
   getTooltipValueFormatter(ctx) {
-    // Each polygon/polyline is one numeric field rendered as a data item in a
-    // single series, so the tooltip's `dataIndex` selects that field's formatter.
-    const formatters = getFieldValueFormatters(multivariateSeriesFields(ctx), ctx.theme, ctx.timeZone);
-    return indexedFormatterResolver(formatters, ctx.formatValue, 'dataIndex');
+    // Each axis is one number field, so each tooltip row formats with the
+    // formatter of its own field (unit, decimals).
+    const fields = multivariateModel(ctx)?.axes.map(({ field }) => field) ?? [];
+    const formatters = getFieldValueFormatters(fields, ctx.theme, ctx.timeZone);
+    return ({ dimensionIndex }) => (dimensionIndex != null ? formatters[dimensionIndex] : undefined) ?? ctx.formatValue;
   },
 
   getTooltipFieldResolver(ctx) {
-    // Keyed by `dataIndex` like the value formatter above; a polygon/polyline
-    // reduces a whole field, so links resolve at row 0.
-    const fields = multivariateSeriesFields(ctx);
-    return (item) => {
-      if (item.dataIndex == null) {
-        return undefined;
-      }
-      const field = fields[item.dataIndex];
-      return field ? { field, rowIndex: 0 } : undefined;
+    // `dataIndex` is the visible row, `dimensionIndex` the axis. Without an axis,
+    // the first axis field gives the links of the row.
+    const model = multivariateModel(ctx);
+    const visible = model?.items.filter((item) => !item.hidden) ?? [];
+    return ({ dataIndex, dimensionIndex }) => {
+      const item = dataIndex != null ? visible[dataIndex] : undefined;
+      const axis = model?.axes[dimensionIndex ?? 0];
+      return item && axis ? { field: axis.field, rowIndex: item.rowIndex } : undefined;
     };
   },
 
@@ -192,21 +190,14 @@ export const multivariateChartModule: ChartModule = {
     return buildRadarOption(ctx, isGrafanaLegend);
   },
 
-  buildLegendItems(ctx, calcs) {
-    return buildRadarLegendItems(ctx.frames, ctx.theme, calcs, ctx.fieldConfig, ctx.timeZone);
+  buildLegendItems(ctx) {
+    return buildRadarLegendItems(ctx.frames, ctx.theme, ctx.fieldConfig);
   },
 };
 
-/**
- * The numeric field behind each polygon/polyline, in the order the family emits
- * its data items — so a tooltip's `dataIndex` maps back to its source field.
- * Both render types build from the same categorical model (one numeric field to
- * one data item of a single series), so one helper serves both. Mirrors
- * `cartesianSeriesFields`.
- */
-function multivariateSeriesFields(ctx: ChartContext): Field[] {
-  const frame = findCategoricalFrame(ctx.frames);
-  return frame ? mapNumericFields(frame, ctx.frames, ctx.theme).map(({ field }) => field) : [];
+/** The multivariate model of the panel data, which the tooltip resolvers index into. */
+function multivariateModel(ctx: ChartContext): MultivariateModel | null {
+  return frameToMultivariate(ctx.frames, ctx.theme, ctx.fieldConfig);
 }
 
 /**

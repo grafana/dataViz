@@ -18,7 +18,7 @@ export const radarSeriesTypes: SeriesType[] = ['radar'];
 
 /**
  * Every render type the multivariate family can host: radar and parallel
- * coordinates. Both use the shared categorical model but different coordinate
+ * coordinates. Both use the shared multivariate model but different coordinate
  * systems, so the family's chart-module dispatch (`multivariateChartModule`) and
  * axis mapping key off this list. The "Chart type" picker lights up separately,
  * once `MULTIVARIATE_SERIES_TYPE_OPTIONS` lists more than one option. Kept

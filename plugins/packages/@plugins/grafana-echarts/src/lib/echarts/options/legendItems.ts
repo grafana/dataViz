@@ -4,7 +4,6 @@ import {
   type Field,
   type FieldConfigSource,
   fieldReducers,
-  FieldType,
   getDisplayProcessor,
   getFieldDisplayName,
   type GrafanaTheme2,
@@ -17,14 +16,15 @@ import { type VizLegendItem } from '@grafana/ui';
 import type { MultiValueSeriesType, PieLegendValue } from 'editor/types';
 import { type ChartContext } from 'lib/echarts/charts/types';
 import { framesToCategoryCartesian } from 'lib/echarts/converters/categoryCartesianModel';
-import { findCategoricalFrame, forEachTimeSeriesField } from 'lib/echarts/converters/frames';
+import { forEachTimeSeriesField } from 'lib/echarts/converters/frames';
 import { multiValueCartesianToEChartsOption } from 'lib/echarts/converters/multiValueCartesian';
+import { frameToMultivariate } from 'lib/echarts/converters/multivariate';
 import { formatPieShare, getPieSliceTotal, resolvePieSlices } from 'lib/echarts/converters/pie';
 import { type PieSliceModel } from 'lib/echarts/converters/types';
 import { getFieldAxisSides } from 'lib/echarts/axes/yAxes';
 import { getFieldConfigFromField } from 'lib/grafana/fields/fieldConfig';
 import { getHiddenSeriesNames } from 'lib/grafana/fields/seriesConfig';
-import { getCartesianSeriesColor, getSeriesColor } from 'lib/echarts/style';
+import { getCartesianSeriesColor } from 'lib/echarts/style';
 
 /**
  * Reduce a field down to per-series calc columns for the table legend.
@@ -78,48 +78,6 @@ export function buildTimeSeriesLegendItems(
       getItemKey: () => `${frameIndex}-${fieldIndex}`,
       getDisplayValues: () => getCalcDisplayValues(calcs, field, theme, timeZone),
     }));
-}
-
-/**
- * Legend items for an axis-less numeric-field chart: one entry per numeric field
- * in the categorical source frame, mirroring the series/polygons the categorical
- * converter emits. Shared by the category-axis cartesian and radar builders,
- * which differ only in the item-key prefix (`series-` vs `polygon-`). The
- * time-series builder above cannot be reused because it keys off a time field,
- * which Numeric (category) frames lack.
- */
-export function buildNumericFieldLegendItems(
-  series: DataFrame[],
-  theme: GrafanaTheme2,
-  calcs: string[],
-  fieldConfig: FieldConfigSource,
-  timeZone: string | undefined,
-  keyPrefix: string
-): VizLegendItem[] {
-  const frame = findCategoricalFrame(series);
-  if (!frame) {
-    return [];
-  }
-
-  const numericFields = frame.fields
-    .map((field, fieldIndex) => ({ field, fieldIndex, label: getFieldDisplayName(field, frame, series) }))
-    .filter(({ field }) => field.type === FieldType.number);
-
-  // Hidden state from `fieldConfig` keeps the legend in lockstep with the chart.
-  const hidden = getHiddenSeriesNames(
-    fieldConfig,
-    numericFields.map(({ label }) => label)
-  );
-
-  return numericFields.map(({ field, fieldIndex, label }) => ({
-    label,
-    fieldName: label,
-    color: getSeriesColor(field, theme),
-    yAxis: 1,
-    disabled: hidden.has(label),
-    getItemKey: () => `${keyPrefix}-${fieldIndex}`,
-    getDisplayValues: () => getCalcDisplayValues(calcs, field, theme, timeZone),
-  }));
 }
 
 /**
@@ -207,17 +165,26 @@ export function buildMultiValueCartesianLegendItems(ctx: ChartContext<MultiValue
 }
 
 /**
- * Legend items for a radar chart: one entry per numeric field (polygon),
- * mirroring the polygons the radar converter emits (item-key prefix `polygon-`).
+ * Legend items for the multivariate family (radar, parallel): one entry for each
+ * row (polygon or line) of the multivariate model (item-key prefix `polygon-`).
+ * A hidden row stays in the legend, greyed, so it can be toggled back. There are
+ * no calc values: a calc over the axes of one row mixes their units.
  */
 export function buildRadarLegendItems(
   series: DataFrame[],
   theme: GrafanaTheme2,
-  calcs: string[],
-  fieldConfig: FieldConfigSource,
-  timeZone?: string
+  fieldConfig: FieldConfigSource
 ): VizLegendItem[] {
-  return buildNumericFieldLegendItems(series, theme, calcs, fieldConfig, timeZone, 'polygon');
+  const model = frameToMultivariate(series, theme, fieldConfig);
+  return (model?.items ?? []).map(({ name, rowIndex, color, hidden }) => ({
+    label: name,
+    fieldName: name,
+    color,
+    yAxis: 1,
+    disabled: hidden,
+    getItemKey: () => `polygon-${rowIndex}`,
+    getDisplayValues: () => [],
+  }));
 }
 
 /**

@@ -33,7 +33,7 @@
           },
           "refId": "A",
           "scenarioId": "csv_content",
-          "csvContent": "axis,v\ncpu,1\nmem,2"
+          "csvContent": "host,cpu,mem\nh0,1,2\nh1,3,4"
         }
       ],
       "transformations": [],
@@ -67,7 +67,7 @@
           },
           "refId": "A",
           "scenarioId": "csv_content",
-          "csvContent": "axis,v\ncpu,\nmem,\ndisk,"
+          "csvContent": "host,cpu,mem,disk\nh0,,,\nh1,,,"
         }
       ],
       "transformations": [
@@ -76,7 +76,15 @@
           "options": {
             "conversions": [
               {
-                "targetField": "v",
+                "targetField": "cpu",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "mem",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "disk",
                 "destinationType": "number"
               }
             ],
@@ -114,7 +122,7 @@
           },
           "refId": "A",
           "scenarioId": "csv_content",
-          "csvContent": "axis,v\ncpu,1"
+          "csvContent": "host,cpu\nh0,1\nh1,2"
         }
       ],
       "transformations": [],

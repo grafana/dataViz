@@ -4,7 +4,7 @@ import { type ParallelLayout } from 'editor/types';
 
 /**
  * Parallel-coordinates (multivariate) editor constants. The multivariate family
- * hosts radar and parallel coordinates over the *same* categorical model; these
+ * hosts radar and parallel coordinates over the *same* multivariate model; these
  * are the parallel-specific paths/defaults (mirrors `editor/radar.ts`). See
  * `modules/multivariate/parity.md`.
  */

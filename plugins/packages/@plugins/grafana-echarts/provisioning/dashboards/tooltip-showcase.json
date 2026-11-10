@@ -851,7 +851,7 @@
       },
       "type": "grafana-echartsmultivariate-panel",
       "title": "Radar",
-      "description": "Radar had no dashboard coverage at all before this one. The 'alpha' polygon carries a data link, which resolves \u2014 radar keys its field resolver by dataIndex, one item per polygon. Every polygon is a data item of one *unnamed* ECharts series, whose auto-generated name (an internal 'series 0' placeholder) used to leak out as the row label; the label now falls back to the polygon's own name.",
+      "description": "Each number field is one axis and each row is one polygon. The tooltip lists every axis of the hovered polygon, each with the unit of its own field ('cost' is in USD). The data link names the polygon with ${__data.fields.item}: radar keys its field resolver by dataIndex (the row) and the axis, and the footer shows the link once. Every polygon is a data item of one *unnamed* ECharts series, whose auto-generated name (an internal 'series 0' placeholder) used to leak out as the row label; the header now shows the polygon's own name.",
       "id": 16,
       "gridPos": {
         "h": 9,
@@ -863,24 +863,25 @@
         "defaults": {
           "color": {
             "mode": "palette-classic"
-          }
+          },
+          "links": [
+            {
+              "title": "Open Grafana docs for ${__data.fields.item}",
+              "url": "https://grafana.com/docs/?item=${__data.fields.item}",
+              "targetBlank": true
+            }
+          ]
         },
         "overrides": [
           {
             "matcher": {
               "id": "byName",
-              "options": "alpha"
+              "options": "cost"
             },
             "properties": [
               {
-                "id": "links",
-                "value": [
-                  {
-                    "title": "Open Grafana docs",
-                    "url": "https://grafana.com/docs/",
-                    "targetBlank": true
-                  }
-                ]
+                "id": "unit",
+                "value": "currencyUSD"
               }
             ]
           }
@@ -902,7 +903,7 @@
         {
           "refId": "A",
           "scenarioId": "csv_content",
-          "csvContent": "metric,alpha,bravo\nspeed,80,60\npower,70,90\nrange,60,75\ncost,90,50\n",
+          "csvContent": "item,speed,power,range,cost\nalpha,80,70,60,90\nbravo,60,90,75,50\n",
           "datasource": {
             "type": "grafana-testdata-datasource",
             "uid": "trlxrdZVk"
@@ -916,11 +917,19 @@
             "fields": {},
             "conversions": [
               {
-                "targetField": "alpha",
+                "targetField": "speed",
                 "destinationType": "number"
               },
               {
-                "targetField": "bravo",
+                "targetField": "power",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "range",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "cost",
                 "destinationType": "number"
               }
             ]

@@ -10,8 +10,8 @@ import { type PanelOptions } from 'types';
 // compared across a bounded set of entities, drawn as a radar (closed polygons on a
 // polar grid) or as parallel coordinates (polylines across parallel axes). The data
 // gate is `scoreMultivariate` (see charts/fitness.ts), which bounds the axis count —
-// one *row* is one axis, so the unbounded gate this replaced is what let a
-// 500-series response reach `radarToEChartsOption` and hang the tab.
+// one *number field* is one axis, so a 500-series wide response does not reach
+// `radarToEChartsOption` and hang the tab.
 // https://grafana.com/developers/plugin-tools/how-to-guides/panel-plugins/add-suggestions-support
 export const multivariateSuggestionsSupplier: VisualizationSuggestionsSupplier<PanelOptions, EChartsFieldConfig> = (
   dataSummary
@@ -21,9 +21,8 @@ export const multivariateSuggestionsSupplier: VisualizationSuggestionsSupplier<P
     return;
   }
 
-  // Grafana truncates each frame's field values to `maxRows`, so the preview draws
-  // 25 indicators. Well under the 50 the gate allows: 50 axis labels around a 350px
-  // card are a grey smear, while 25 still reads as the right shape.
+  // Grafana truncates each frame's field values to `maxRows`, so this caps the
+  // polygons the preview draws.
   const cardOptions = previewCardOptions({ maxRows: MULTIVARIATE_PREVIEW_MAX_ROWS });
 
   return [

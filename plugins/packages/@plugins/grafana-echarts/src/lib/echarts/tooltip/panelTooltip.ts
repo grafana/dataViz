@@ -65,8 +65,8 @@ export function buildPanelTooltip(
     mode === TooltipDisplayMode.Multi
       ? { sort: ctx.options.tooltip?.sort, hideZeros: ctx.options.tooltip?.hideZeros }
       : undefined;
-  // Multi-value families (candlestick/boxplot) pack several values per item, so
-  // the tooltip lists each dimension instead of just the last.
+  // Multi-value families (candlestick/boxplot, radar/parallel) pack several values
+  // per item, so the tooltip lists each dimension instead of just the last.
   const multiValueDimensions = chartModule.getTooltipDimensions?.(ctx);
   const formatHeaderValue =
     axisType === 'time' ? makeHeaderValueFormatter(ctx.timeZone, multiValueDimensions) : undefined;
@@ -81,6 +81,7 @@ export function buildPanelTooltip(
         resolveField,
         formatHeaderValue,
         multiValueDimensions,
+        multiValueOffset: chartModule.tooltipDimensionOffset,
       }),
     ctx.tooltipSink ?? NOOP_TOOLTIP_SINK,
     // A band over the hovered category; the default is the time crosshair.

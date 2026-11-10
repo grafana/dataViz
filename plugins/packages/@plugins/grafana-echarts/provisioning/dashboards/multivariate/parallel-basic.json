@@ -78,7 +78,7 @@
           },
           "refId": "A",
           "scenarioId": "csv_content",
-          "csvContent": "indicator,Team A,Team B,Team C\nSpeed,80,60,70\nPower,70,90,50\nRange,60,50,85\nDurability,90,70,60\nPrecision,55,80,95"
+          "csvContent": "team,Speed,Power,Range,Durability,Precision\nTeam A,80,70,60,90,55\nTeam B,60,90,50,70,80\nTeam C,70,50,85,60,95"
         }
       ],
       "transformations": [
@@ -88,15 +88,23 @@
             "fields": {},
             "conversions": [
               {
-                "targetField": "Team A",
+                "targetField": "Speed",
                 "destinationType": "number"
               },
               {
-                "targetField": "Team B",
+                "targetField": "Power",
                 "destinationType": "number"
               },
               {
-                "targetField": "Team C",
+                "targetField": "Range",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "Durability",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "Precision",
                 "destinationType": "number"
               }
             ]
@@ -148,7 +156,7 @@
           },
           "refId": "A",
           "scenarioId": "csv_content",
-          "csvContent": "indicator,Team A,Team B,Team C\nSpeed,80,60,70\nPower,70,90,50\nRange,60,50,85\nDurability,90,70,60\nPrecision,55,80,95"
+          "csvContent": "team,Speed,Power,Range,Durability,Precision\nTeam A,80,70,60,90,55\nTeam B,60,90,50,70,80\nTeam C,70,50,85,60,95"
         }
       ],
       "transformations": [
@@ -158,15 +166,23 @@
             "fields": {},
             "conversions": [
               {
-                "targetField": "Team A",
+                "targetField": "Speed",
                 "destinationType": "number"
               },
               {
-                "targetField": "Team B",
+                "targetField": "Power",
                 "destinationType": "number"
               },
               {
-                "targetField": "Team C",
+                "targetField": "Range",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "Durability",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "Precision",
                 "destinationType": "number"
               }
             ]
@@ -189,8 +205,8 @@
           },
           "links": [
             {
-              "title": "Open Grafana docs for ${__field.name}",
-              "url": "https://grafana.com/docs/?team=${__field.name}",
+              "title": "Open Grafana docs for ${__data.fields.team}",
+              "url": "https://grafana.com/docs/?team=${__data.fields.team}",
               "targetBlank": true
             }
           ]
@@ -224,7 +240,7 @@
           },
           "refId": "A",
           "scenarioId": "csv_content",
-          "csvContent": "indicator,Team A,Team B,Team C\nSpeed,80,60,70\nPower,70,90,50\nRange,60,50,85\nDurability,90,70,60\nPrecision,55,80,95"
+          "csvContent": "team,Speed,Power,Range,Durability,Precision\nTeam A,80,70,60,90,55\nTeam B,60,90,50,70,80\nTeam C,70,50,85,60,95"
         }
       ],
       "transformations": [
@@ -234,15 +250,23 @@
             "fields": {},
             "conversions": [
               {
-                "targetField": "Team A",
+                "targetField": "Speed",
                 "destinationType": "number"
               },
               {
-                "targetField": "Team B",
+                "targetField": "Power",
                 "destinationType": "number"
               },
               {
-                "targetField": "Team C",
+                "targetField": "Range",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "Durability",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "Precision",
                 "destinationType": "number"
               }
             ]

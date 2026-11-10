@@ -63,7 +63,7 @@ export function isHierarchySeriesType(type: SeriesType): type is HierarchySeries
   return hierarchySeriesTypes.some((t) => t === type);
 }
 
-// Multivariate charts (radar today; parallel coordinates on the roadmap) share
+// Multivariate charts (radar, parallel coordinates) share
 // the multivariate family panel and chart module.
 export function isMultivariateSeriesType(type: SeriesType): type is MultivariateSeriesType {
   return multivariateSeriesTypes.some((t) => t === type);

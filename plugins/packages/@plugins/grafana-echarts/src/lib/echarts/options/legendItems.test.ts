@@ -154,23 +154,23 @@ describe('buildTimeSeriesLegendItems', () => {
 });
 
 describe('buildRadarLegendItems', () => {
-  it('builds one item per numeric field (one per polygon)', () => {
-    const items = buildRadarLegendItems([categoricalFrame()], theme, [], fieldConfig);
+  it('builds one item per row (one per polygon)', () => {
+    const items = buildRadarLegendItems([categoricalFrame()], theme, fieldConfig);
 
-    expect(items.map((item) => item.label)).toEqual(['q1', 'q2']);
+    expect(items.map((item) => item.label)).toEqual(['north', 'south', 'east']);
     expect(items[0].color).toEqual(expect.any(String));
   });
 
-  it('reduces each polygon across its axes for the calc columns', () => {
-    const items = buildRadarLegendItems([categoricalFrame()], theme, ['max'], fieldConfig);
+  // A calc over the axes of one row mixes their units.
+  it('has no calc columns', () => {
+    const items = buildRadarLegendItems([categoricalFrame()], theme, fieldConfig);
 
-    expect(items[0].getDisplayValues?.()).toEqual([expect.objectContaining({ title: 'Max', numeric: 30 })]);
-    expect(items[1].getDisplayValues?.()).toEqual([expect.objectContaining({ title: 'Max', numeric: 60 })]);
+    expect(items.map((item) => item.getDisplayValues?.())).toEqual([[], [], []]);
   });
 
   it('returns nothing when no frame has a numeric field', () => {
     const stringsOnly = toDataFrame({ fields: [{ name: 'category', type: FieldType.string, values: ['a'] }] });
-    expect(buildRadarLegendItems([stringsOnly], theme, [], fieldConfig)).toHaveLength(0);
+    expect(buildRadarLegendItems([stringsOnly], theme, fieldConfig)).toHaveLength(0);
   });
 });
 
@@ -255,10 +255,10 @@ describe('legend disabled state (per-field families)', () => {
     expect(items.map((item) => item.disabled ?? false)).toEqual([false, true]);
   });
 
-  it('marks radar polygons disabled when the field config hides them from the viz', () => {
-    const items = buildRadarLegendItems([categoricalFrame()], theme, [], hiddenConfig('q2', ['q1', 'q2']));
+  it('marks radar polygons disabled when the field config hides their rows from the viz', () => {
+    const items = buildRadarLegendItems([categoricalFrame()], theme, hiddenConfig('south', ['north', 'south', 'east']));
 
-    expect(items.map((item) => item.label)).toEqual(['q1', 'q2']);
-    expect(items.map((item) => item.disabled ?? false)).toEqual([false, true]);
+    expect(items.map((item) => item.label)).toEqual(['north', 'south', 'east']);
+    expect(items.map((item) => item.disabled ?? false)).toEqual([false, true, false]);
   });
 });

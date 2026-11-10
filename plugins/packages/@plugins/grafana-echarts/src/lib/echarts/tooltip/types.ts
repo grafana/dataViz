@@ -196,8 +196,16 @@ export type TooltipFieldResolver = (item: {
  * data items), so each supplies its own resolver keyed by `seriesIndex` and/or
  * `dataIndex`. This is what lets tooltips honor per-field unit/decimals overrides
  * instead of formatting every row with one shared formatter.
+ *
+ * `dimensionIndex` is set for the rows of a multi-value item (see
+ * {@link TooltipModelOptions.multiValueDimensions}). A family whose dimensions
+ * have different units (the axes of radar and parallel) selects the formatter by it.
  */
-export type TooltipValueFormatterResolver = (item: { seriesIndex?: number; dataIndex?: number }) => ValueFormatter;
+export type TooltipValueFormatterResolver = (item: {
+  seriesIndex?: number;
+  dataIndex?: number;
+  dimensionIndex?: number;
+}) => ValueFormatter;
 
 /**
  * Receives the latest tooltip content on each hover. Supplied by the React layer
@@ -240,6 +248,12 @@ export interface TooltipModelOptions {
    * or "Max" with no indication the rest exist.
    */
   multiValueDimensions?: string[];
+  /**
+   * Where the dimensions start in the item's `value` array. Default `1`: ECharts
+   * puts the data index first in candlestick and boxplot items. Radar and parallel
+   * items hold only the axis values, so they use `0`.
+   */
+  multiValueOffset?: number;
 }
 
 /**

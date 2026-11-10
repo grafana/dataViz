@@ -432,23 +432,28 @@ export const scoreHierarchy = (summary: PanelDataSummary): VisualizationSuggesti
  * Multivariate (radar / parallel coordinates): several numeric metrics compared
  * across a bounded set of entities.
  *
- * The axes come from **rows**, not fields — `frameToCategorical` turns one row into
- * one indicator — which is why this is `rowCountMax` (a single frame is read) and
- * why the ceiling matters so much: the previous gate was `fieldCountByType(number)
- * >= 2` and nothing else, so a 500-series Prometheus response scored fit and
- * `radarToEChartsOption` was handed 500 axes. Requiring a snapshot shape now keeps
- * dense time series out on shape alone, and `MULTIVARIATE_MAX_AXES` bounds what
- * gets through.
+ * `frameToMultivariate` reads one frame: each number field is one axis and each
+ * row is one polygon/polyline. So the gate reads that frame only, and needs it to
+ * be the only frame with a number field — a response of several frames would
+ * score on fields the chart never draws. Requiring a snapshot shape keeps dense
+ * time series out on shape alone. The axis ceiling matters: a 500-series
+ * Prometheus instant response as one wide frame is 500 number fields, which
+ * `MULTIVARIATE_MAX_AXES` withholds.
  *
- * Numeric fields are the overlaid polygons/polylines. At least two, because one
- * polygon has nothing to be compared against — that is a bar chart.
+ * Rows are the overlaid polygons/polylines. At least two, because one polygon has
+ * nothing to be compared against — that is a bar chart.
  */
 export const scoreMultivariate = (summary: PanelDataSummary): VisualizationSuggestionScore | undefined => {
   if (!isSnapshotShape(summary)) {
     return undefined;
   }
-  const axes = summary.rowCountMax;
-  const series = summary.fieldCountByType(FieldType.number);
+  const numericFrames = framesOf(summary).filter((frame) => frame.fields.some(isNumberField));
+  if (numericFrames.length !== 1) {
+    return undefined;
+  }
+  const [frame] = numericFrames;
+  const axes = frame.fields.filter(isNumberField).length;
+  const series = frame.length;
   if (axes < MULTIVARIATE_MIN_AXES || axes > MULTIVARIATE_MAX_AXES) {
     return undefined;
   }

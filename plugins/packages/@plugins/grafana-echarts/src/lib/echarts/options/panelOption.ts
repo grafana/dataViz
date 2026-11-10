@@ -3,7 +3,7 @@ import { debug, LOG_LEVELS } from 'development';
 import { type ECBasicOption } from 'echarts/types/dist/shared';
 import { partToWholeSeriesTypes } from 'editor/pie';
 import { panelTypeToAxis } from 'lib/echarts/axes/converters';
-import { isHierarchySeriesType, isRelationsSeriesType } from 'lib/echarts/charts/narrowing';
+import { isHierarchySeriesType, isMultivariateSeriesType, isRelationsSeriesType } from 'lib/echarts/charts/narrowing';
 import { resolveChartModule } from 'lib/echarts/charts/registry';
 import { type BaseOptionParts, type ChartContext, type ChartModule } from 'lib/echarts/charts/types';
 import { framesHaveTimeField } from 'lib/echarts/converters/frames';
@@ -67,6 +67,9 @@ export function buildPanelChartOption(
   //   the chart would be deleted.
   // - **hierarchy** (treemap/sunburst) for the same reason: its legend rows are
   //   top-level node names. It drops hidden roots in `toTreeData`.
+  // - **multivariate** (radar/parallel) for the same reason as part-to-whole: its
+  //   legend rows are frame rows, and its number fields are the axes. It drops
+  //   hidden rows in `radarToEChartsOption` / `parallelToEChartsOption`.
   // - **relations** (graph/sankey/chord) because deleting a mark's column destroys
   //   the information its reader needs. A node's field carries the fact that it was
   //   hidden; remove the field and `frameToGraphWide` simply *re-derives* the node
@@ -83,6 +86,7 @@ export function buildPanelChartOption(
     partToWholeSeriesTypes.includes(rawCtx.seriesType) ||
     isRelationsSeriesType(rawCtx.seriesType) ||
     isHierarchySeriesType(rawCtx.seriesType) ||
+    isMultivariateSeriesType(rawCtx.seriesType) ||
     isHistogramPanel(rawCtx.options);
   const ctx: ChartContext = hidesItsOwnMarks
     ? { ...rawCtx, tooltipSink: sink, options }

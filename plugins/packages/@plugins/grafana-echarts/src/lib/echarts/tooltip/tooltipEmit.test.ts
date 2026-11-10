@@ -73,17 +73,23 @@ const boxplotFrame = (): DataFrame =>
   });
 
 /**
- * Categorical frame with one numeric field per radar polygon — the shape the
- * showcase dashboard's radar panel produces after its `convertFieldType`.
+ * Wide frame with one number field per radar axis and one row per polygon — the
+ * shape the showcase dashboard's radar panel produces after its `convertFieldType`.
  */
 const radarFrame = (): DataFrame =>
   toDataFrame({
     fields: [
-      { name: 'metric', type: FieldType.string, values: ['speed', 'power', 'range', 'cost'] },
-      { name: 'alpha', type: FieldType.number, values: [80, 70, 60, 90] },
-      { name: 'bravo', type: FieldType.number, values: [60, 90, 75, 50] },
+      { name: 'item', type: FieldType.string, values: ['alpha', 'bravo'] },
+      { name: 'speed', type: FieldType.number, values: [80, 60] },
+      { name: 'power', type: FieldType.number, values: [70, 90] },
+      { name: 'range', type: FieldType.number, values: [60, 75] },
+      { name: 'cost', type: FieldType.number, values: [90, 50], config: { unit: 'currencyUSD' } },
     ],
   });
+
+/** The `[label, value]` of each tooltip row, and the field and row behind each. */
+const rowsOf = (model: TooltipModel) => model.rows.map((row) => [row.label, row.value]);
+const sourcesOf = (model: TooltipModel) => model.rows.map((row) => [row.source?.field.name, row.source?.rowIndex]);
 
 const pieFrame = (): DataFrame =>
   toDataFrame({
@@ -287,10 +293,22 @@ describe('tooltip emission through a real ECharts instance', () => {
 
     expect(emitted).toHaveLength(1);
     const [model] = emitted;
-    expect(model.rows).toHaveLength(1);
-    // Radar keys its resolvers by `dataIndex` (one data item per polygon), so
-    // index 1 is the second numeric field.
-    expect(model.source?.field.name).toBe('bravo');
+    // One row per axis, each with the unit of its own field. Radar keys its
+    // resolvers by `dataIndex` (one data item per row), so index 1 is `bravo`.
+    expect(model.header?.value).toBe('bravo');
+    expect(rowsOf(model)).toEqual([
+      ['speed', '60'],
+      ['power', '90'],
+      ['range', '75'],
+      ['cost', '$50'],
+    ]);
+    // Each row links to its own axis field at the hovered row, for the footer.
+    expect(sourcesOf(model)).toEqual([
+      ['speed', 1],
+      ['power', 1],
+      ['range', 1],
+      ['cost', 1],
+    ]);
     chart.dispose();
   });
 
@@ -304,19 +322,24 @@ describe('tooltip emission through a real ECharts instance', () => {
     const { emitted, chart } = emitViaHover(
       makeContext([radarFrame()], 'parallel', TooltipDisplayMode.Single),
       // Second polyline: the family renders one series whose data items are the
-      // numeric fields, so index 1 is `bravo`.
+      // rows, so index 1 is `bravo`.
       1
     );
 
     expect(emitted).toHaveLength(1);
     const [model] = emitted;
-    expect(model.rows).toHaveLength(1);
     // The header reads `params.name`, which ECharts fills from the data item's
     // own `name` — the thing `buildParallelOption` used to drop.
     expect(model.header?.value).toBe('bravo');
-    // Keyed by `dataIndex`, and what the pinned tooltip's data-link footer
-    // resolves its links from.
-    expect(model.source?.field.name).toBe('bravo');
+    expect(rowsOf(model)).toEqual([
+      ['speed', '60'],
+      ['power', '90'],
+      ['range', '75'],
+      ['cost', '$50'],
+    ]);
+    // Keyed by `dataIndex` and the axis, and what the pinned tooltip's data-link
+    // footer resolves its links from.
+    expect(sourcesOf(model)[0]).toEqual(['speed', 1]);
     chart.dispose();
   });
 
