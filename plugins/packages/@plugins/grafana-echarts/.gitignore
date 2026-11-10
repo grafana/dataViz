@@ -70,15 +70,13 @@ scripts/__pycache__
 scripts/*
 !scripts/package-relations.mjs
 !scripts/build-basemap.mjs
-!scripts/sync-contract.mjs
+!scripts/check-contract-rules.mjs
 !scripts/renderer-manifest.mjs
 !scripts/renderer-manifest.test.mjs
 !scripts/check-renderer-bundle.mjs
 !scripts/bundle-imports.mjs
 !scripts/bundle-imports.test.mjs
 !scripts/check-renderer-bundle.test.mjs
-!scripts/contract-scan.mjs
-!scripts/contract-scan.test.mjs
 !scripts/contract-rules.mjs
 !scripts/contract-rules.test.mjs
 !scripts/tracked-imports.test.mjs

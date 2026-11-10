@@ -1,8 +1,8 @@
 import { type TimeRange } from '@grafana/data';
 import { type TimeZone } from '@grafana/schema';
 import { TimeRangePicker } from '@grafana/ui';
+import { type RefreshRequest } from '@grafana/viz-contract/renderer-api';
 import React from 'react';
-import { type RefreshRequest } from './contract/renderer-api';
 import { shiftTimeRange, toRefreshRequest, zoomOutTimeRange } from './timeRangeRequest';
 
 const noop = () => {};

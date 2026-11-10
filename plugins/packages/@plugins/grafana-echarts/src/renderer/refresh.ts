@@ -1,5 +1,5 @@
 // The busy state of a refresh (`refresh.4` to `refresh.7`).
-import { type RefreshRequest } from './contract/renderer-api';
+import { type RefreshRequest } from '@grafana/viz-contract/renderer-api';
 import { LOG_PREFIX } from './log';
 import { refreshMessage } from './messages';
 import { REFRESH_TIMEOUT_MS } from './registry';

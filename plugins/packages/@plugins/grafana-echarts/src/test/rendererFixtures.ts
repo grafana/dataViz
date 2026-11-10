@@ -1,16 +1,21 @@
-// Reads the fixture sets of the viz contract copy in `src/renderer/contract/fixtures/`.
+// Reads the Renderer fixture sets of the viz contract, from the installed `@grafana/viz-contract` package.
+import { type RenderState } from '@grafana/viz-contract/renderer-api';
 import fs from 'node:fs';
 import path from 'node:path';
-import { type RenderState } from 'renderer/contract/renderer-api';
 
-const FIXTURES_DIR = path.join(__dirname, '..', 'renderer', 'contract', 'fixtures');
+/** The `fixtures/` directory of the contract package. */
+export const FIXTURES_DIR = path.join(path.dirname(require.resolve('@grafana/viz-contract/package.json')), 'fixtures');
 
-/** The names of the fixture sets, sorted. */
-export const fixtureSets = (): string[] =>
+/** All fixture sets of the contract, sorted. Only some of them are Renderer sets. */
+export const allFixtureSets = (): string[] =>
   fs
     .readdirSync(FIXTURES_DIR)
     .filter((name) => fs.statSync(path.join(FIXTURES_DIR, name)).isDirectory())
     .sort();
+
+/** The Renderer sets, sorted: a set is a Renderer set when it has a `state.json` (`fixtures.10`). */
+export const fixtureSets = (): string[] =>
+  allFixtureSets().filter((name) => fs.existsSync(path.join(FIXTURES_DIR, name, 'state.json')));
 
 /** The `spec.json` of a set, as JSON. Each call gives a new object. */
 export const fixtureSpec = (set: string): Record<string, unknown> =>

@@ -1,6 +1,6 @@
 // Sets `data-viz-state` and `data-viz-error` on `el` (`state.1`, `state.2`) and calls `onState` (`state.12`,
 // `state.13`).
-import { type RenderOptions, type RenderState } from './contract/renderer-api';
+import { type RenderOptions, type RenderState } from '@grafana/viz-contract/renderer-api';
 import { LOG_PREFIX } from './log';
 
 export class StateReporter {

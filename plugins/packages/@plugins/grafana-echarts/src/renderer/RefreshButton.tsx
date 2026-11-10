@@ -1,7 +1,7 @@
 import { t } from '@grafana/i18n';
 import { RefreshPicker } from '@grafana/ui';
+import { type RefreshRequest } from '@grafana/viz-contract/renderer-api';
 import React from 'react';
-import { type RefreshRequest } from './contract/renderer-api';
 
 const noop = () => {};
 

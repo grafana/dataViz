@@ -1,7 +1,8 @@
 // Each contract rule that the Renderer owns has a test or a check that names it (`contract-rule: <id>`).
+// The package has no contract chapters, so `scripts/check-contract-rules.mjs` compares the rule ids with them.
+import contractPackage from '@grafana/viz-contract/package.json';
 import fs from 'node:fs';
 import path from 'node:path';
-import contractIds from './contract/rule-ids.json';
 import rules from './contractRules.json';
 
 const PACKAGE_DIR = path.join(__dirname, '..', '..');
@@ -10,7 +11,7 @@ const PACKAGE_DIR = path.join(__dirname, '..', '..');
 const sourceFiles = (): string[] => [
   ...fs
     .readdirSync(path.join(PACKAGE_DIR, 'src'), { recursive: true, encoding: 'utf8' })
-    .filter((file) => /\.test\.tsx?$/.test(file) && !file.startsWith(`renderer${path.sep}contract${path.sep}`))
+    .filter((file) => /\.test\.tsx?$/.test(file))
     .map((file) => path.join('src', file)),
   ...fs.readdirSync(path.join(PACKAGE_DIR, 'tests-renderer')).map((file) => path.join('tests-renderer', file)),
   ...fs
@@ -34,22 +35,20 @@ function namedRules(): Map<string, string[]> {
 describe('the contract rule coverage', () => {
   const named = namedRules();
 
-  it('lists the rules of the contract copy', () => {
-    expect(rules.contractVersion).toBe(
-      fs.readFileSync(path.join(__dirname, 'contract', 'CONTRACT_VERSION'), 'utf8').trim()
-    );
+  it('lists the rules of the installed contract version', () => {
+    expect(rules.contractVersion).toBe(contractPackage.version);
   });
 
-  it('gives one owner to each rule of the contract copy, and lists no other rule', () => {
-    const all = [...rules.renderer, ...rules.notRenderer];
+  it('puts each rule in one list only', () => {
+    const all = [...rules.renderer, ...rules.notRenderer, ...rules.pending];
     expect(new Set(all).size).toBe(all.length);
-    expect([...all].sort()).toEqual([...contractIds].sort());
   });
 
   it('has a test or a check for each rule that the Renderer owns', () => {
     expect(rules.renderer.filter((id) => !named.has(id))).toEqual([]);
   });
 
+  // A pending rule that gets a test fails here too: move it to `renderer`.
   it('names only rules that the Renderer owns', () => {
     const owned = new Set(rules.renderer);
     expect([...named].filter(([id]) => !owned.has(id))).toEqual([]);

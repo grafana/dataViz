@@ -1,5 +1,6 @@
 import { type PanelDataErrorViewProps } from '@grafana/runtime';
 import { ThemeContext } from '@grafana/ui';
+import { type RefreshRequest } from '@grafana/viz-contract/renderer-api';
 import { ChartErrorBoundary } from 'lib/components/ChartErrorBoundary';
 import { ChartInitContext, type ChartInitListener } from 'lib/components/chartInitContext';
 import { ChartNotices } from 'lib/components/ChartNotices';
@@ -8,7 +9,6 @@ import { PanelDataErrorViewContext } from 'lib/components/panelDataErrorViewCont
 import { PanelErrorContext, type PanelErrorSignal } from 'lib/components/panelErrorContext';
 import { TimeZoomOutContext } from 'lib/components/TimeZoomOutContext';
 import React, { useEffect, useMemo } from 'react';
-import { type RefreshRequest } from './contract/renderer-api';
 import { dataIssueText } from './dataIssueText';
 import { TOOLBAR_HEIGHT_PX } from './layout';
 import { errorMessage } from './messages';

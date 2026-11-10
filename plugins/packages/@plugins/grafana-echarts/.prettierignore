@@ -4,5 +4,3 @@ src/modules/relations/CHANGELOG.md
 src/lib/echarts/geo/data/countries.geojson
 # Written by scripts/build-basemap.mjs.
 src/lib/echarts/geo/data/countries.topo.json
-# A copy of the viz contract. Written by scripts/sync-contract.mjs.
-src/renderer/contract/

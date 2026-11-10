@@ -1,4 +1,4 @@
-// The panels that the Renderer draws: one entry for each row of `contract/registry/panel-types.json`.
+// The panels that the Renderer draws: one entry for each row of `registry/panel-types.json` of the contract.
 // `./setup` must be the first import: it fills the registries that the modules below read when they load.
 import './setup';
 import {

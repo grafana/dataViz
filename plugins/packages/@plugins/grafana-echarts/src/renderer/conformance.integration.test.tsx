@@ -1,11 +1,11 @@
 // The conformance test of the viz contract (`fixtures.10`): each fixture set draws, and its last `onState` value
 // equals its `state.json`. It never looks at pixels.
+import { type RenderHandle, type RenderState } from '@grafana/viz-contract/renderer-api';
 import { act, waitFor } from '@testing-library/react';
 import { getInstanceByDom } from 'lib/echarts/echarts';
 import { getChart } from 'test/canvas';
 import { fixtureSets, fixtureSpec, fixtureState } from 'test/rendererFixtures';
 import { dispatch, tooltipText } from 'test/tooltipPointer';
-import { type RenderHandle, type RenderState } from './contract/renderer-api';
 import { render } from './index';
 
 /**

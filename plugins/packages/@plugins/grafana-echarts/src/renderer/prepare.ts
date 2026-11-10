@@ -1,7 +1,7 @@
 // From the input of `render` to what the Renderer shows: an error, the no-data view, or the chart. It never throws
 // (`renderer.3`).
 import { type GrafanaTheme2, type TimeRange } from '@grafana/data';
-import { type Notice, type RenderError } from './contract/renderer-api';
+import { type Notice, type RenderError } from '@grafana/viz-contract/renderer-api';
 import { hasNoRows } from './computeState';
 import { LOG_PREFIX } from './log';
 import { errorMessage } from './messages';

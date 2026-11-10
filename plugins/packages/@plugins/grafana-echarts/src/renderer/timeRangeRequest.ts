@@ -1,6 +1,6 @@
 // The `RefreshRequest` of a time range pick (`refresh.3`), and the moves of the time picker buttons.
 import { dateTime, type TimeRange, isDateTime } from '@grafana/data';
-import { type RefreshRequest } from './contract/renderer-api';
+import { type RefreshRequest } from '@grafana/viz-contract/renderer-api';
 
 /**
  * A relative pick keeps its relative text, for example `now-6h` and `now`, so a later refresh moves with the

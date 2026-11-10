@@ -1,7 +1,7 @@
 // The notices of the Renderer (`state.7` to `state.11`): first the notices that the Renderer raises, then the
 // notices of the viz spec.
+import { type Notice } from '@grafana/viz-contract/renderer-api';
 import { type ChartNotice } from 'lib/echarts/charts/types';
-import { type Notice } from './contract/renderer-api';
 import { geoNotices } from './geoNotices';
 import { fillPattern, noticeMessage } from './messages';
 import { MAX_SERIES, panelType } from './registry';

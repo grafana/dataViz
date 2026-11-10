@@ -1,6 +1,6 @@
 // The Renderer of the viz contract: an ES module that draws a viz spec into an element (`renderer.1`).
-// The contract is in `contract/` (see its README). The API shape is `contract/renderer-api.d.ts`.
-import { type RenderHandle, type RenderOptions } from './contract/renderer-api';
+// The contract is the `@grafana/viz-contract` package. The API shape is its `renderer-api.d.ts`.
+import { type RenderHandle, type RenderOptions } from '@grafana/viz-contract/renderer-api';
 import { createRenderer } from './handle';
 import { SUPPORTED_SPEC_VERSIONS } from './parseSpec';
 import { LOG_PREFIX } from './log';

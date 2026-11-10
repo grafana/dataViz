@@ -15,8 +15,9 @@ const isPeerEvalProbe = (m: Message) => m.directive === 'script-src' && m.blocke
 /**
  * KNOWN DEFECT (https://github.com/grafana/viz-contract/issues/1): `@grafana/ui` `Icon` fetches each SVG from
  * `public/build/img/icons/` with `react-inlinesvg`. `connect-src 'none'` blocks the fetch, and the icon is blank.
- * The fix is on the App side: https://github.com/grafana/viz-contract/pull/11 adds `renderer.15`, which says that the
- * App fills the icon cache before `render`. The harness App does not do that yet.
+ * The fix is on the App side: contract 1.2.0 `renderer.15` says that the App fills the icon cache from the `icons.json`
+ * of the Renderer build (`delivery.9`) before `render`. The build does not write `icons.json` yet, and the harness App
+ * does not fill the cache (`delivery.8`). Both rules are `pending` in `src/renderer/contractRules.json`.
  * The test below with `test.fail` passes while the defect is there, and fails when the icons load with no network.
  */
 const isIconFetch = (m: Message) =>
