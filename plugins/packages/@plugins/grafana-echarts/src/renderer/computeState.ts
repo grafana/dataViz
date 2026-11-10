@@ -1,6 +1,6 @@
 // The final state of a draw (`state.1` to `state.7`), from what the Renderer knows. A pure function, so each rule
 // has a unit test.
-import { type Notice, type RenderError, type RenderState } from './contract/renderer-api';
+import { type Notice, type RenderError, type RenderState } from '@grafana/viz-contract/renderer-api';
 
 /** What the draw shows, as the views and the signals of the panel report it. */
 export type DrawResult =

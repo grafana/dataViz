@@ -1,10 +1,15 @@
 // The handle of `render`: one React root in `el`, the state of each draw, the size of `el`, and the refresh
 // (`renderer.2` to `renderer.5`, `renderer.10`, `state.1` to `state.13`, `refresh.1` to `refresh.7`).
 // https://react.dev/reference/react-dom/client/createRoot
+import {
+  type RefreshRequest,
+  type RenderError,
+  type RenderHandle,
+  type RenderOptions,
+} from '@grafana/viz-contract/renderer-api';
 import { type EChartsType } from 'lib/echarts/echarts';
 import React from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { type RefreshRequest, type RenderError, type RenderHandle, type RenderOptions } from './contract/renderer-api';
 import { computeState } from './computeState';
 import { LOG_PREFIX } from './log';
 import { errorMessage } from './messages';

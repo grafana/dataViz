@@ -286,6 +286,9 @@ importers:
       '@grafana/tsconfig':
         specifier: 2.0.1
         version: 2.0.1
+      '@grafana/viz-contract':
+        specifier: 1.2.0
+        version: 1.2.0
       '@playwright/test':
         specifier: 1.57.0
         version: 1.57.0
@@ -1655,6 +1658,9 @@ packages:
     peerDependencies:
       react: '>=19'
       react-dom: '>=19'
+
+  '@grafana/viz-contract@1.2.0':
+    resolution: {integrity: sha512-DdvPfvLpbfPVJXOUuGLMXVLWFEjAuPak+stidaD3AdH977etiRULzNSBy3s7kQg+qHaPe1ecVmHvcki4iUFq0g==}
 
   '@hello-pangea/dnd@17.0.0':
     resolution: {integrity: sha512-LDDPOix/5N0j5QZxubiW9T0M0+1PR0rTDWeZF5pu1Tz91UQnuVK4qQ/EjY83Qm2QeX0eM8qDXANfDh3VVqtR4Q==}
@@ -9515,6 +9521,8 @@ snapshots:
       - react-native
       - supports-color
       - typescript
+
+  '@grafana/viz-contract@1.2.0': {}
 
   '@hello-pangea/dnd@17.0.0(@types/react@18.3.26)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:

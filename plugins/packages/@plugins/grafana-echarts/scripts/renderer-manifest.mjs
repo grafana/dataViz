@@ -4,12 +4,16 @@
 // Run it after the bundle build: `pnpm run build:renderer` runs both. See docs/renderer.md.
 import { createHash } from 'node:crypto';
 import { readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 
 const PACKAGE_DIR = join(dirname(fileURLToPath(import.meta.url)), '..');
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
+
+/** The directory of the installed viz contract package (`@grafana/viz-contract`). */
+export const CONTRACT_DIR = dirname(createRequire(import.meta.url).resolve('@grafana/viz-contract/package.json'));
 
 /** The output directory: `RENDERER_DIST_DIR` of `webpack.renderer.config.ts`. */
 export const DIST_DIR = join(PACKAGE_DIR, 'dist-renderer');
@@ -46,7 +50,7 @@ export function expectedValues() {
   return {
     // Decision 1 of the plan: the Renderer version is the package version (`__RENDERER_VERSION__`).
     version: pkg.version,
-    contractVersion: readFileSync(join(PACKAGE_DIR, 'src/renderer/contract/CONTRACT_VERSION'), 'utf8').trim(),
+    contractVersion: readJson(join(CONTRACT_DIR, 'package.json')).version,
     // `parseSpec.ts` reads the same file, so the manifest and the `specVersions` export agree.
     specVersions: readJson(join(PACKAGE_DIR, 'src/renderer/specVersions.json')),
     license: pkg.license,

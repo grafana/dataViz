@@ -15,6 +15,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { gzipSync } from 'node:zlib';
 import {
   BUNDLE_FILE,
+  CONTRACT_DIR,
   DIST_DIR,
   MANIFEST_FILE,
   PEER_PACKAGES,
@@ -165,7 +166,7 @@ check('renderer.9', dynamicImports.length === 0, `${dynamicImports.length} dynam
 
 // contract-rule: delivery.5. Report the gzip size. Fail only when the contract gives a limit.
 const gzipBytes = gzipSync(readFileSync(bundlePath)).length;
-const limit = readJson(join(PACKAGE_DIR, 'src/renderer/contract/registry/constants.json')).maxBundleGzipBytes.value;
+const limit = readJson(join(CONTRACT_DIR, 'registry/constants.json')).maxBundleGzipBytes.value;
 const sizeText = `gzip size ${gzipBytes} bytes (${(gzipBytes / 1024).toFixed(1)} KiB)`;
 if (typeof limit === 'number') {
   check('delivery.5', gzipBytes <= limit, `${sizeText}, maxBundleGzipBytes ${limit}`);

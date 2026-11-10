@@ -1,5 +1,5 @@
-# The Renderer of the viz contract (grafana-echarts `src/renderer/`, docs/renderer.md): the bundle checks and the
-# sandbox test. The Renderer is an ES module, not a plugin, so plugin-ci.yml does not build it. Its Jest tests,
+# The Renderer of the viz contract (grafana-echarts `src/renderer/`, docs/renderer.md): the contract rule check, the
+# bundle checks and the sandbox test. The Renderer is an ES module, not a plugin, so plugin-ci.yml does not build it. Its Jest tests,
 # with the conformance and the rule coverage tests, run in ci.yml.
 #
 # No `paths:` filter: discover-plugins decides if the change touches the echarts package, as in plugin-ci.yml.
@@ -64,6 +64,14 @@ jobs:
         uses: $/.github/actions/setup-workspace
         with:
           package: '@plugins/grafana-echarts'
+
+      # contractRules.json lists the rules of the installed @grafana/viz-contract version. The package has no
+      # contract chapters, so the script reads them from the public grafana/viz-contract tag. The token (contents:
+      # read) only raises the GitHub API rate limit: with no token, runners that share an IP address can get a 403.
+      - name: Contract rules
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: pnpm run check:contract-rules
 
       # Builds the bundle with webpack stats, writes the manifest and the package.json, and checks them:
       # delivery.2, delivery.5 (reports the gzip size), delivery.6, renderer.9, and the @grafana/runtime modules.

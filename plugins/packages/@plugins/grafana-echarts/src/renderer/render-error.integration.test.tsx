@@ -1,6 +1,6 @@
+import { type RenderState } from '@grafana/viz-contract/renderer-api';
 import { screen, waitFor } from '@testing-library/react';
 import { fixtureSpec } from 'test/rendererFixtures';
-import { type RenderState } from './contract/renderer-api';
 import { render } from './index';
 
 // A panel that throws while it renders, as a bug of a chart module does.

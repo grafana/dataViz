@@ -1,9 +1,9 @@
+import { type RenderHandle, type RenderOptions, type RenderState } from '@grafana/viz-contract/renderer-api';
 import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getInstanceByDom } from 'lib/echarts/echarts';
 import { withLayout } from 'test/layout';
 import { fixtureSets, fixtureSpec } from 'test/rendererFixtures';
-import { type RenderHandle, type RenderOptions, type RenderState } from './contract/renderer-api';
 import { render } from './index';
 import { TOOLBAR_HEIGHT_PX } from './layout';
 

@@ -24,16 +24,8 @@ export const MCP_APPS_DEFAULT_CSP = [
 const PACKAGE_DIR = path.join(__dirname, '..');
 const app = () => fs.readFileSync(path.join(PACKAGE_DIR, 'dist-renderer-harness', 'app.js'), 'utf8');
 
-/** A spec of the contract copy. */
-export const fixtureSpec = (set: string): Record<string, unknown> =>
-  JSON.parse(
-    fs.readFileSync(path.join(PACKAGE_DIR, 'src', 'renderer', 'contract', 'fixtures', set, 'spec.json'), 'utf8')
-  );
-
-export const fixtureState = (set: string): unknown =>
-  JSON.parse(
-    fs.readFileSync(path.join(PACKAGE_DIR, 'src', 'renderer', 'contract', 'fixtures', set, 'state.json'), 'utf8')
-  );
+// The Jest tests read the fixture sets with the same functions.
+export { fixtureSets, fixtureSpec, fixtureState } from '../src/test/rendererFixtures';
 
 /**
  * Code in a `<script>` element: a `</script` in it would end the element. The escapes are legal in a JS string and in

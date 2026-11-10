@@ -1,7 +1,7 @@
-// Typed access to the contract registries in `contract/registry/`. Messages and constants come from here only
-// (design decision 2 of the plan). https://github.com/grafana/viz-contract (commit in contract/README.md)
-import constants from './contract/registry/constants.json';
-import panelTypes from './contract/registry/panel-types.json';
+// Typed access to the registries of the `@grafana/viz-contract` package. Messages and constants come from here only
+// (design decision 2 of the plan). https://github.com/grafana/viz-contract
+import constants from '@grafana/viz-contract/registry/constants.json';
+import panelTypes from '@grafana/viz-contract/registry/panel-types.json';
 
 /** The error codes of the viz spec checks (`state.3`), in the order of the checks. */
 export const SPEC_ERROR_CODES = [

@@ -1,5 +1,5 @@
-import notices from './contract/registry/notices.json';
-import states from './contract/registry/states.json';
+import notices from '@grafana/viz-contract/registry/notices.json';
+import states from '@grafana/viz-contract/registry/states.json';
 import { errorMessage, fillPattern, noticeMessage, refreshMessage } from './messages';
 import { SPEC_ERROR_CODES } from './registry';
 

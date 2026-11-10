@@ -1,10 +1,10 @@
 // The geo notices (`state.11`). The geo panel always draws the vector basemap of the bundle, and the Renderer
 // fetches no file (`renderer.7`). So a layer that needs map tiles or a file from the network is drawn with no
 // network (the vector basemap) or left out, and the Renderer says so.
+import { type Notice } from '@grafana/viz-contract/renderer-api';
 import { getLayerSrc, isGeoJsonLayer } from 'lib/grafana/geo/geojson';
 import { COUNTRIES_GEOJSON_SRC } from 'lib/grafana/geo/geojsonSource';
 import { getGazetteer } from 'lib/grafana/geo/gazetteer';
-import { type Notice } from './contract/renderer-api';
 import { noticeMessage } from './messages';
 import { isObject } from './parseSpec';
 

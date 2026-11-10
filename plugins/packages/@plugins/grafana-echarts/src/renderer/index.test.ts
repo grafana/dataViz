@@ -1,10 +1,10 @@
-import type * as RendererApi from './contract/renderer-api';
+import constants from '@grafana/viz-contract/registry/constants.json';
+import type * as RendererApi from '@grafana/viz-contract/renderer-api';
 import * as renderer from './index';
-import constants from './contract/registry/constants.json';
 
 describe('Renderer module', () => {
   // contract-rule: renderer.1
-  it('matches the shape of contract/renderer-api.d.ts', () => {
+  it('matches the shape of renderer-api.d.ts of the contract', () => {
     // A type check: tsc fails here if an export is missing or has another type.
     const api: typeof RendererApi = renderer;
     expect(Object.keys(api).sort()).toEqual(['render', 'specVersions', 'version']);

@@ -1,6 +1,6 @@
 // Builds the messages of errors and notices from the patterns of the registries (`state.6`).
-import notices from './contract/registry/notices.json';
-import states from './contract/registry/states.json';
+import notices from '@grafana/viz-contract/registry/notices.json';
+import states from '@grafana/viz-contract/registry/states.json';
 import { type ErrorCode } from './registry';
 
 type Values = Record<string, string | number>;

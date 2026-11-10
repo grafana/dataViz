@@ -1,8 +1,8 @@
 import { FieldType } from '@grafana/data';
+import { type RenderState } from '@grafana/viz-contract/renderer-api';
 import { act, screen, waitFor } from '@testing-library/react';
 import { getInstanceByDom } from 'lib/echarts/echarts';
 import { fixtureSpec, fixtureState } from 'test/rendererFixtures';
-import { type RenderState } from './contract/renderer-api';
 import { render, specVersions } from './index';
 
 /** An element with a size: jsdom has no layout, so `clientWidth` and `clientHeight` are 0. */

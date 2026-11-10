@@ -1,7 +1,7 @@
 // The checks of the viz spec (`state.3`), in the order of the `errors` list of `states.json`. They never throw
 // (`renderer.3`), and they ignore the fields that they do not know (`spec.9`).
 import { type ConfigOverrideRule, type DataFrameJSON, type FieldConfigSource } from '@grafana/data';
-import { type Notice, type RenderError } from './contract/renderer-api';
+import { type Notice, type RenderError } from '@grafana/viz-contract/renderer-api';
 import { errorMessage } from './messages';
 import { PANEL_IDS, type SpecErrorCode } from './registry';
 import { orderedResults } from './results';

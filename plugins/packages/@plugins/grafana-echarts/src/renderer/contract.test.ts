@@ -1,12 +1,12 @@
-// Checks that the contract copy in `contract/` and the panels of this package agree.
+// Checks that the installed viz contract (`@grafana/viz-contract`) and the panels of this package agree.
+import chartTypes from '@grafana/viz-contract/registry/chart-types.json';
+import panelTypes from '@grafana/viz-contract/registry/panel-types.json';
 import fs from 'node:fs';
 import path from 'node:path';
-import chartTypes from './contract/registry/chart-types.json';
-import panelTypes from './contract/registry/panel-types.json';
+import { allFixtureSets, FIXTURES_DIR, fixtureSets } from 'test/rendererFixtures';
 
-const fixturesDir = path.join(__dirname, 'contract', 'fixtures');
-const sets = fs.readdirSync(fixturesDir).filter((name) => fs.statSync(path.join(fixturesDir, name)).isDirectory());
-const smokeSets = sets.filter((name) => name.startsWith('smoke-')).sort();
+const sets = fixtureSets();
+const smokeSets = sets.filter((name) => name.startsWith('smoke-'));
 
 const modulesDir = path.join(__dirname, '..', 'modules');
 const pluginIds = fs
@@ -15,29 +15,27 @@ const pluginIds = fs
   .map((name) => JSON.parse(fs.readFileSync(path.join(modulesDir, name, 'plugin.json'), 'utf8')).id)
   .sort();
 
-describe('contract copy', () => {
+describe('viz contract', () => {
   // contract-rule: fixtures.5
   it('has one smoke set for each chart type, and no other smoke set', () => {
     expect(smokeSets).toEqual(chartTypes.charts.map((chart) => `smoke-${chart.name}`).sort());
   });
 
   // contract-rule: fixtures.10
-  it('has spec.json and state.json in each set', () => {
-    for (const set of sets) {
-      expect([set, fs.existsSync(path.join(fixturesDir, set, 'spec.json'))]).toEqual([set, true]);
-      expect([set, fs.existsSync(path.join(fixturesDir, set, 'state.json'))]).toEqual([set, true]);
-    }
+  it('has spec.json in each Renderer set', () => {
+    expect(sets.length).toBeGreaterThan(0);
+    expect(sets.filter((set) => !fs.existsSync(path.join(FIXTURES_DIR, set, 'spec.json')))).toEqual([]);
   });
 
   // contract-rule: fixtures.10
-  it('has no expected.png, because the Renderer has no image test yet', () => {
-    // When a set has expected.png, add the image test of fixtures.10, then remove this test.
-    expect(sets.filter((set) => fs.existsSync(path.join(fixturesDir, set, 'expected.png')))).toEqual([]);
+  it('has no smoke or error set that is not a Renderer set', () => {
+    const others = allFixtureSets().filter((set) => !sets.includes(set));
+    expect(others.filter((set) => set.startsWith('smoke-') || set.startsWith('error-'))).toEqual([]);
   });
 
   // contract-rule: fixtures.12
   it('has one error set for each error that the spec checks give', () => {
-    const errorSets = sets.filter((name) => name.startsWith('error-')).sort();
+    const errorSets = sets.filter((name) => name.startsWith('error-'));
     expect(errorSets).toEqual(
       ['invalid-spec', 'unsupported-spec-version', 'unsupported-panel-type', 'all-queries-failed']
         .map((code) => `error-${code}`)
