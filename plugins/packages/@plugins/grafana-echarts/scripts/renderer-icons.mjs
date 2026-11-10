@@ -6,11 +6,9 @@ import { existsSync, readFileSync, readdirSync, realpathSync, writeFileSync } fr
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { DIST_DIR } from './renderer-manifest.mjs';
+import { DIST_DIR, ICONS_FILE } from './renderer-manifest.mjs';
 
 const PACKAGE_DIR = join(dirname(fileURLToPath(import.meta.url)), '..');
-
-export const ICONS_FILE = 'icons.json';
 
 /** The checked-in list of the icons that the Renderer can show, as `<dir>/<name>` keys. */
 export const ICON_LIST = join(PACKAGE_DIR, 'src/renderer/iconList.json');

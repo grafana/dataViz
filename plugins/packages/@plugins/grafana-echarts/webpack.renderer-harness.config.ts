@@ -6,8 +6,12 @@ import fs from 'fs';
 import path from 'path';
 import { type Configuration } from 'webpack';
 
-/** The real folder of `@grafana/ui`. pnpm puts its dependencies in the `node_modules` folder above it. */
-const realUiDir = () => fs.realpathSync(path.dirname(require.resolve('@grafana/ui/package.json')));
+/**
+ * The folder of the `react-inlinesvg` that `@grafana/ui` imports. pnpm puts the dependencies of `@grafana/ui` in the
+ * `node_modules` folder above its real folder.
+ */
+const uiInlineSvgDir = () =>
+  path.join(fs.realpathSync(path.dirname(require.resolve('@grafana/ui/package.json'))), '..', '..', 'react-inlinesvg');
 
 const config = (): Configuration => ({
   mode: 'production',
@@ -31,8 +35,10 @@ const config = (): Configuration => ({
   resolve: {
     extensions: ['.js', '.mjs'],
     // The App fills the icon cache of the `react-inlinesvg` that its `@grafana/ui` imports (`renderer.15`). This
-    // package has no dependency on it, so resolve it from the folder of `@grafana/ui`: the same copy, not a second one.
-    modules: ['node_modules', path.dirname(path.dirname(realUiDir()))],
+    // package has no dependency on it. The alias pins that copy for `react-inlinesvg` only, so the harness cannot fill
+    // the cache of a second copy. A folder alias reads `module` of its package.json, the file that `exports` gives to
+    // the `import` of `@grafana/ui`. https://webpack.js.org/configuration/resolve/#resolvealias
+    alias: { 'react-inlinesvg$': uiInlineSvgDir() },
   },
 });
 

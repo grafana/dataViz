@@ -17,6 +17,7 @@ import {
   BUNDLE_FILE,
   CONTRACT_DIR,
   DIST_DIR,
+  ICONS_FILE,
   MANIFEST_FILE,
   PEER_PACKAGES,
   expectedValues,
@@ -25,7 +26,7 @@ import {
   writeRendererPackage,
 } from './renderer-manifest.mjs';
 import { bundleImports } from './bundle-imports.mjs';
-import { ICONS_FILE, iconProblems, writeIcons } from './renderer-icons.mjs';
+import { iconProblems, writeIcons } from './renderer-icons.mjs';
 
 const PACKAGE_DIR = join(dirname(fileURLToPath(import.meta.url)), '..');
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
