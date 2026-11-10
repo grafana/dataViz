@@ -24,22 +24,8 @@ export const MCP_APPS_DEFAULT_CSP = [
 const PACKAGE_DIR = path.join(__dirname, '..');
 const app = () => fs.readFileSync(path.join(PACKAGE_DIR, 'dist-renderer-harness', 'app.js'), 'utf8');
 
-/** The `fixtures/` directory of the installed viz contract package. */
-const FIXTURES_DIR = path.join(path.dirname(require.resolve('@grafana/viz-contract/package.json')), 'fixtures');
-
-/** The Renderer sets of the contract, sorted: the sets that have a `state.json` (`fixtures.10`). */
-export const fixtureSets = (): string[] =>
-  fs
-    .readdirSync(FIXTURES_DIR)
-    .filter((name) => fs.existsSync(path.join(FIXTURES_DIR, name, 'state.json')))
-    .sort();
-
-/** A spec of a contract fixture set. */
-export const fixtureSpec = (set: string): Record<string, unknown> =>
-  JSON.parse(fs.readFileSync(path.join(FIXTURES_DIR, set, 'spec.json'), 'utf8'));
-
-export const fixtureState = (set: string): unknown =>
-  JSON.parse(fs.readFileSync(path.join(FIXTURES_DIR, set, 'state.json'), 'utf8'));
+// The Jest tests read the fixture sets with the same functions.
+export { fixtureSets, fixtureSpec, fixtureState } from '../src/test/rendererFixtures';
 
 /**
  * Code in a `<script>` element: a `</script` in it would end the element. The escapes are legal in a JS string and in

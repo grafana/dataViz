@@ -89,12 +89,14 @@ The contract package has no contract chapters, so it does not give the rule ids.
 
 ## Differences from the contract
 
-The Renderer does not obey all of the contract yet. Each difference below the pending rules has a test that fails when the difference is fixed.
+The Renderer does not obey all of the contract yet.
 
-The rules in `pending` of `contractRules.json` came with contract 1.2.0. The Renderer does none of them yet:
+The rules in `pending` of `contractRules.json` came with contract 1.2.0. The Renderer does none of them yet, and no test covers them:
 
 - Title (`renderer.17`): the Renderer does not show `panel.title`. The `title` fixture set draws, and its state equals its `state.json`, but there is no title above the chart.
-- Icons (`delivery.9`, `delivery.8`, `delivery.11`, [#162](https://github.com/grafana/dataViz/issues/162)): the build does not write `icons.json` next to the manifest. So no CI check fills the icon cache from it and draws the fixtures with no icon request, and no check reports its gzip size. The App rules `renderer.15` and `renderer.16` use this file.
+- Icons (`delivery.8`, `delivery.9`, `delivery.11`, [#162](https://github.com/grafana/dataViz/issues/162)): the build does not write `icons.json` next to the manifest. So no CI check fills the icon cache from it and draws the fixtures with no icon request, and no check reports its gzip size. The App rules `renderer.15` and `renderer.16` use this file.
+
+Each of these differences has a test that fails when the difference is fixed:
 
 - `series-truncated` (`state.10`): The contract draws the series with the largest peak values. The Renderer draws the first 50 series, in the order of the frames and fields. It does this only for the `cartesian` and `stream` families. Its message is "`<omitted>` series are not shown. The first `<maxSeries>` series are drawn." The registry message is not used, because it names the peak values. The constant is `SERIES_TRUNCATED_PATTERN` in `src/renderer/notices.ts`.
 - Icons (`renderer.7`, [grafana/viz-contract#1](https://github.com/grafana/viz-contract/issues/1)): `@grafana/ui` `Icon` gets each SVG file from the network. The sandbox blocks the request, so the icons are blank. Grafana core fills the icon cache of `react-inlinesvg` when it starts. Contract 1.2.0 makes the App do the same for its copy of `@grafana/ui` (`renderer.15`), from the `icons.json` of the Renderer build (`delivery.9`, pending). The sandbox test "the icons load with no network request" is marked `test.fail` until the sandbox test fills the icon cache from `icons.json` (`delivery.8`, pending).
