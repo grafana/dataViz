@@ -1,0 +1,20 @@
+{
+  "description": "The @grafana/ui icons that the Renderer, or a @grafana/ui component that the Renderer uses, can show, as `<dir>/<name>` keys. `scripts/renderer-icons.mjs` writes their SVG to `dist-renderer/icons.json` (`delivery.9`). The sandbox test fails on each icon request in the states of `delivery.8`: add the icon that it names here.",
+  "icons": [
+    "unicons/angle-double-left",
+    "unicons/angle-double-right",
+    "unicons/angle-down",
+    "unicons/angle-up",
+    "unicons/calendar-alt",
+    "unicons/clipboard-alt",
+    "unicons/clock-nine",
+    "unicons/compress-arrows",
+    "unicons/copy",
+    "unicons/exclamation-triangle",
+    "unicons/search",
+    "unicons/search-minus",
+    "unicons/search-plus",
+    "unicons/sync",
+    "unicons/times"
+  ]
+}

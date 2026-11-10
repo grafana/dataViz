@@ -6,7 +6,7 @@
     "build:dev": "webpack -c ./webpack.config.ts --env development",
     "build:analyze": "webpack -c ./webpack.config.ts --env production --env analyze",
     "build:relations": "webpack -c ./webpack.config.ts --env production --env standalone=relations",
-    "build:renderer": "webpack -c ./webpack.renderer.config.ts && node scripts/renderer-manifest.mjs",
+    "build:renderer": "webpack -c ./webpack.renderer.config.ts && node scripts/renderer-manifest.mjs && node scripts/renderer-icons.mjs",
     "check:renderer": "node scripts/check-renderer-bundle.mjs",
     "check:contract-rules": "node scripts/check-contract-rules.mjs",
     "build:renderer-harness": "webpack -c ./webpack.renderer-harness.config.ts",

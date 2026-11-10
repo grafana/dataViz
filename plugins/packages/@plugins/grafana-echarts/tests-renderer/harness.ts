@@ -49,14 +49,21 @@ try { localStorage.getItem('probe'); post({ type: 'storage', readable: true }); 
 catch (e) { post({ type: 'storage', readable: false, name: e.name }); }
 `;
 
+export interface HarnessOptions {
+  size?: { width: number; height: number };
+  /** `false`: the App gives no `onRefresh` to `render`. */
+  onRefresh?: boolean;
+}
+
 /** The outer page: it records the messages of the iframe in `window.messages`. */
-export function harnessPage(spec: unknown, size = { width: 640, height: 400 }): string {
+export function harnessPage(spec: unknown, { size = { width: 640, height: 400 }, onRefresh }: HarnessOptions = {}) {
   const inner = `<!doctype html><html><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="${MCP_APPS_DEFAULT_CSP}">
 <style>html,body{margin:0}#root{width:${size.width}px;height:${size.height}px}</style></head>
 <body><div id="root"></div>
 <script>${scriptText(PROBES)}</script>
 <script type="application/json" id="viz-spec">${scriptJson(spec)}</script>
+<script type="application/json" id="harness-options">${scriptJson({ onRefresh })}</script>
 <script>${scriptText(app())}</script></body></html>`;
   const srcdoc = inner.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
   return `<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0">
@@ -77,9 +84,9 @@ export const HOST_URL = 'https://sandbox.host.test/';
  * Draws `spec`, records every request but the page (and blocks it), and waits for `idle` from the App: the first
  * `onState` and the work that it queued are done. A timer that the Renderer sets for later is not included.
  */
-export async function draw(page: Page, spec: unknown) {
+export async function draw(page: Page, spec: unknown, options: HarnessOptions = {}) {
   const requests: string[] = [];
-  const html = harnessPage(spec);
+  const html = harnessPage(spec, options);
   await page.route('**/*', (route) => {
     if (route.request().url() === HOST_URL) {
       return route.fulfill({ contentType: 'text/html; charset=utf-8', body: html });
@@ -93,7 +100,23 @@ export async function draw(page: Page, spec: unknown) {
       page.evaluate(() => (window as unknown as { messages: Message[] }).messages.some((m) => m.type === 'idle'))
     )
     .toBe(true);
-  const messages: Message[] = await page.evaluate(() => (window as unknown as { messages: Message[] }).messages);
+  const messages = await readMessages(page);
   const of = (type: string) => messages.filter((m) => m.type === type);
   return { requests, messages, of, states: of('state').map((m) => m.state) };
+}
+
+/** All the messages of the iframe up to now. */
+export const readMessages = (page: Page): Promise<Message[]> =>
+  page.evaluate(() => (window as unknown as { messages: Message[] }).messages);
+
+let pings = 0;
+
+/** Waits until the iframe has no work left in its queue, for example after an interaction: a `ping` and its `pong`. */
+export async function settle(page: Page) {
+  const id = ++pings;
+  await page.evaluate(
+    (ping) => document.querySelector<HTMLIFrameElement>('#app')!.contentWindow!.postMessage(ping, '*'),
+    { type: 'ping', id }
+  );
+  await expect.poll(async () => (await readMessages(page)).some((m) => m.type === 'pong' && m.id === id)).toBe(true);
 }

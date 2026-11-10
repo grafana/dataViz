@@ -1,9 +1,9 @@
 // The Renderer in `<iframe sandbox="allow-scripts">` with the default CSP of MCP Apps and the network blocked
 // (`renderer.6`, `renderer.7`, `renderer.8`). Build first: `pnpm run build:renderer && pnpm run build:renderer-harness`.
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { draw, fixtureSpec, fixtureState, type Message } from './harness';
+import { draw, fixtureSets, fixtureSpec, fixtureState, type Message, readMessages, settle } from './harness';
 
 /**
  * CSP reports that the Renderer does not cause. The `@grafana/data` bundle of the App tests `new Function('')` in a
@@ -13,15 +13,15 @@ import { draw, fixtureSpec, fixtureState, type Message } from './harness';
 const isPeerEvalProbe = (m: Message) => m.directive === 'script-src' && m.blocked === 'eval';
 
 /**
- * KNOWN DEFECT (https://github.com/grafana/viz-contract/issues/1): `@grafana/ui` `Icon` fetches each SVG from
- * `public/build/img/icons/` with `react-inlinesvg`. `connect-src 'none'` blocks the fetch, and the icon is blank.
- * The fix is on the App side: contract 1.2.0 `renderer.15` says that the App fills the icon cache from the `icons.json`
- * of the Renderer build (`delivery.9`) before `render`. The build does not write `icons.json` yet, and the harness App
- * does not fill the cache (`delivery.8`). Both rules are `pending` in `src/renderer/contractRules.json`.
- * The test below with `test.fail` passes while the defect is there, and fails when the icons load with no network.
+ * An icon request of `@grafana/ui` `Icon`: `react-inlinesvg` fetches the SVG when the icon cache has no entry for its
+ * URL. `connect-src 'none'` blocks the fetch, so it is a CSP report, not a request of the page.
  */
 const isIconFetch = (m: Message) =>
-  m.directive === 'connect-src' && typeof m.blocked === 'string' && m.blocked.includes('/public/build/img/icons/');
+  m.type === 'csp' && typeof m.blocked === 'string' && m.blocked.includes('/public/build/img/icons/');
+
+/** The icons that the iframe requested up to now, as `<dir>/<name>`: add each one to `src/renderer/iconList.json`. */
+const iconRequests = async (page: Page) =>
+  (await readMessages(page)).filter(isIconFetch).map((m) => String(m.blocked).replace(/^.*\/icons\/|\.svg$/g, ''));
 
 for (const set of ['prometheus-line', 'smoke-geomap']) {
   test(`${set}: draws in the sandbox with no request, no CSP violation and no error`, async ({ page }) => {
@@ -31,10 +31,72 @@ for (const set of ['prometheus-line', 'smoke-geomap']) {
     const { requests, of, states } = await draw(page, fixtureSpec(set));
     expect(states.at(-1)).toEqual(fixtureState(set));
     expect(requests).toEqual([]);
-    expect(of('csp').filter((m) => !isPeerEvalProbe(m) && !isIconFetch(m))).toEqual([]);
+    expect(of('csp').filter((m) => !isPeerEvalProbe(m))).toEqual([]);
     expect(of('error')).toEqual([]);
   });
 }
+
+// `delivery.8`: the harness App fills the icon cache from `icons.json`, as the App does. Then each fixture set draws in
+// the states of the rule, with no icon request. The check finds only the icons of these states.
+const NARROW = { width: 480, height: 400 };
+for (const set of fixtureSets()) {
+  test(`${set}: no icon request with no onRefresh, and below 769 px wide`, async ({ page }) => {
+    // contract-rule: delivery.8
+    // Below 769 px, the toolbar buttons of `@grafana/ui` show only their icon.
+    for (const options of [{ onRefresh: false }, { size: NARROW }]) {
+      await page.unrouteAll();
+      await draw(page, fixtureSpec(set), options);
+      expect(await iconRequests(page), JSON.stringify(options)).toEqual([]);
+    }
+  });
+
+  test(`${set}: no icon request with onRefresh, a tooltip, a legend menu and the time picker open`, async ({
+    page,
+  }) => {
+    // contract-rule: delivery.8
+    // The zoom controls show with no interaction, for the families that have them.
+    await draw(page, fixtureSpec(set));
+    expect(await iconRequests(page)).toEqual([]);
+    const app = page.frameLocator('#app');
+    const box = (await page.locator('#app').boundingBox())!;
+    // A tooltip opens on hover over the middle of the chart, and a click there pins it. Not each chart has a data
+    // point in the middle, so not each set gets a tooltip.
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await settle(page);
+    await page.keyboard.press('Escape');
+    // The legend menu: the color picker of a series opens from its color icon.
+    const seriesIcon = app.getByTestId('series-icon').first();
+    if ((await seriesIcon.count()) > 0) {
+      await seriesIcon.click();
+      await settle(page);
+      await page.keyboard.press('Escape');
+    }
+    const timePicker = app.getByTestId('data-testid TimePicker Open Button');
+    if ((await timePicker.count()) > 0) {
+      await timePicker.click();
+      await settle(page);
+    }
+    expect(await iconRequests(page)).toEqual([]);
+  });
+}
+
+test('the delivery.8 interactions reach their states', async ({ page }) => {
+  // The test above passes with no icon request if an interaction opens nothing. This set has each control.
+  await draw(page, fixtureSpec('prometheus-line'));
+  const app = page.frameLocator('#app');
+  const box = (await page.locator('#app').boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  // A count, not a visible check: with no icon, the close button has no size.
+  await expect(app.getByRole('button', { name: 'Close' })).toHaveCount(1);
+  await page.keyboard.press('Escape');
+  await app.getByTestId('series-icon').first().click();
+  await expect(app.getByTestId('data-testid Tab Colors')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await app.getByTestId('data-testid TimePicker Open Button').click();
+  await expect(app.getByText('Absolute time range')).toBeVisible();
+});
 
 test('the manifest gives the version and the specVersions of the built bundle', async ({ page }) => {
   // contract-rule: delivery.2
@@ -100,9 +162,10 @@ test('a refresh asks the App, and the result shows in the sandbox', async ({ pag
 
 test('the icons load with no network request', async ({ page }) => {
   // contract-rule: renderer.7
-  test.fail(true, 'Known defect: @grafana/ui icons are fetched by URL (grafana/viz-contract#1).');
-  const { of } = await draw(page, fixtureSpec('smoke-timeseries'));
-  expect(of('csp').filter(isIconFetch)).toEqual([]);
+  await draw(page, fixtureSpec('smoke-timeseries'));
+  expect(await iconRequests(page)).toEqual([]);
+  // A filled icon cache draws the SVG, not the empty `loader` element of `Icon`.
+  await expect(page.frameLocator('#app').getByTestId('icon-sync').locator('path')).not.toHaveCount(0);
 });
 
 test('a label with HTML comment and script markup gets to the Renderer as text', async ({ page }) => {
