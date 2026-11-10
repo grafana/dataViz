@@ -3,12 +3,12 @@ import { type GrafanaTheme2 } from '@grafana/data';
 import { IconButton, useStyles2 } from '@grafana/ui';
 import { type ChartZoomAction } from 'lib/echarts/charts/types';
 import { type EChartsType } from 'lib/echarts/echarts';
-import React, { type MutableRefObject, useCallback } from 'react';
+import React, { type RefObject, useCallback } from 'react';
 
 interface Props {
   action: ChartZoomAction | undefined;
   /** The live ECharts instance; `null` before mount and after dispose. */
-  chartRef: MutableRefObject<EChartsType | null>;
+  chartRef: RefObject<EChartsType | null>;
   /** Viz area size, so a zoom is anchored at its centre rather than at the origin. */
   width: number;
   height: number;

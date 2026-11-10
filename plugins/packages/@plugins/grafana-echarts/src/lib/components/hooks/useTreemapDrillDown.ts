@@ -1,7 +1,7 @@
 import { type ECElementEvent } from 'echarts/core';
 import { type EChartsType } from 'lib/echarts/echarts';
 import { treemapDrillDownNodeId, treemapRootNodeId, zoomTreemapToNode } from 'lib/echarts/treemapDrillDown';
-import { type MutableRefObject, useEffect, useRef } from 'react';
+import { type RefObject, useEffect, useRef } from 'react';
 
 /**
  * Drill down in a treemap: a click on a parent node zooms to it. A leaf click is left to the
@@ -10,7 +10,7 @@ import { type MutableRefObject, useEffect, useRef } from 'react';
  * update. The root is view-only state (contract 4.5 item 6).
  * https://echarts.apache.org/en/api.html#events.Mouse%20events
  */
-export function useTreemapDrillDown(chart: EChartsType | null): MutableRefObject<string | undefined> {
+export function useTreemapDrillDown(chart: EChartsType | null): RefObject<string | undefined> {
   const rootRef = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (!chart) {

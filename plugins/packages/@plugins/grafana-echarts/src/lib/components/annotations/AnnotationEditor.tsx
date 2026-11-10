@@ -93,7 +93,7 @@ export const AnnotationEditor: React.FC<Props> = ({ draft, timeZone, dismiss }) 
     };
   }, [dismiss]);
 
-  const onSubmit = async (event: React.FormEvent) => {
+  const onSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (description.trim() === '') {
       setInvalid(true);

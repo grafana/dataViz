@@ -6,7 +6,7 @@ import { buildPanelChartOption } from 'lib/echarts/options/panelOption';
 import { type InteractedRelationsView } from 'lib/echarts/relations/options/view';
 import { ENABLE_TIME_BRUSH_ACTION } from 'lib/echarts/timeBrush';
 import { NOOP_TOOLTIP_SINK } from 'lib/echarts/tooltip/model';
-import { type MutableRefObject } from 'react';
+import { type RefObject } from 'react';
 import { useChartOption } from './useChartOption';
 
 // The option build is covered end-to-end by `panelOption.test.ts`; mocking it
@@ -52,7 +52,7 @@ function createFakeChart() {
 }
 
 const ctx = { seriesType: 'line' } as unknown as ChartContext;
-const relationsViewRef: MutableRefObject<InteractedRelationsView | undefined> = { current: undefined };
+const relationsViewRef: RefObject<InteractedRelationsView | undefined> = { current: undefined };
 const options = {
   isGrafanaLegend: false,
   plotWidth: 400,
