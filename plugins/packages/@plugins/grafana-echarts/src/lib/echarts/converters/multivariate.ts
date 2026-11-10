@@ -5,10 +5,10 @@ import {
   getFieldDisplayName,
   type GrafanaTheme2,
 } from '@grafana/data';
-import { findCategoricalFrame, resolveCategoriesFromFrame } from 'lib/echarts/converters/frames';
+import { findCategoricalFrame } from 'lib/echarts/converters/frames';
 import { getPaletteColorByIndex } from 'lib/echarts/style';
 import { getHiddenSeriesNames, getSeriesColorOverride } from 'lib/grafana/fields/seriesConfig';
-import { isNumberField } from 'lib/grafana/narrowing';
+import { isNumberField, isStringField } from 'lib/grafana/narrowing';
 
 /** One axis: a number field of the source frame. */
 export interface MultivariateAxis {
@@ -37,7 +37,7 @@ export interface MultivariateModel {
  * The multivariate model of the data, shared by radar and parallel coordinates.
  *
  * - Each number field is one axis.
- * - Each row is one item. The first string field gives the item name, else the row index.
+ * - Each row is one item, named by `rowName`.
  *
  * This is the wide shape: one row for each item, one number field for each metric, for example SQL with
  * `GROUP BY service`. The data plane calls it numeric long: https://grafana.com/developers/dataplane/numeric
@@ -60,7 +60,8 @@ export function frameToMultivariate(
   const axes: MultivariateAxis[] = frame.fields
     .filter(isNumberField)
     .map((field) => ({ name: getFieldDisplayName(field, frame, frames), field }));
-  const names = resolveCategoriesFromFrame(frame);
+  const stringFields = frame.fields.filter(isStringField);
+  const names = Array.from({ length: frame.length }, (_, rowIndex) => rowName(stringFields, rowIndex));
   const hidden = fieldConfig ? getHiddenSeriesNames(fieldConfig, names) : new Set<string>();
 
   const items: MultivariateItem[] = names.map((name, rowIndex) => ({
@@ -74,4 +75,22 @@ export function frameToMultivariate(
   }));
 
   return { axes, items };
+}
+
+/**
+ * The name of a row: the non-empty values of all its string fields, joined with a space (for example
+ * `prod web-01`), else the row index. The name is also the key of the legend toggle and of a `byName`
+ * color override, so the first string field alone is not enough: a label column such as `cluster` often
+ * has one value on every row. Core pie names its "All values" rows the same way
+ * (`getSmartDisplayNameForRow`, which `@grafana/data` does not export):
+ * https://github.com/grafana/grafana/blob/main/packages/grafana-data/src/field/fieldDisplay.ts
+ */
+function rowName(stringFields: Array<Field<string>>, rowIndex: number): string {
+  const parts = stringFields
+    .map((field) => {
+      const value = field.values[rowIndex] ?? '';
+      return field.display ? field.display(value).text : value;
+    })
+    .filter((part) => part.length > 0);
+  return parts.length > 0 ? parts.join(' ') : String(rowIndex);
 }

@@ -15,8 +15,10 @@ compares against ECharts semantics rather than a core panel.
 Both render types read the multivariate model (`converters/multivariate.ts`):
 
 - Each **number field** is one **axis** (a radar indicator / a parallel axis).
-- Each **row** is one **polygon** (radar) or one **polyline** (parallel). The first
-  string field gives its name. With no string field, the name is the row index.
+- Each **row** is one **polygon** (radar) or one **polyline** (parallel). Its name
+  joins the non-empty values of all string fields with a space (`prod web-01`), as
+  core pie names its "All values" rows. With no string value, the name is the row
+  index. The name is the key of the legend toggle and of a `byName` color override.
 
 This is the usual shape of a query result: one row for each item, one number field
 for each metric. ECharts uses the same shape
@@ -37,11 +39,11 @@ value axis).
 
 ### Shaping your query
 
-| Query                                                                  | Route                                                                                   |
-| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| SQL `GROUP BY service`, Elasticsearch terms + metrics, a JSON array    | Works as returned                                                                       |
-| Prometheus / Loki instant queries, Format: Table, one query per metric | Add the **Merge** (or **Join by field**) transformation, so the queries share one frame |
-| Key/value data (`metric,value`) for one item                           | Add the **Transpose** transformation. The data issue names it                           |
+| Query                                                                  | Route                                                                                                            |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| SQL `GROUP BY service`, Elasticsearch terms + metrics, a JSON array    | Works as returned                                                                                                |
+| Prometheus / Loki instant queries, Format: Table, one query per metric | Add the **Merge** (or **Join by field**) transformation, so the queries share one frame. The data issue names it |
+| Key/value data (`metric,value`) for one item                           | Add the **Transpose** transformation. The data issue names it                                                    |
 
 The panel does not transpose data by itself: the shape alone cannot show the
 orientation (3 rows × 3 number fields are valid either way), and a wrong guess draws
@@ -66,7 +68,9 @@ Display name, No value, Thresholds, Value mappings, Data links), customizing onl
 Color (PaletteClassic, byValue + bySeries). Unit and Decimals apply to each axis,
 because each axis is one field. Min/Max do not set the axis range yet. Each row
 takes the classic palette color of its row index, or a `byName` fixed-color override
-on its name.
+on its name. A "Hide in area" (`custom.hideFrom.viz`) override on a number field has
+no effect, because that field is an axis, not a polygon. Hide a row from the legend
+instead.
 
 ## Notes / gaps
 

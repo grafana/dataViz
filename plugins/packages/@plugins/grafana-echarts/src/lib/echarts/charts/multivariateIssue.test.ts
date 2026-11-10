@@ -41,6 +41,38 @@ describe('getMultivariateIssue', () => {
     );
   });
 
+  // Three Prometheus instant table queries with no Merge: three frames, each with one `Value #X` field. The chart
+  // reads the first frame only, and Transpose would draw one metric across the hosts.
+  it('names the Merge transformation when more than one frame has a number field', () => {
+    const query = (refId: string) =>
+      toDataFrame({
+        refId,
+        fields: [
+          { name: 'Time', type: FieldType.time, values: [1, 1, 1] },
+          { name: 'instance', type: FieldType.string, values: ['a', 'b', 'c'] },
+          { name: `Value #${refId}`, type: FieldType.number, values: [1, 2, 3] },
+        ],
+      });
+
+    expect(getMultivariateIssue([query('A'), query('B'), query('C')], theme, 'radar')?.message).toBe(
+      'Radar needs 3 or more number fields. Each number field is one axis. To join the queries into one frame, add the Merge transformation.'
+    );
+  });
+
+  // Transpose would make each timestamp an axis.
+  it('does not name Transpose for a time series', () => {
+    const series = toDataFrame({
+      fields: [
+        { name: 'Time', type: FieldType.time, values: [1, 2, 3, 4, 5] },
+        { name: 'Value', type: FieldType.number, values: [1, 2, 3, 4, 5] },
+      ],
+    });
+
+    expect(getMultivariateIssue([series], theme, 'radar')?.message).toBe(
+      MULTIVARIATE_ISSUE_MESSAGES['too-few-axes']('radar', 3, 'add')
+    );
+  });
+
   it('gives the empty issue when all values are null', () => {
     expect(getMultivariateIssue([frame(3, 2, () => null)], theme, 'radar')).toEqual({
       reason: 'all-values-empty',
