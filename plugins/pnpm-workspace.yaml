@@ -8,6 +8,12 @@ allowBuilds:
   esbuild: true
   protobufjs: true
   unrs-resolver: true
+minimumReleaseAgeExclude:
+  # The viz contract (grafana/viz-contract) ships types and JSON only, with no
+  # install scripts. The Renderer takes a new contract version on the day it is
+  # published, so every version skips the release-age wait. The lockfile still
+  # pins the version and its integrity hash.
+  - '@grafana/viz-contract'
 overrides:
   # grafana-clock-panel pins moment to avoid duplicate versions in its
   # bundle; scoped to that package so it doesn't affect other workspace
