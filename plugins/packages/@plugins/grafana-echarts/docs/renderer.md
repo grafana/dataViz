@@ -113,9 +113,7 @@ The contract package has no contract chapters, so it does not give the rule ids.
 
 The Renderer does not obey all of the contract yet.
 
-The rule in `pending` of `contractRules.json` came with contract 1.2.0. The Renderer does not obey it yet, and no test covers it:
-
-- Title (`renderer.17`): the Renderer does not show `panel.title`. The `title` fixture set draws, and its state equals its `state.json`, but there is no title above the chart.
+The `pending` list of `contractRules.json` is empty: each rule that the Renderer owns has a test or a check.
 
 Each of these differences has a test that fails when the difference is fixed:
 

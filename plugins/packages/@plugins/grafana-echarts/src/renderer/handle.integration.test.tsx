@@ -5,7 +5,7 @@ import { getInstanceByDom } from 'lib/echarts/echarts';
 import { withLayout } from 'test/layout';
 import { fixtureSets, fixtureSpec } from 'test/rendererFixtures';
 import { render } from './index';
-import { TOOLBAR_HEIGHT_PX } from './layout';
+import { TITLE_HEIGHT_PX, TOOLBAR_HEIGHT_PX } from './layout';
 
 /** An element with an inline size: the jsdom shim of `jest-setup.js` reads `clientWidth` from the style. */
 function sizedElement(width = 600, height = 300): HTMLElement {
@@ -297,5 +297,60 @@ describe('refresh', () => {
     await userEvent.click(within(el).getByRole('button', { name: /move time range backwards/i }));
     const half = (to - from) / 2;
     expect(onRefresh).toHaveBeenCalledWith({ cause: 'timeRange', from: String(from - half), to: String(to - half) });
+  });
+});
+
+describe('the title', () => {
+  const titleOf = (spec: Record<string, unknown>) => (spec.panel as { title: string }).title;
+  /** The box of the chart: the last child of the root of the Renderer. */
+  const chartBox = (el: HTMLElement) => (el.firstElementChild as HTMLElement).lastElementChild as HTMLElement;
+
+  // contract-rule: renderer.17
+  it('shows panel.title above the chart as text, also when the title has markup', async () => {
+    const spec = fixtureSpec('title');
+    expect(titleOf(spec)).toMatch(/<b>/);
+    const { el } = draw(spec);
+    await waitForState(el, 'ready');
+    const heading = within(el).getByRole('heading', { level: 2 });
+    expect(heading.textContent).toBe(titleOf(spec));
+    expect(heading.querySelector('*')).toBeNull();
+    // The title is before the box of the chart.
+    expect(heading.compareDocumentPosition(chartBox(el)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  // contract-rule: renderer.17
+  it('cuts a wide title with an ellipsis and shows the full title on hover', async () => {
+    const spec = fixtureSpec('title');
+    (spec.panel as { title: string }).title = 'A very long title '.repeat(20);
+    const { el } = draw(spec, {}, sizedElement(200, 300));
+    await waitForState(el, 'ready');
+    const heading = within(el).getByRole('heading', { level: 2 });
+    // jsdom has no layout, so the test checks the styles that cut the text, not its width.
+    expect(heading).toHaveStyle({ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' });
+    expect(heading).toHaveAttribute('title', titleOf(spec));
+  });
+
+  // contract-rule: renderer.17
+  it.each([
+    ['without onRefresh', {}, 300 - TITLE_HEIGHT_PX],
+    ['with onRefresh', { onRefresh: jest.fn() }, 300 - TOOLBAR_HEIGHT_PX - TITLE_HEIGHT_PX],
+  ])('gives the chart the height of el minus the title %s', async (_mode, options: RenderOptions, height) => {
+    const { el } = draw(fixtureSpec('title'), options);
+    await waitForState(el, 'ready');
+    expect((el.firstElementChild as HTMLElement).style.height).toBe('300px');
+    expect(chartBox(el).style.height).toBe(`${height}px`);
+  });
+
+  // contract-rule: renderer.17
+  it.each([
+    ['no panel.title', undefined],
+    ['an empty panel.title', ''],
+  ])('shows no title and gives the chart the full height for %s', async (_name, title) => {
+    const spec = fixtureSpec('title');
+    (spec.panel as { title?: string }).title = title;
+    const { el } = draw(spec);
+    await waitForState(el, 'ready');
+    expect(within(el).queryByRole('heading')).toBeNull();
+    expect(chartBox(el).style.height).toBe('300px');
   });
 });

@@ -10,13 +10,14 @@ import { PanelErrorContext, type PanelErrorSignal } from 'lib/components/panelEr
 import { TimeZoomOutContext } from 'lib/components/TimeZoomOutContext';
 import React, { useEffect, useMemo } from 'react';
 import { dataIssueText } from './dataIssueText';
-import { TOOLBAR_HEIGHT_PX } from './layout';
+import { TITLE_HEIGHT_PX, TOOLBAR_HEIGHT_PX } from './layout';
 import { errorMessage } from './messages';
 import { NoDataView } from './NoDataView';
 import { toChartNotices } from './notices';
 import { type Prepared } from './prepare';
 import { type RefreshStatus } from './refresh';
 import { RendererErrorView } from './RendererErrorView';
+import { RendererTitle } from './RendererTitle';
 import { RendererToolbar } from './RendererToolbar';
 import { rootClassName } from './rootStyles';
 
@@ -42,7 +43,8 @@ const renderDataIssue = (props: PanelDataErrorViewProps) => <RendererErrorView m
 /**
  * What the Renderer shows for a viz spec, with the theme of the spec. The chart is `Panel`, not `plugin.panel`: that
  * adds the tag search and the error view of Grafana (see `lib/components/LazyPanel.tsx`). The notices are a badge in
- * the top-left corner, so they do not cover the notices of the panel in the top-right corner.
+ * the top-left corner, so they do not cover the notices of the panel in the top-right corner. `panel.title` is above
+ * the chart, below the Refresh bar (`renderer.17`).
  * https://github.com/grafana/grafana/blob/main/packages/grafana-ui/src/themes/ThemeContext.tsx
  */
 export const RendererView = ({
@@ -55,7 +57,11 @@ export const RendererView = ({
   onChartInit,
   refresh,
 }: Props) => {
-  const chartHeight = Math.max(0, height - (refresh ? TOOLBAR_HEIGHT_PX : 0));
+  // `renderer.10`, `renderer.17`: the bar, the title and the chart together fill `el`.
+  const chartHeight = Math.max(
+    0,
+    height - (refresh ? TOOLBAR_HEIGHT_PX : 0) - (prepared.title !== undefined ? TITLE_HEIGHT_PX : 0)
+  );
   const rootClass = useMemo(() => rootClassName(prepared.theme), [prepared.theme]);
   useEffect(() => {
     if (prepared.kind !== 'chart') {
@@ -80,6 +86,7 @@ export const RendererView = ({
                     onRequest={refresh.onRequest}
                   />
                 )}
+                {prepared.title !== undefined && <RendererTitle title={prepared.title} />}
                 <div style={{ position: 'relative', width, height: chartHeight }}>
                   {prepared.kind === 'error' && <RendererErrorView message={prepared.error.message} />}
                   {prepared.kind === 'no-data' && (

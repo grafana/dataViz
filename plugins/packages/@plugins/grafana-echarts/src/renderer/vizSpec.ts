@@ -13,6 +13,8 @@ export interface VizSpec {
   specVersion: number;
   panel: {
     type: string;
+    /** `panel.title`, shown above the chart (`renderer.17`). Not set when the spec has no title or an empty one. */
+    title?: string;
     options: Record<string, unknown>;
     fieldConfig: FieldConfigSource;
     /** The refIds of `panel.targets`, in order. Empty when the spec has no targets. */
