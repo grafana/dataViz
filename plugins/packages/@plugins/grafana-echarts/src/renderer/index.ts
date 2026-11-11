@@ -7,7 +7,7 @@ import { LOG_PREFIX } from './log';
 
 declare const __RENDERER_VERSION__: string;
 
-/** The semver of the Renderer: the package version (decision 1 of the plan). */
+/** The semver of the Renderer: the package version, until the Renderer has its own package. */
 export const version: string = __RENDERER_VERSION__;
 
 /** The viz spec versions that the Renderer supports (`delivery.2`, `delivery.3`). */

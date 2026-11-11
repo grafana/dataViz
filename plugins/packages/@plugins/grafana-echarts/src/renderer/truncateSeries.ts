@@ -1,8 +1,8 @@
 // The `series-truncated` cut (`state.10`). The Renderer draws the FIRST `maxSeries` series, in frame order and in
-// field order. It does not pick the series with the largest peak values, as `state.10` says (decision 2 of the plan).
+// field order. It does not pick the series with the largest peak values, as `state.10` says (see `docs/renderer.md`).
 import { type DataFrame, FieldType } from '@grafana/data';
 
-/** The families that raise `series-truncated` (decision 2 of the plan). The other families never cut series. */
+/** The families that raise `series-truncated` (`state.10`). The other families never cut series. */
 export const TRUNCATED_FAMILIES = new Set(['cartesian', 'stream']);
 
 /**

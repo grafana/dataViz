@@ -89,7 +89,7 @@ import { buildHistogramChartOption, buildHistogramLegendItems, getHistogramDataI
 // Cartesian family (Groups 1-2). The x-axis mode follows the data, not the
 // series type: time frames render on a `time` axis, while Numeric frames with no
 // time field render on a `category` axis built from the shared categorical
-// model. See the plan's "axis type should follow data" note.
+// model.
 
 /** The height in pixels of the time axis labels and the grid padding, below and above the value axes. */
 const TIME_X_AXIS_SPACE = 30;

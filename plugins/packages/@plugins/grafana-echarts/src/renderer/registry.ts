@@ -1,5 +1,5 @@
-// Typed access to the registries of the `@grafana/viz-contract` package. Messages and constants come from here only
-// (design decision 2 of the plan). https://github.com/grafana/viz-contract
+// Typed access to the registries of the `@grafana/viz-contract` package. Messages and constants come from here only,
+// so a contract bump is the one place they change. https://github.com/grafana/viz-contract
 import constants from '@grafana/viz-contract/registry/constants.json';
 import panelTypes from '@grafana/viz-contract/registry/panel-types.json';
 

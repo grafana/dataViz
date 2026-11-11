@@ -11,7 +11,7 @@ export const PEER = /^(react|react-dom)(\/.*)?$|^@grafana\/(ui|data)(\/.*)?$|^@e
 /** The output directory. `scripts/renderer-manifest.mjs` has the same path in `DIST_DIR`. */
 export const RENDERER_DIST_DIR = 'dist-renderer';
 
-// Decision 1 of the plan: the Renderer `version` is the package version, until the Renderer has its own package.
+// The Renderer `version` is the package version, until the Renderer has its own package.
 const packageVersion: string = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'package.json'), 'utf8')).version;
 
 const config = (env: { development?: boolean }): Configuration => ({
