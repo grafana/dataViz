@@ -41,10 +41,8 @@ describe('geoNotices', () => {
     ]);
   });
 
-  it('reads a GeoJSON src that is not text as the panel does: not the countries file', () => {
-    expect(geoNotices({ layers: [{ type: 'geojson', name: 'Bad', config: { src: 5 } }] })).toEqual([
-      { code: 'geo-offline-file', message: 'Map layer Bad: 5 is not available offline.' },
-    ]);
+  it('reads a GeoJSON src that is not text as the panel does: the core default, so no notice', () => {
+    expect(geoNotices({ layers: [{ type: 'geojson', name: 'Bad', config: { src: 5 } }] })).toEqual([]);
   });
 
   it('gives geo-offline-file for a lookup gazetteer that is not bundled', () => {
