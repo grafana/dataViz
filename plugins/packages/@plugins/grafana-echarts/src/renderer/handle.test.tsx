@@ -1,17 +1,24 @@
 import { type ChartInitListener } from 'lib/components/chartInitContext';
 import { type PanelErrorSignal } from 'lib/components/panelErrorContext';
 import { act } from '@testing-library/react';
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { fixtureSpec } from 'test/rendererFixtures';
 import { render } from './index';
+import { type Prepared } from './prepare';
 
 /** The props that the handle gives to the view, so that a test can give the signals of a chart. */
-let view: { onPanelError: PanelErrorSignal; onChartInit: ChartInitListener };
+let view: {
+  prepared: Prepared;
+  onCommit: (prepared: Prepared) => void;
+  onPanelError: PanelErrorSignal;
+  onChartInit: ChartInitListener;
+};
 
-/** A view that gives a panel error signal of `null` when it unmounts, as `DataIssueView` does. */
+/** A view that commits its spec, and gives a panel error signal of `null` when it unmounts, as `DataIssueView` does. */
 jest.mock('./RendererView', () => ({
   RendererView: (props: typeof view) => {
     view = props;
+    useLayoutEffect(() => props.onCommit(props.prepared), [props]);
     useEffect(() => () => props.onPanelError(null), [props]);
     return null;
   },
