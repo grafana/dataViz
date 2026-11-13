@@ -12,6 +12,8 @@ export interface LiveForceLayout {
   force?: unknown;
   /** The links of the live option, as `source>target` keys. */
   links?: ReadonlySet<string>;
+  /** True while an animated layout moves the nodes. The positions are then not the final positions. */
+  isLayouting?: boolean;
 }
 
 /**
@@ -67,7 +69,37 @@ export function readLiveForceLayout(chart: EChartsType): LiveForceLayout {
     force: Reflect.get(option, 'force'),
     // https://echarts.apache.org/en/option.html#series-graph.edges
     links: toLinkKeys(Reflect.get(option, 'edges') ?? Reflect.get(option, 'links')),
+    isLayouting: series != null && isForceLayoutRunning(chart, series),
   };
+}
+
+/**
+ * Tell if the graph view still steps an animated layout (`force.layoutAnimation`). The view is not in the public
+ * API, thus each step is checked at run time.
+ * https://github.com/apache/echarts/blob/master/src/chart/graph/GraphView.ts
+ */
+function isForceLayoutRunning(chart: EChartsType, series: object): boolean {
+  const getView: unknown = Reflect.get(chart, 'getViewOfSeriesModel');
+  const view: unknown = typeof getView === 'function' ? getView.call(chart, series) : undefined;
+  return typeof view === 'object' && view !== null && Reflect.get(view, '_layouting') === true;
+}
+
+/** The first series and its node ids when it is a force graph. */
+function getForceGraph(option: EChartBuildOption) {
+  const first = Array.isArray(option.series) ? option.series[0] : option.series;
+  if (first == null || first.type !== 'graph' || first.layout !== 'force' || !Array.isArray(first.data)) {
+    return undefined;
+  }
+  return { series: first, ids: first.data.map(toNodeId) };
+}
+
+/** The id that ECharts gives a node: its `id`, or its `name`. */
+function toNodeId(item: unknown): string | undefined {
+  if (typeof item !== 'object' || item === null || Array.isArray(item) || item instanceof Date) {
+    return undefined;
+  }
+  const id: unknown = Reflect.get(item, 'id') ?? Reflect.get(item, 'name');
+  return id == null ? undefined : String(id);
 }
 
 /** The `source>target` keys of graph links. https://echarts.apache.org/en/option.html#series-graph.links */
@@ -100,57 +132,53 @@ export function readLiveForcePositions(chart: EChartsType): ForcePositions {
 }
 
 /**
- * Prepare a new force graph option to start from the last layout, and tell if it can. If every node has a position
- * and the links and force settings did not change, the layout starts with no friction, so no node moves. Otherwise
- * the layout starts from the last positions with the normal friction, so it settles to the new links or settings.
+ * Prepare a new force graph option to start from the last layout, and tell if it can. If the nodes, the links and
+ * the force settings did not change and the last layout stopped, the layout starts with no friction, so no node
+ * moves. Otherwise the layout starts from the last positions with the normal friction, so it settles to the new
+ * nodes, links or settings, or completes a layout that an animation did not complete.
  * A preview ignores the force settings, because its automatic settings change with the card size and a preview must
  * stay still.
- * A draggable graph keeps its friction: ECharts starts a drag from the start friction, so a low friction stops the
- * linked nodes from following the dragged node.
- * https://echarts.apache.org/en/option.html#series-graph.draggable
  * The positions are not set as node `x` and `y`: ECharts then fits their extent to the plot, so a change of
  * repulsion, edge length or gravity does not change the drawn size.
  */
 export function prepareForceStart(
   option: EChartBuildOption,
-  { positions, force, links }: LiveForceLayout,
+  { positions, force, links, isLayouting = false }: LiveForceLayout,
   { isPreview = false }: { isPreview?: boolean } = {}
 ): boolean {
   if (positions.size === 0) {
     return false;
   }
-  const first = Array.isArray(option.series) ? option.series[0] : option.series;
-  if (first == null || first.type !== 'graph' || first.layout !== 'force' || !Array.isArray(first.data)) {
+  const graph = getForceGraph(option);
+  if (graph == null) {
     return false;
   }
-  const everyNodePlaced = first.data.every((item) => {
-    if (typeof item !== 'object' || item === null || Array.isArray(item) || item instanceof Date) {
-      return false;
-    }
-    const id = item.id ?? item.name;
-    return id != null && positions.has(String(id));
-  });
-  const isSameLayout = isSameLinks(toLinkKeys(first.links), links) && (isPreview || isSameForce(first.force, force));
-  if (everyNodePlaced && first.draggable !== true && isSameLayout) {
-    first.force = { ...first.force, friction: FROZEN_FRICTION };
+  const { series, ids } = graph;
+  // A removed node also changes the layout, so the positions must be the positions of these nodes only.
+  const isSameNodes = ids.length === positions.size && ids.every((id) => id != null && positions.has(id));
+  const isSameLayout = isSameLinks(toLinkKeys(series.links), links) && (isPreview || isSameForce(series.force, force));
+  if (isSameNodes && isSameLayout && !isLayouting) {
+    series.force = { ...series.force, friction: FROZEN_FRICTION };
   }
   return true;
 }
 
 /**
- * Give the last positions to the new graph series model, then run the update that `setOption` with `lazyUpdate`
- * delayed. The force layout of that update starts from the positions. A node without a position starts from a
- * random one. `resize` runs a delayed update at once.
+ * Give the last positions of the nodes of the new option to the new graph series model, then run the update that
+ * `setOption` with `lazyUpdate` delayed. The force layout of that update starts from the positions. A node without
+ * a position starts from a random one. The position of a removed node is not kept, so the positions do not
+ * accumulate when the node ids change with each refresh. `resize` runs a delayed update at once.
  * https://echarts.apache.org/en/api.html#echartsInstance.setOption
  * https://echarts.apache.org/en/api.html#echartsInstance.resize
  */
-export function restoreForcePositions(chart: EChartsType, positions: ForcePositions): void {
+export function restoreForcePositions(chart: EChartsType, option: EChartBuildOption, positions: ForcePositions): void {
   const series = getGraphSeriesModel(chart);
   if (series != null) {
+    const ids = new Set(getForceGraph(option)?.ids);
     Reflect.set(
       series,
       'preservedPoints',
-      Object.fromEntries([...positions].map(([id, point]) => [id, [point[0], point[1]]]))
+      Object.fromEntries([...positions].filter(([id]) => ids.has(id)).map(([id, point]) => [id, [point[0], point[1]]]))
     );
   }
   chart.resize({ width: chart.getWidth(), height: chart.getHeight() });

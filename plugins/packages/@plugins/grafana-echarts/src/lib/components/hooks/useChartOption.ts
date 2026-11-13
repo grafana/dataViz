@@ -199,7 +199,7 @@ export function useChartOption(
     // `lazyUpdate` delays the layout until the positions are on the new series model.
     chart.setOption(option, keepForceLayout ? { notMerge: true, lazyUpdate: true } : { notMerge: true });
     if (keepForceLayout) {
-      restoreForcePositions(chart, forceLayout.positions);
+      restoreForcePositions(chart, option, forceLayout.positions);
     }
     applyForceLayoutHoverFade(chart, option);
 

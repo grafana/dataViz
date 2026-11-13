@@ -11,8 +11,9 @@ const NODE_IDS = ['a', 'b', 'c', 'd', 'e', 'f'];
 
 function forceOption(
   repulsion = 200,
-  draggable = false,
-  extraLinks: GraphSeriesOption['links'] = []
+  extraLinks: GraphSeriesOption['links'] = [],
+  layoutAnimation = false,
+  ids = NODE_IDS
 ): {
   series: GraphSeriesOption[];
 } {
@@ -22,10 +23,9 @@ function forceOption(
         type: 'graph',
         layout: 'force',
         animation: false,
-        draggable,
-        force: { initLayout: 'none', layoutAnimation: false, repulsion, edgeLength: 60, gravity: 0.2, friction: 0.2 },
-        data: NODE_IDS.map((id) => ({ id, name: id })),
-        links: [...NODE_IDS.slice(1).map((target) => ({ source: 'a', target })), ...extraLinks],
+        force: { initLayout: 'none', layoutAnimation, repulsion, edgeLength: 60, gravity: 0.2, friction: 0.2 },
+        data: ids.map((id) => ({ id, name: id })),
+        links: [...ids.slice(1).map((target) => ({ source: ids[0], target })), ...extraLinks],
       },
     ],
   };
@@ -41,7 +41,7 @@ function rebuild(chart: EChartsType, option: { series: GraphSeriesOption[] }) {
   const keep = prepareForceStart(option, live);
   chart.setOption(option, keep ? { notMerge: true, lazyUpdate: true } : { notMerge: true });
   if (keep) {
-    restoreForcePositions(chart, live.positions);
+    restoreForcePositions(chart, option, live.positions);
   }
 }
 
@@ -70,35 +70,14 @@ function drawnSpread(chart: EChartsType): number {
   return points.reduce((sum, p) => sum + Math.hypot(p[0] - cx, p[1] - cy), 0) / points.length;
 }
 
-interface ForceInstance {
-  warmUp(): void;
-  setFixed(index: number): void;
-  step(callback: (stopped: boolean) => void): void;
-}
-
-/**
- * Drag the first node 100 pixels to the right, then return how far the second node moved in pixels. This makes the
- * calls of the drag handler of the ECharts graph view, because a ZRender pointer drag does not move a node in jsdom.
- * The force instance is not in the public API.
- * https://github.com/apache/echarts/blob/master/src/chart/graph/GraphView.ts
- */
-function dragFirstNode(chart: EChartsType): number {
-  const series = Reflect.get(chart, 'getModel').call(chart).getSeriesByIndex(0);
-  const force: ForceInstance = series.forceLayout;
-  const data = series.getData();
-  const [x, y]: number[] = data.getItemLayout(0);
-  const before = drawnPositions(chart).get(NODE_IDS[1]) ?? [NaN, NaN];
-  force.warmUp();
-  force.setFixed(0);
-  data.setItemLayout(0, [x + 100, y]);
-  let stopped = false;
-  for (let step = 0; step < 1000 && !stopped; step++) {
-    force.step((done) => {
-      stopped = done;
-    });
+/** The sum of the distances in pixels that the nodes moved. */
+function totalMove(before: Map<string, number[]>, after: Map<string, number[]>): number {
+  let sum = 0;
+  for (const [id, [x0, y0]] of before) {
+    const [x1, y1] = after.get(id) ?? [NaN, NaN];
+    sum += Math.hypot(x1 - x0, y1 - y0);
   }
-  const after = drawnPositions(chart).get(NODE_IDS[1]) ?? [NaN, NaN];
-  return Math.hypot(after[0] - before[0], after[1] - before[1]);
+  return sum;
 }
 
 describe('force layout across a notMerge rebuild', () => {
@@ -136,19 +115,37 @@ describe('force layout across a notMerge rebuild', () => {
     chart.dispose();
   });
 
-  it('moves the linked nodes on a drag after a rebuild with the same option', () => {
-    const fresh = createChart();
-    rebuild(fresh, forceOption(200, true));
-    const freshMove = dragFirstNode(fresh);
+  it('completes an animated layout after a rebuild during the animation', () => {
+    jest.useFakeTimers();
+    try {
+      const chart = createChart();
+      rebuild(chart, forceOption(200, [], true));
+      // The animation makes one step each 16 ms, so the layout is at its start.
+      jest.advanceTimersByTime(100);
+      const early = drawnPositions(chart);
 
+      rebuild(chart, forceOption(200, [], true));
+      jest.advanceTimersByTime(20000);
+
+      expect(totalMove(early, drawnPositions(chart))).toBeGreaterThan(10);
+      // The layout stopped, so the subsequent rebuild moves no node.
+      const settled = drawnPositions(chart);
+      rebuild(chart, forceOption(200, [], true));
+      jest.advanceTimersByTime(20000);
+      expect(totalMove(settled, drawnPositions(chart))).toBeLessThan(0.5);
+      chart.dispose();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('does not keep the position of a removed node', () => {
     const chart = createChart();
-    rebuild(chart, forceOption(200, true));
-    rebuild(chart, forceOption(200, true));
-    const keptMove = dragFirstNode(chart);
-
-    expect(freshMove).toBeGreaterThan(5);
-    expect(keptMove).toBeGreaterThan(5);
-    fresh.dispose();
+    for (let round = 0; round < 5; round++) {
+      const ids = ['a', ...NODE_IDS.slice(1).map((id) => `${id}-${round}`)];
+      rebuild(chart, forceOption(200, [], false, ids));
+      expect([...readLiveForcePositions(chart).keys()].sort()).toEqual([...ids].sort());
+    }
     chart.dispose();
   });
 
@@ -162,7 +159,7 @@ describe('force layout across a notMerge rebuild', () => {
       .reduce((far, pair) => (drawnDistance(chart, ...pair) > drawnDistance(chart, ...far) ? pair : far));
     const apart = drawnDistance(chart, from, to);
 
-    rebuild(chart, forceOption(200, false, [{ source: from, target: to }]));
+    rebuild(chart, forceOption(200, [{ source: from, target: to }]));
 
     expect(drawnDistance(chart, from, to)).toBeLessThan(apart * 0.8);
     chart.dispose();

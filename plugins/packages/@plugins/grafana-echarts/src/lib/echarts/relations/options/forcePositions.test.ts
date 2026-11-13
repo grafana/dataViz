@@ -44,10 +44,16 @@ describe('prepareForceStart', () => {
     expect(option.series[0].force?.friction).toBe(0.2);
   });
 
-  it('keeps the friction of a draggable graph, so a drag still moves the linked nodes', () => {
+  it('keeps the friction when a node was removed', () => {
     const option = forceOption(['a', 'b']);
-    option.series[0].draggable = true;
-    expect(prepareForceStart(option, { positions: placed(['a', 'b']), force, links: linkKeys })).toBe(true);
+    expect(prepareForceStart(option, { positions: placed(['a', 'b', 'gone']), force, links: linkKeys })).toBe(true);
+    expect(option.series[0].force?.friction).toBe(0.2);
+  });
+
+  it('keeps the friction while an animated layout moves the nodes, so the layout completes', () => {
+    const option = forceOption(['a', 'b']);
+    const live = { positions: placed(['a', 'b']), force, links: linkKeys, isLayouting: true };
+    expect(prepareForceStart(option, live)).toBe(true);
     expect(option.series[0].force?.friction).toBe(0.2);
   });
 
