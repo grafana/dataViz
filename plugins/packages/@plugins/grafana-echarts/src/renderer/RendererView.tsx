@@ -8,7 +8,8 @@ import { Panel } from 'lib/components/Panel';
 import { PanelDataErrorViewContext } from 'lib/components/panelDataErrorViewContext';
 import { PanelErrorContext, type PanelErrorSignal } from 'lib/components/panelErrorContext';
 import { TimeZoomOutContext } from 'lib/components/TimeZoomOutContext';
-import React, { useEffect, useLayoutEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
+import { CommitSignal } from './CommitSignal';
 import { dataIssueText } from './dataIssueText';
 import { TITLE_HEIGHT_PX, TOOLBAR_HEIGHT_PX } from './layout';
 import { errorMessage } from './messages';
@@ -27,7 +28,7 @@ interface Props {
   height: number;
   /** Called after a view with no chart (an error, no data) is on screen. */
   onViewShown: () => void;
-  /** Called when React commits the view of `prepared`, before the chart draws it. */
+  /** Called in the effects of the commit that shows `prepared`, immediately before the chart draws it. */
   onCommit: (prepared: Prepared) => void;
   /** The panel shows its own error view (`message`), or the view goes (`null`). */
   onPanelError: PanelErrorSignal;
@@ -66,9 +67,6 @@ export const RendererView = ({
     height - (refresh ? TOOLBAR_HEIGHT_PX : 0) - (prepared.title !== undefined ? TITLE_HEIGHT_PX : 0)
   );
   const rootClass = useMemo(() => rootClassName(prepared.theme), [prepared.theme]);
-  // A layout effect: it runs before the passive effect of the chart that calls `setOption`.
-  // https://react.dev/reference/react/useLayoutEffect
-  useLayoutEffect(() => onCommit(prepared), [prepared, onCommit]);
   useEffect(() => {
     if (prepared.kind !== 'chart') {
       onViewShown();
@@ -83,6 +81,8 @@ export const RendererView = ({
         <TimeZoomOutContext.Provider value={null}>
           <PanelErrorContext.Provider value={onPanelError}>
             <PanelDataErrorViewContext.Provider value={renderDataIssue}>
+              {/* Before the chart, so its effect runs before the effect of the chart. */}
+              <CommitSignal prepared={prepared} onCommit={onCommit} />
               <div className={rootClass} style={{ width, height }}>
                 {refresh && (
                   <RendererToolbar
