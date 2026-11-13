@@ -10,7 +10,7 @@ The module has three exports. Their types are in `renderer-api.d.ts` of the cont
 
 | Export                      | Value                                                                                    |
 | --------------------------- | ---------------------------------------------------------------------------------------- |
-| `version`                   | The semver of the Renderer. It is the `version` of the package `package.json`.           |
+| `version`                   | The semver of the Renderer, from `src/renderer/version.txt`. A release PR changes it.    |
 | `specVersions`              | The viz spec versions that the Renderer supports, from `src/renderer/specVersions.json`. |
 | `render(el, spec, options)` | Draws `spec` into `el` and returns a handle at once.                                     |
 
@@ -34,8 +34,20 @@ The build writes a `package.json` next to the bundle. Its `peerDependencies` lis
 
 Run these commands in `plugins/packages/@plugins/grafana-echarts`. Install the workspace first with `pnpm install` in `plugins/`.
 
-1. Run `pnpm run build:renderer`. Webpack writes `dist-renderer/renderer.js`, then `scripts/renderer-manifest.mjs` writes `renderer.manifest.json` and `package.json` next to it, and `scripts/renderer-icons.mjs` writes `icons.json`.
+1. Run `pnpm run build:renderer`. Webpack writes `dist-renderer/renderer.js` and `renderer.js.LICENSE.txt`. Then `scripts/renderer-manifest.mjs` writes `renderer.manifest.json` and `package.json` next to them, and copies `renderer.d.ts` and `LICENSE`. Last, `scripts/renderer-icons.mjs` writes `icons.json`.
 2. Run `pnpm run check:renderer`. The script builds the bundle again with webpack stats, and then makes sure that the bundle and the manifest obey the contract.
+
+`dist-renderer/` has the seven files of a release, and no other file. A consumer needs no file from another place.
+
+| File                      | Content                                                                             |
+| ------------------------- | ----------------------------------------------------------------------------------- |
+| `renderer.js`             | The bundle.                                                                         |
+| `renderer.js.LICENSE.txt` | The license comments of the bundled packages. Webpack moves them out of the bundle. |
+| `renderer.manifest.json`  | The manifest.                                                                       |
+| `package.json`            | The `peerDependencies` and the version.                                             |
+| `icons.json`              | The SVG of each icon. See Icons.                                                    |
+| `renderer.d.ts`           | The types of the module: a copy of `renderer-api.d.ts` of the installed contract.   |
+| `LICENSE`                 | The license of this package.                                                        |
 
 The bundle is one file with no chunks, because the sandbox iframe cannot load a second file. `webpack.renderer.config.ts` is the webpack configuration. It does not extend `.config/webpack`, because that configuration makes an AMD plugin bundle.
 
@@ -46,6 +58,8 @@ The manifest has `version`, `sha256` (the hash of `renderer.js`), `contractVersi
 - Each bare import is a peer, and the bundle has no copy of a peer.
 - The bundle has no `eval` and no dynamic `import()`.
 - The bundle has only the four known `@grafana/runtime` modules.
+- `dist-renderer/` has each release file and no other file. `renderer.d.ts` and `LICENSE` are equal to their sources.
+- If the environment variable `EXPECT_VERSION` is set, the manifest `version` is equal to it. The release workflow sets it to the version of the tag.
 
 The script also reports the gzip size of the bundle. The contract constant `maxBundleGzipBytes` has no value yet, so the size does not fail the check. If the constant gets a value, the check fails when the bundle is larger. Use `node scripts/check-renderer-bundle.mjs --no-build` to check the files that are in `dist-renderer/` now. That mode skips the two checks that need the webpack stats.
 
@@ -68,6 +82,38 @@ To add an icon:
 3. Run `pnpm run test:renderer-sandbox`.
 
 `check:renderer` makes sure that `icons.json` has the key and value shape of the contract (`delivery.9`). It also reports the gzip size of `icons.json` (`delivery.11`). The size never fails the check, and `maxBundleGzipBytes` does not include it.
+
+## Releases
+
+The `Release Please` workflow of the repository releases the Renderer as `grafana-echarts-renderer`. A release PR changes `src/renderer/version.txt` and `src/renderer/CHANGELOG.md`. When a maintainer merges it, the workflow makes the tag `grafana-echarts-renderer/v<version>` and a draft GitHub release. Then it runs `check:renderer` at the tag, and attaches the seven files of `dist-renderer/` to the release. `.github/actions/RELEASES.md` gives the design, and tells which commits open a release.
+
+Do not change `version.txt` by hand. If a release must have a specified version, add a `Release-As: x.y.z` footer to a commit.
+
+The release notes name each peer range that changed since the last release.
+
+### Use a release
+
+A consumer downloads a release with the GitHub CLI (`gh`). A draft release is visible only with write access, so a maintainer must publish the release first.
+
+1. Download the files of the release into the `renderer` directory:
+
+   ```bash
+   gh release download grafana-echarts-renderer/v0.1.0 --repo grafana/dataViz --dir renderer
+   ```
+
+2. Make sure that the release workflow of this repository built `renderer.js`. The command checks the provenance attestation of the file, which is a signed record of the workflow run that built it:
+
+   ```bash
+   gh attestation verify renderer/renderer.js --repo grafana/dataViz --signer-workflow grafana/dataViz/.github/workflows/release-please.yml
+   ```
+
+3. Make sure that the hash of `renderer.js` is the `sha256` of the manifest:
+
+   ```bash
+   test "$(shasum -a 256 renderer/renderer.js | cut -d' ' -f1)" = "$(jq -r .sha256 renderer/renderer.manifest.json)"
+   ```
+
+Each release file has an attestation, so step 2 works for each of them.
 
 ## Tests
 

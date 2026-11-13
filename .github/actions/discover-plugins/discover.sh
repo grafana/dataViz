@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Prints the CI view of every plugin package under <root> as one compact JSON
 # object:
-#   {"targets": [{dir, pkg, id, script, plugin_json}],
-#    "e2e":     [{dir, pkg, url, grafana_dependency, id, script, plugin_json, compose}]}
+#   {"targets":   [{dir, pkg, id, script, plugin_json}],
+#    "e2e":       [{dir, pkg, url, grafana_dependency, id, script, plugin_json, compose}],
+#    "artifacts": [{dir, pkg, id, script, dist, package_json}]}
 #
 # targets: what each package publishes. A package declares them in
 # plugin-ci.json `targets`; without that it has one implicit target, its
@@ -16,7 +17,15 @@
 # `e2e.compose` names the compose file. `id` is that target's id, or empty for
 # the default. `url` is `e2e.url`, default http://127.0.0.1:3000.
 #
-# With <base-sha>, both lists keep only packages with a file changed since
+# artifacts: what a package releases that is not a plugin (plugin-ci.json
+# `releases`), such as the Renderer of grafana-echarts. `script` builds and
+# checks it into the package's `dist` directory, and every file there is a
+# release asset. `package_json` (optional `packageJson`) is the checked-in
+# source of the built <dist>/package.json; the release notes name the peer
+# ranges that changed since the last release. Only release-please.yml reads
+# this list.
+#
+# With <base-sha>, the lists keep only packages with a file changed since
 # that commit, unless a shared file changed, in which case nothing is filtered.
 # Shared means any path under plugins/ but outside <root> (lockfile, .shared/,
 # turbo.json, ...), or one of shared_paths below.
@@ -49,6 +58,7 @@ ${SHARED_PATHS:-}"
 
 targets='[]'
 e2e='[]'
+artifacts='[]'
 failed=0
 
 # escape_message / escape_property: values from a PR's plugin-ci.json or
@@ -158,6 +168,62 @@ for pkg_json in "$root"/*/package.json; do
 			'. + [{dir: $dir, pkg: $pkg, id: $id, script: $script, plugin_json: $pj}]' <<<"$targets")"
 	done
 
+	if jq -e 'has("releases")' <<<"$config" >/dev/null; then
+		declared_releases="$(jq -c '.releases' <<<"$config")"
+		if ! jq -e 'type == "array" and length > 0' <<<"$declared_releases" >/dev/null; then
+			error "$manifest" "releases must be a non-empty array"
+			declared_releases='[]'
+		fi
+		count="$(jq 'length' <<<"$declared_releases")"
+		for ((i = 0; i < count; i++)); do
+			if [ "$(jq -r ".[$i] | type" <<<"$declared_releases")" != object ]; then
+				error "$manifest" "releases[$i] must be an object with id, script and dist"
+				continue
+			fi
+			unknown="$(jq -r ".[$i] | keys - [\"id\", \"script\", \"dist\", \"packageJson\"] | join(\", \")" <<<"$declared_releases")"
+			id="$(jq -r ".[$i].id // \"\" | tostring" <<<"$declared_releases")"
+			script="$(jq -r ".[$i].script // \"\" | tostring" <<<"$declared_releases")"
+			dist="$(jq -r ".[$i].dist // \"\" | tostring" <<<"$declared_releases")"
+			package_json="$(jq -r ".[$i].packageJson // \"\" | tostring" <<<"$declared_releases")"
+
+			if [[ ! "$id" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+				error "$manifest" "release id '$id' must match ^[a-z0-9][a-z0-9-]*\$"
+				continue
+			fi
+			if [ -n "$unknown" ]; then
+				error "$manifest" "release $id: unknown key $unknown (known: id, script, dist, packageJson)"
+				continue
+			fi
+			# As for a target: a missing script would build nothing and pass.
+			if ! jq -e --arg s "$script" '(.scripts // {}) | has($s)' "$pkg_json" >/dev/null; then
+				error "$manifest" "release $id: script '$script' is not in $pkg_json"
+				continue
+			fi
+			# Uploaded from the package directory: a plain relative path, no `..`.
+			if [[ ! "$dist" =~ ^[A-Za-z0-9_][A-Za-z0-9._/-]*$ || "$dist" =~ (^|/)\.\.(/|$) ]]; then
+				error "$manifest" "release $id: dist must be a relative path to a directory in the package, like dist-renderer"
+				continue
+			fi
+			if [ -n "$package_json" ]; then
+				if [[ ! "$package_json" =~ ^[A-Za-z0-9_][A-Za-z0-9._/-]*$ || "$package_json" =~ (^|/)\.\.(/|$) ]]; then
+					error "$manifest" "release $id: packageJson must be a relative path to a file in the package"
+					continue
+				fi
+				if [ ! -f "$dir/$package_json" ]; then
+					error "$manifest" "release $id: packageJson '$package_json' does not exist"
+					continue
+				fi
+			fi
+			if jq -e --arg id "$id" 'any(.[]; .id == $id)' <<<"$artifacts" >/dev/null; then
+				error "$manifest" "release id $id is declared more than once"
+				continue
+			fi
+
+			artifacts="$(jq -c --arg dir "$dir" --arg pkg "$pkg" --arg id "$id" --arg script "$script" --arg dist "$dist" --arg pj "$package_json" \
+				'. + [{dir: $dir, pkg: $pkg, id: $id, script: $script, dist: $dist, package_json: $pj}]' <<<"$artifacts")"
+		done
+	fi
+
 	has_script="$(jq -r '(.scripts // {}) | has("e2e")' "$pkg_json")"
 	has_config=false
 	if [ -f "$dir/playwright.config.ts" ]; then
@@ -196,6 +262,14 @@ for pkg_json in "$root"/*/package.json; do
 		error "$pkg_json" "has an e2e script but no playwright.config.ts"
 	elif [ "$has_config" = true ]; then
 		error "$dir/playwright.config.ts" "exists but $pkg_json has no e2e script"
+	fi
+done
+
+# After every package, so the order of the packages does not matter: a release
+# tag is <id>/v<version>, so a release and a plugin with one id would share tags.
+for id in $(jq -r '.[].id' <<<"$artifacts"); do
+	if jq -e --arg id "$id" 'any(.[]; .id == $id)' <<<"$targets" >/dev/null; then
+		error "$(jq -r --arg id "$id" 'map(select(.id == $id)) | first | .dir' <<<"$artifacts")/plugin-ci.json" "release id $id is also the id of a plugin target"
 	fi
 done
 
@@ -245,10 +319,11 @@ if [ -n "$base" ]; then
 			keep='map(select(.dir | IN($dirs[])))'
 			targets="$(jq -c --argjson dirs "$changed_dirs" "$keep" <<<"$targets")"
 			e2e="$(jq -c --argjson dirs "$changed_dirs" "$keep" <<<"$e2e")"
+			artifacts="$(jq -c --argjson dirs "$changed_dirs" "$keep" <<<"$artifacts")"
 		fi
 	else
 		echo "::warning::cannot diff against $base, so every package is selected" >&2
 	fi
 fi
 
-jq -nc --argjson t "$targets" --argjson e "$e2e" '{targets: $t, e2e: $e}'
+jq -nc --argjson t "$targets" --argjson e "$e2e" --argjson a "$artifacts" '{targets: $t, e2e: $e, artifacts: $a}'

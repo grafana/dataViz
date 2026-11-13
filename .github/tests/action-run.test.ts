@@ -6,17 +6,17 @@ import { join } from 'node:path';
 import { describe, test, type TestContext } from 'node:test';
 import { ACTION_RUN, bash, outputFile, readOutputs, tempDir, writeText } from './helpers.ts';
 
-function runEntryPoint(t: TestContext, env: Record<string, string>): { args: string[]; e2e: string } {
+function runEntryPoint(t: TestContext, env: Record<string, string>): { args: string[]; e2e: string; artifacts: string } {
 	const stubDir = tempDir(t);
 	// Echoes its arguments back as `targets`, so the test can see what was passed.
-	writeText(join(stubDir, 'discover.sh'), `jq -nc '{targets: $ARGS.positional, e2e: []}' --args "$@"\n`);
+	writeText(join(stubDir, 'discover.sh'), `jq -nc '{targets: $ARGS.positional, e2e: [], artifacts: [{id: "x"}]}' --args "$@"\n`);
 	const output = outputFile(t);
 	const entryPoint = bash(ACTION_RUN, [], {
 		env: { ROOT: 'plugins/packages/@plugins', CHANGED_ONLY: 'false', PR_BASE: '', PUSH_BEFORE: '', ACTION_PATH: stubDir, GITHUB_OUTPUT: output, ...env },
 	});
 	assert.equal(entryPoint.status, 0, entryPoint.stderr);
 	const outputs = readOutputs(output);
-	return { args: JSON.parse(outputs.targets), e2e: outputs.e2e };
+	return { args: JSON.parse(outputs.targets), e2e: outputs.e2e, artifacts: outputs.artifacts };
 }
 
 describe('discover-plugins/run.sh', () => {
@@ -38,7 +38,9 @@ describe('discover-plugins/run.sh', () => {
 		}
 	});
 
-	test('writes targets and e2e as compact single-line outputs', (t) => {
-		assert.equal(runEntryPoint(t, {}).e2e, '[]');
+	test('writes targets, e2e and artifacts as compact single-line outputs', (t) => {
+		const outputs = runEntryPoint(t, {});
+		assert.equal(outputs.e2e, '[]');
+		assert.equal(outputs.artifacts, '[{"id":"x"}]');
 	});
 });

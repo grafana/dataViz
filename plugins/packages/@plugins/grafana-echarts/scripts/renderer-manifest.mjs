@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-// Writes the manifest (`delivery.2`) and copies `src/renderer/renderer.package.json` (`renderer.9`), with the package
-// version, next to the Renderer bundle.
+// Writes the manifest (`delivery.2`) and copies `src/renderer/renderer.package.json` (`renderer.9`), with the Renderer
+// version, next to the Renderer bundle. It also copies the license and the types of the contract, so `dist-renderer/`
+// has each file of a release.
 // Run it after the bundle build: `pnpm run build:renderer` runs both. See docs/renderer.md.
 import { createHash } from 'node:crypto';
-import { readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { copyFileSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -21,10 +22,48 @@ export const BUNDLE_FILE = 'renderer.js';
 export const MANIFEST_FILE = 'renderer.manifest.json';
 /** The SVG of each icon, for the icon cache of the App (`delivery.9`). `renderer-icons.mjs` writes it. */
 export const ICONS_FILE = 'icons.json';
+/** The types of the module: a copy of `renderer-api.d.ts` of the installed contract. */
+export const TYPES_FILE = 'renderer.d.ts';
+export const TYPES_SOURCE = join(CONTRACT_DIR, 'renderer-api.d.ts');
+export const LICENSE_FILE = 'LICENSE';
+export const LICENSE_SOURCE = join(PACKAGE_DIR, LICENSE_FILE);
+
+/** The files of a release: all of `dist-renderer/`. A consumer needs no file from another place. */
+export const RELEASE_FILES = [
+  BUNDLE_FILE,
+  // The license comments of the bundled packages. Webpack moves them out of the bundle into this file.
+  // https://webpack.js.org/plugins/terser-webpack-plugin/#extractcomments
+  `${BUNDLE_FILE}.LICENSE.txt`,
+  MANIFEST_FILE,
+  'package.json',
+  ICONS_FILE,
+  TYPES_FILE,
+  LICENSE_FILE,
+];
+
+/**
+ * The version of the Renderer. release-please writes this file in a release PR, with a newline at the end
+ * (`.github/actions/RELEASES.md`). The webpack configuration, `jest-setup.js` and `index.test.ts` read it too.
+ */
+export const VERSION_FILE = join(PACKAGE_DIR, 'src/renderer/version.txt');
+export function readVersion(text = readFileSync(VERSION_FILE, 'utf8')) {
+  const version = text.trim();
+  if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/.test(version)) {
+    throw new Error(`src/renderer/version.txt: ${JSON.stringify(version)} is not a version`);
+  }
+  return version;
+}
+
+/** The names that are missing from a list of the files in `dist-renderer/`, and the names that a release does not have. */
+export function releaseFileProblems(names) {
+  const missing = RELEASE_FILES.filter((name) => !names.includes(name));
+  const extra = names.filter((name) => !RELEASE_FILES.includes(name));
+  return [...missing.map((name) => `${name} is missing`), ...extra.map((name) => `${name} is not a release file`)];
+}
 
 /**
  * The checked-in `package.json` of the Renderer, without `version`. The build copies it next to the bundle and adds
- * the version of the package `package.json` (decision 1 of the plan).
+ * the version of `src/renderer/version.txt`.
  */
 export const PACKAGE_TEMPLATE = join(PACKAGE_DIR, 'src/renderer/renderer.package.json');
 export const readTemplate = () => readJson(PACKAGE_TEMPLATE);
@@ -50,8 +89,8 @@ export function expectedValues() {
     })
   );
   return {
-    // Decision 1 of the plan: the Renderer version is the package version (`__RENDERER_VERSION__`).
-    version: pkg.version,
+    // The same file as `__RENDERER_VERSION__` of the bundle, so the manifest and the `version` export agree.
+    version: readVersion(),
     contractVersion: readJson(join(CONTRACT_DIR, 'package.json')).version,
     // `parseSpec.ts` reads the same file, so the manifest and the `specVersions` export agree.
     specVersions: readJson(join(PACKAGE_DIR, 'src/renderer/specVersions.json')),
@@ -69,7 +108,7 @@ export function expectedValues() {
 export function templateProblems(template = readTemplate(), expected = expectedValues()) {
   const problems = [];
   if (Object.hasOwn(template, 'version')) {
-    problems.push('version: remove it, because the build adds the package version');
+    problems.push('version: remove it, because the build adds the version of src/renderer/version.txt');
   }
   if (template.private !== true) {
     problems.push(`private: must be true, not ${JSON.stringify(template.private)}`);
@@ -93,7 +132,10 @@ export function templateProblems(template = readTemplate(), expected = expectedV
   return problems;
 }
 
-/** Writes both files and returns them. It throws when the template differs from its sources. */
+/**
+ * Writes the manifest and the `package.json`, copies the types and the license, and returns the two written objects.
+ * It throws when the template differs from its sources.
+ */
 export function writeRendererPackage() {
   const expected = expectedValues();
   const template = readTemplate();
@@ -108,6 +150,8 @@ export function writeRendererPackage() {
   const packageJson = { name, version, ...rest };
   writeFileSync(join(DIST_DIR, MANIFEST_FILE), `${JSON.stringify(manifest, null, 2)}\n`);
   writeFileSync(join(DIST_DIR, 'package.json'), `${JSON.stringify(packageJson, null, 2)}\n`);
+  copyFileSync(TYPES_SOURCE, join(DIST_DIR, TYPES_FILE));
+  copyFileSync(LICENSE_SOURCE, join(DIST_DIR, LICENSE_FILE));
   return { manifest, packageJson };
 }
 

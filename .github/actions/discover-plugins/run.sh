@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The action's entry point: picks the base commit for `changed-only`, runs
-# discover.sh, and writes its two lists to $GITHUB_OUTPUT as `targets` and
-# `e2e`.
+# discover.sh, and writes its lists to $GITHUB_OUTPUT as `targets`, `e2e` and
+# `artifacts`.
 #
 # Env: ROOT, CHANGED_ONLY ('true' to filter), PR_BASE
 # (github.event.pull_request.base.sha), PUSH_BEFORE (github.event.before),
@@ -24,4 +24,5 @@ jq . <<<"$result"
 {
 	echo "targets=$(jq -c '.targets' <<<"$result")"
 	echo "e2e=$(jq -c '.e2e' <<<"$result")"
+	echo "artifacts=$(jq -c '.artifacts // []' <<<"$result")"
 } >>"$GITHUB_OUTPUT"

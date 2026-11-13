@@ -1,8 +1,8 @@
 # Plugin releases
 
 **Status: implemented, not yet run.** `release-please.yml` runs on pushes to `main`; it needs the
-prerequisites at the end of this file before its first real run. Only `grafana-relations-panel` is
-configured so far.
+prerequisites at the end of this file before its first real run. `grafana-relations-panel` and the Renderer
+(`grafana-echarts-renderer`, see [The Renderer](#the-renderer)) are configured so far.
 
 A release is a **GitHub release** with the signed plugin zip attached. A `grafana-relations-panel` release is
 also **published to the dev and ops catalogs and deployed** to every dev and ops stack, by the `publish` job of
@@ -67,13 +67,64 @@ into local actions with the same interface plus only what the monorepo needs, so
 
 It also reuses this repo's `discover-plugins`, `setup-workspace` and `scripts/build-target.sh`, which checks
 that the built `plugin.json` carries the tagged version. `scripts/release-matrix.sh` matches each released
-package to its build target: a package's `component` in `release-please-config.json` is its plugin id. The
+package to its build target: a package's `component` in `release-please-config.json` is its plugin id (or
+the id of a `plugin-ci.json` release, for the Renderer). The
 draft release and its notes come from release-please. Attaching the zip uses `softprops/action-gh-release`,
 as `cd.yml`'s GitHub release job does; it keeps release-please's notes and the draft state.
 
 **Adding a plugin:** a package entry in `release-please-config.json` (`release-type: node`, `component` = the
 plugin id), its current version in `.release-please-manifest.json`, and a `CHANGELOG.md` next to its
-`package.json`.
+`package.json`. If the new plugin is a new package directory, also add that directory to the `exclude-paths` of
+the Renderer package (`.`). Without it, each `feat` and `fix` of the new plugin opens a Renderer release.
+
+## The Renderer
+
+The Renderer of `grafana-echarts` (`docs/renderer.md` in that package) is an ES module, not a plugin. It is
+released as `grafana-echarts-renderer`, with tags like `grafana-echarts-renderer/v0.1.0`, so that
+grafana/mcp-grafana can pin a version and download it. The release assets are the files of `dist-renderer/`.
+The release is not signed, not zipped and not validated as a plugin, and it is not published to a catalog.
+
+**Version.** `src/renderer/version.txt` holds the version. release-please writes it in the release PR
+(`release-type: simple`), and the build puts it in the bundle, the manifest and the built `package.json`.
+The changelog is `src/renderer/CHANGELOG.md`.
+
+**Which commits count.** The Renderer bundles `src/renderer`, `src/lib` and every module in `src/modules`,
+and it changes with the lockfile. One package directory cannot cover all of that (see the shared code
+caveat above). So its release-please package is the repo root, `.`, which gets every commit, and
+`exclude-paths` removes the directories that cannot change the bundle. This has two results:
+
+- A change in `src/lib` or in `src/modules/relations` counts for the Renderer with no extra file to touch.
+- A commit is removed only when all its files are in excluded directories. A `feat` or `fix` of an excluded
+  package that also changes a file outside the list, for example `plugins/pnpm-lock.yaml` for a new
+  dependency, still opens a Renderer release. That release has a bundle that differs only in its version.
+  This is accepted, because a missed release is worse than an extra one.
+
+`exclude-paths` entries are directories, relative to the repo root. A file cannot be excluded.
+`bump-minor-pre-major` is set, so before `1.0.0` a breaking change in any package that counts bumps the minor version, not the major one.
+
+**Build.** The package declares the release in its `plugin-ci.json` (`releases`, see the Plugin CI section of
+[README.md](README.md)). The `build-artifact` job runs its `script`, `check:renderer`, at the tagged commit
+with `EXPECT_VERSION` set to the tag version. The script builds the bundle and fails if the manifest has
+another version, or if `dist-renderer/` does not have exactly the release files. The job then attests the
+provenance of each file, and the `attach` job uploads them to the draft release.
+
+**Root outputs.** release-please-action gives the outputs of the root package with no path prefix
+(`tag_name`, `sha`, `version`), and the outputs of every other package as `<path>--tag_name`.
+`scripts/release-matrix.sh` reads both forms, and fails if a released package has no tag.
+
+**Peer ranges.** The App gives the peer packages, so a changed range can break a consumer.
+`scripts/peer-range-notes.sh` compares the `peerDependencies` of the build with those of the previous
+Renderer tag, and the `attach` job appends each changed range to the release notes. The first release lists
+every peer. If the `attach` job runs again, it appends the note again: remove the copy from the draft.
+
+**Baseline tag.** release-please finds the previous release of a package by its tag. With no
+`grafana-echarts-renderer/v*` tag, the first release notes list every `feat` and `fix` since `bootstrap-sha`.
+To start the notes from a known commit, a maintainer pushes the tag `grafana-echarts-renderer/v0.0.1` on a
+commit of `main` before the first run of this configuration. It needs no GitHub release.
+
+**Use a release.** `docs/renderer.md` in the echarts package gives the commands to download a release and
+to check its attestation and hash. A draft release is visible only with write access, so a consumer can
+download it after a maintainer publishes it.
 
 ## Publishing to dev or ops
 

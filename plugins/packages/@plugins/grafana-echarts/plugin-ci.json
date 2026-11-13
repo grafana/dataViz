@@ -11,6 +11,14 @@
       "pluginJson": "src/plugin.json"
     }
   ],
+  "releases": [
+    {
+      "id": "grafana-echarts-renderer",
+      "script": "check:renderer",
+      "dist": "dist-renderer",
+      "packageJson": "src/renderer/renderer.package.json"
+    }
+  ],
   "e2e": {
     "url": "http://127.0.0.1:4001",
     "target": "grafana-relations-panel",

@@ -1,5 +1,6 @@
 pnpm-lock.yaml
 src/modules/relations/CHANGELOG.md
+src/renderer/CHANGELOG.md
 # The basemap source is a byte-equal copy of core public/maps/countries.geojson (see its README).
 src/lib/echarts/geo/data/countries.geojson
 # Written by scripts/build-basemap.mjs.
