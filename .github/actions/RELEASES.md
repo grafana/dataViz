@@ -98,6 +98,9 @@ caveat above). So its release-please package is the repo root, `.`, which gets e
   package that also changes a file outside the list, for example `plugins/pnpm-lock.yaml` for a new
   dependency, still opens a Renderer release. That release has a bundle that differs only in its version.
   This is accepted, because a missed release is worse than an extra one.
+- A file in the repo root cannot be excluded: `CLAUDE.md`, `AGENTS.md`, `README.md`, `renovate.json` and the
+  release-please files. A CI change usually changes `CLAUDE.md` too, so a `feat(CI)` or `fix(CI)` commit
+  usually opens a Renderer release PR. Leave that PR open until a change of the bundle arrives.
 
 `exclude-paths` entries are directories, relative to the repo root. A file cannot be excluded.
 `bump-minor-pre-major` is set, so before `1.0.0` a breaking change in any package that counts bumps the minor version, not the major one.
@@ -114,8 +117,11 @@ provenance of each file, and the `attach` job uploads them to the draft release.
 
 **Peer ranges.** The App gives the peer packages, so a changed range can break a consumer.
 `scripts/peer-range-notes.sh` compares the `peerDependencies` of the build with those of the previous
-Renderer tag, and the `attach` job appends each changed range to the release notes. The first release lists
-every peer. If the `attach` job runs again, it appends the note again: remove the copy from the draft.
+Renderer tag, and the `attach` job appends each changed range to the release notes. With no previous
+Renderer tag, the note lists every peer. The baseline tag below is a previous tag, so with it the first
+release names only the ranges that changed since that tag, or has no note. The full list is always in the
+`package.json` of the release. If the `attach` job runs again, it appends the note again: remove the copy
+from the draft.
 
 **Baseline tag.** release-please finds the previous release of a package by its tag. With no
 `grafana-echarts-renderer/v*` tag, the first release notes list every `feat` and `fix` since `bootstrap-sha`.

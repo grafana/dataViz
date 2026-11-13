@@ -31,9 +31,12 @@
       "exclude-paths": [
         ".github",
         ".claude",
+        ".run",
         "plugins/provisioning",
         "plugins/packages/@plugins/grafana-clock-panel",
         "plugins/packages/@plugins/grafana-workspace-panel",
+        "plugins/packages/@plugins/grafana-echarts/.claude",
+        "plugins/packages/@plugins/grafana-echarts/.codex",
         "plugins/packages/@plugins/grafana-echarts/docs",
         "plugins/packages/@plugins/grafana-echarts/tests",
         "plugins/packages/@plugins/grafana-echarts/tests-renderer",

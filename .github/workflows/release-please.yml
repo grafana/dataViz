@@ -196,12 +196,23 @@ jobs:
 
       # files/ becomes the release assets. notes/ is appended to the release
       # notes, so it must not be a release asset.
+      # The version comparison does not depend on EXPECT_VERSION reaching the
+      # script above: if a later change drops it from the environment (turbo
+      # strict env mode, for example), that check stops with no failure.
       - name: Collect release files
         env:
           DIST: ${{ matrix.release.dir }}/${{ matrix.release.dist }}
+          VERSION: ${{ matrix.release.version }}
         run: |
           mkdir -p release-assets/files
           cp "$DIST"/* release-assets/files/
+          if [ -f release-assets/files/package.json ]; then
+            built="$(jq -r '.version // ""' release-assets/files/package.json)"
+            if [ "$built" != "$VERSION" ]; then
+              echo "::error::The built package.json has version '$built', but the tag has '$VERSION'"
+              exit 1
+            fi
+          fi
 
       - name: Write the peer dependency note
         env:

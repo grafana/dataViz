@@ -2,8 +2,8 @@
 # Writes the peer dependency note of a non-plugin release: the
 # peerDependencies of the built package.json that differ from the previous
 # release. The attach job appends the file to the release notes, so a consumer
-# sees a changed peer range before a sync. With no previous release it lists
-# every peer. With no change, or no SOURCE, the file is empty and nothing is
+# sees a changed peer range before a sync. With no previous tag it lists
+# every peer. A baseline tag pushed by hand counts as a previous tag. With no change, or no SOURCE, the file is empty and nothing is
 # appended.
 #
 # The previous release is the tag with the same component and the highest
