@@ -87,6 +87,17 @@ describe('the handle', () => {
     expect(states).toHaveLength(1);
   });
 
+  // contract-rule: state.1
+  it('ignores a finished event of the chart of the viz spec before an update', async () => {
+    const { el, handle } = draw(fixtureSpec('smoke-timeseries'));
+    await waitForState(el, 'ready');
+    // Not in `act`, so React does not commit the new viz spec before the late event.
+    handle.update(fixtureSpec('smoke-timeseries'));
+    chartOf(el).trigger('finished');
+    expect(el.getAttribute('data-viz-state')).toBe('rendering');
+    await waitForState(el, 'ready');
+  });
+
   // contract-rule: renderer.5
   it('removes the chart and the attributes on destroy, and then update and setRefreshed do nothing', async () => {
     const el = withLayout(document.createElement('div'));

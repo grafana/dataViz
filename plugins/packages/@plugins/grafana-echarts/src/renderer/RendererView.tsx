@@ -8,7 +8,7 @@ import { Panel } from 'lib/components/Panel';
 import { PanelDataErrorViewContext } from 'lib/components/panelDataErrorViewContext';
 import { PanelErrorContext, type PanelErrorSignal } from 'lib/components/panelErrorContext';
 import { TimeZoomOutContext } from 'lib/components/TimeZoomOutContext';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo } from 'react';
 import { dataIssueText } from './dataIssueText';
 import { TITLE_HEIGHT_PX, TOOLBAR_HEIGHT_PX } from './layout';
 import { errorMessage } from './messages';
@@ -25,6 +25,8 @@ interface Props {
   prepared: Prepared;
   width: number;
   height: number;
+  /** Called when React commits `prepared`, before the chart gets its option. It must be stable. */
+  onCommit: (prepared: Prepared) => void;
   /** Called after a view with no chart (an error, no data) is on screen. */
   onViewShown: () => void;
   /** The panel shows its own error view (`message`), or the view goes (`null`). */
@@ -51,6 +53,7 @@ export const RendererView = ({
   prepared,
   width,
   height,
+  onCommit,
   onViewShown,
   onPanelError,
   onRenderError,
@@ -63,6 +66,10 @@ export const RendererView = ({
     height - (refresh ? TOOLBAR_HEIGHT_PX : 0) - (prepared.title !== undefined ? TITLE_HEIGHT_PX : 0)
   );
   const rootClass = useMemo(() => rootClassName(prepared.theme), [prepared.theme]);
+  // A layout effect, because the chart gets its option in an effect, and each layout effect of a commit runs before
+  // each effect. So this call comes before the first `finished` event of `prepared`.
+  // https://react.dev/reference/react/useLayoutEffect
+  useLayoutEffect(() => onCommit(prepared), [prepared, onCommit]);
   useEffect(() => {
     if (prepared.kind !== 'chart') {
       onViewShown();

@@ -41,6 +41,8 @@ class Renderer {
   /** Set when `el` had a box once, and `setDefaultHeight` looked at its height. */
   private heightChecked = false;
   private prepared: Prepared | undefined;
+  /** The viz spec that React put on screen. It is not `prepared` between an `update` and the commit of React. */
+  private committed: Prepared | undefined;
   private signals = newSignals();
   private size: { width: number; height: number };
   private destroyed = false;
@@ -174,13 +176,21 @@ class Renderer {
     }
   };
 
+  private readonly onCommit = (prepared: Prepared) => {
+    this.committed = prepared;
+  };
+
   /**
    * `state.1`: the first draw is complete at the first ECharts `finished` event. A later draw (a resize, an
-   * `update`) reports again, and the reporter calls `onState` only for a change.
+   * `update`) reports again, and the reporter calls `onState` only for a change. A `finished` event before React
+   * commits the viz spec of an `update` is from the draw of the viz spec before it, so it is not a signal.
    * https://echarts.apache.org/en/api.html#events.finished
    */
   private readonly onChartInit = (chart: EChartsType) => {
     chart.on('finished', () => {
+      if (this.committed !== this.prepared) {
+        return;
+      }
       this.signals.drawn = true;
       this.report();
     });
@@ -197,6 +207,7 @@ class Renderer {
         prepared={this.prepared}
         width={this.size.width}
         height={this.size.height}
+        onCommit={this.onCommit}
         onViewShown={this.onViewShown}
         onPanelError={this.onPanelError}
         onRenderError={this.onRenderError}

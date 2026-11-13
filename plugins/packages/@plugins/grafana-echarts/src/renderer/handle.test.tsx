@@ -6,13 +6,21 @@ import { fixtureSpec } from 'test/rendererFixtures';
 import { render } from './index';
 
 /** The props that the handle gives to the view, so that a test can give the signals of a chart. */
-let view: { onPanelError: PanelErrorSignal; onChartInit: ChartInitListener };
+let view: {
+  prepared: unknown;
+  onCommit: (prepared: unknown) => void;
+  onPanelError: PanelErrorSignal;
+  onChartInit: ChartInitListener;
+};
 
 /** A view that gives a panel error signal of `null` when it unmounts, as `DataIssueView` does. */
 jest.mock('./RendererView', () => ({
   RendererView: (props: typeof view) => {
     view = props;
-    useEffect(() => () => props.onPanelError(null), [props]);
+    useEffect(() => {
+      props.onCommit(props.prepared);
+      return () => props.onPanelError(null);
+    }, [props]);
     return null;
   },
 }));
