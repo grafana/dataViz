@@ -299,10 +299,13 @@ describe('relations layout', () => {
       await waitFor(() => expect(setOption).toHaveBeenCalledTimes(1));
       expect(getChart(container).chart).toBe(chart);
       expect(buildOption).toHaveBeenCalledTimes(1);
+      // The same nodes keep their layout: the delayed update runs at the size that the card already has.
       expect(setOption).toHaveBeenCalledWith(expect.objectContaining({ series: expect.any(Array) }), {
         notMerge: true,
+        lazyUpdate: true,
       });
-      expect(resize).not.toHaveBeenCalled();
+      expect(resize.mock.calls).toEqual([[{ width: chart.getWidth(), height: chart.getHeight() }]]);
+      expect(graphNodeLayouts(chart)).toEqual(initialLayouts);
     });
   });
 
