@@ -179,6 +179,24 @@ and publishes it. It creates no tag or GitHub release.
 - **Release PRs and tags are made with a GitHub App token**, as upstream's action does, so they trigger CI
   and their commits are signed, which the repo requires on every branch.
 
+## GitHub App permissions
+
+Release automation uses `grafana-plugins-platform-bot` with the `release-please` permission set. The workflow token stays narrow; release PRs, tags and draft releases use the App token so commits are signed and CI runs on the generated refs.
+
+| Layer | Needed permissions | Why |
+|---|---|---|
+| `release-please` job `GITHUB_TOKEN` | `contents: read` | Checkout local actions plus `release-please-config.json` and `.release-please-manifest.json`. |
+| `release-please` job `GITHUB_TOKEN` | `id-token: write` | OIDC auth for `grafana/shared-workflows/actions/create-github-app-token`. |
+| `grafana-plugins-platform-bot` App token, permission set `release-please` | `contents: write` | Open release PR commits, update the release-please manifest, create tags and create draft GitHub releases through `release-please-action`. |
+| `grafana-plugins-platform-bot` App token, permission set `release-please` | `pull-requests: write` | Open and update release PRs. |
+| `grafana-plugins-platform-bot` App token, permission set `release-please` | `issues: write` | Let release-please label or comment on release PRs; GitHub models PR labels and comments through issues APIs. |
+| `build` job `GITHUB_TOKEN` | `contents: read` | Checkout the tagged commit that release-please created. |
+| `build` job `GITHUB_TOKEN` | `id-token: write` | Vault auth for the signing token and provenance attestation. |
+| `build` job `GITHUB_TOKEN` | `attestations: write` | Publish build provenance for the packaged plugin zip. |
+| `attach` job `GITHUB_TOKEN` | `contents: write` | Attach the signed zip and checksum to the draft GitHub release. |
+
+The App grant must exist for `grafana/dataViz` on `release-please.yml` in deployment_tools. If the grant is missing or too narrow, token creation or the later release-please PR, tag, release, label or comment operation fails.
+
 ## Credentials
 
 Every credential is short-lived and obtained through the job's GitHub OIDC token (`id-token: write`); there are
