@@ -9,6 +9,10 @@
 # Env: PKG (package name), SCRIPT (package.json script), DIR (repo-root-relative
 # package dir), ID (expected plugin id; optional), VERSION (expected
 # info.version; optional, needs ID), GITHUB_WORKSPACE (repo root).
+# The script inherits the rest of the environment. The release workflow relies
+# on that for EXPECT_VERSION, which a non-plugin release's script reads
+# (check:renderer). This file does not read it, so the workflow also compares
+# the built version itself.
 # Run from plugins/, where pnpm resolves the workspace.
 set -euo pipefail
 # shellcheck source=SCRIPTDIR/annotations.sh

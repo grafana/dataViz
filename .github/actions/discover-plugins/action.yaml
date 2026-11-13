@@ -37,6 +37,14 @@ outputs:
       its docker-compose.yaml serves Grafana), grafana_dependency (from
       src/plugin.json).
     value: ${{ steps.find.outputs.e2e }}
+  artifacts:
+    description: |
+      One entry per release that is not a plugin (plugin-ci.json `releases`).
+      Fields: dir, pkg, id (the release-please component), script
+      (package.json script that builds and checks it), dist (package-relative
+      directory of the release files), package_json (package-relative source
+      of the built package.json, or empty).
+    value: ${{ steps.find.outputs.artifacts }}
 
 runs:
   using: 'composite'

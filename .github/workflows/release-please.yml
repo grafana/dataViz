@@ -1,4 +1,5 @@
-# Releases plugins with release-please; design in .github/actions/RELEASES.md.
+# Releases plugins and the Renderer with release-please; design in
+# .github/actions/RELEASES.md.
 #
 # Every push to main opens or updates one release PR per plugin with
 # releasable changes. Merging a release PR makes the next run tag it
@@ -7,6 +8,11 @@
 # commit and attaches the zip. A maintainer publishes the draft. A
 # grafana-relations-panel release is also published to the dev and ops
 # catalogs and deployed to every dev and ops stack (publish job).
+#
+# The Renderer of grafana-echarts (grafana-echarts-renderer) is released the
+# same way, but it is an ES module, not a plugin: build-artifact builds and
+# checks it and attaches the dist-renderer/ files, with no signing, zip or
+# validator.
 name: Release Please
 
 on:
@@ -34,7 +40,10 @@ jobs:
       contents: read # checkout, for the local actions and the release-please config
       id-token: write # Vault login for the GitHub App token
     outputs:
+      # Every release of this run, and the same entries split by how they build.
       releases: ${{ steps.matrix.outputs.releases }}
+      plugins: ${{ steps.matrix.outputs.plugins }}
+      artifacts: ${{ steps.matrix.outputs.artifacts }}
       # Empty unless this run released grafana-relations-panel.
       relations-tag: ${{ fromJSON(steps.release-please.outputs.release-outputs || '{}')['plugins/packages/@plugins/grafana-echarts/src/modules/relations--tag_name'] }}
     steps:
@@ -53,6 +62,7 @@ jobs:
           RELEASE_OUTPUTS: '{}'
           CONFIG: release-please-config.json
           TARGETS: ${{ steps.targets.outputs.targets }}
+          ARTIFACTS: ${{ steps.targets.outputs.artifacts }}
         run: bash .github/scripts/release-matrix.sh
 
       - name: Run release-please
@@ -65,12 +75,14 @@ jobs:
           RELEASE_OUTPUTS: ${{ steps.release-please.outputs.release-outputs }}
           CONFIG: release-please-config.json
           TARGETS: ${{ steps.targets.outputs.targets }}
+          ARTIFACTS: ${{ steps.targets.outputs.artifacts }}
         run: bash .github/scripts/release-matrix.sh
 
   build:
     name: Build ${{ matrix.release.tag }}
     needs: release-please
-    if: needs.release-please.outputs.releases != '[]'
+    # An empty matrix fails the job, so skip it when no plugin was released.
+    if: needs.release-please.outputs.plugins != '[]'
     runs-on: ubuntu-latest
     permissions:
       contents: read # checkout of the tagged commit
@@ -79,7 +91,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        release: ${{ fromJSON(needs.release-please.outputs.releases) }}
+        release: ${{ fromJSON(needs.release-please.outputs.plugins) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -141,14 +153,97 @@ jobs:
           path: release-assets/
           if-no-files-found: error
 
+  # A release that is not a plugin (plugin-ci.json `releases`), such as the
+  # Renderer: its script builds and checks it, and every file in its dist
+  # directory is a release asset. No signing, no zip, no plugin validator, so
+  # no Vault secret.
+  build-artifact:
+    name: Build ${{ matrix.release.tag }}
+    needs: release-please
+    if: needs.release-please.outputs.artifacts != '[]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # checkout of the tagged commit
+      id-token: write # the provenance attestation
+      attestations: write # provenance attestation for the release files
+    strategy:
+      fail-fast: false
+      matrix:
+        release: ${{ fromJSON(needs.release-please.outputs.artifacts) }}
+    steps:
+      # Full history with tags: the peer note reads the previous release tag.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ matrix.release.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up workspace
+        uses: $/.github/actions/setup-workspace
+        with:
+          package: ${{ matrix.release.pkg }}
+
+      # EXPECT_VERSION fails the script if the build does not have the tagged
+      # version. No ID: there is no dist/plugin.json to compare.
+      - name: Build and check
+        working-directory: plugins
+        env:
+          PKG: ${{ matrix.release.pkg }}
+          SCRIPT: ${{ matrix.release.script }}
+          DIR: ${{ matrix.release.dir }}
+          EXPECT_VERSION: ${{ matrix.release.version }}
+        run: bash "$GITHUB_WORKSPACE/.github/scripts/build-target.sh"
+
+      # files/ becomes the release assets. notes/ is appended to the release
+      # notes, so it must not be a release asset.
+      # The version comparison does not depend on EXPECT_VERSION reaching the
+      # script above: if a later change drops it from the environment (turbo
+      # strict env mode, for example), that check stops with no failure.
+      - name: Collect release files
+        env:
+          DIST: ${{ matrix.release.dir }}/${{ matrix.release.dist }}
+          VERSION: ${{ matrix.release.version }}
+        run: |
+          mkdir -p release-assets/files
+          cp "$DIST"/* release-assets/files/
+          if [ -f release-assets/files/package.json ]; then
+            built="$(jq -r '.version // ""' release-assets/files/package.json)"
+            if [ "$built" != "$VERSION" ]; then
+              echo "::error::The built package.json has version '$built', but the tag has '$VERSION'"
+              exit 1
+            fi
+          fi
+
+      - name: Write the peer dependency note
+        env:
+          TAG: ${{ matrix.release.tag }}
+          SOURCE: ${{ matrix.release.package_json && format('{0}/{1}', matrix.release.dir, matrix.release.package_json) || '' }}
+          BUILT: release-assets/files/package.json
+          OUT: release-assets/notes/release-notes.md
+        run: bash .github/scripts/peer-range-notes.sh
+
+      # One attestation with one subject for each file.
+      - name: Attest provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: release-assets/files/*
+
+      - name: Upload release assets
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: release-${{ matrix.release.id }}
+          path: release-assets/
+          if-no-files-found: error
+
   # Holds contents: write, so it checks out nothing and runs no repo or
-  # package code: it only uploads what the build job produced.
+  # package code: it only uploads what a build job produced.
   attach:
     name: Attach to ${{ matrix.release.tag }}
-    needs: [release-please, build]
-    # Run even when another plugin's build failed: needs waits for the whole
-    # build matrix, so a single failure would otherwise skip every attach.
-    # A release whose own build failed has no artifact, so its download fails.
+    needs: [release-please, build, build-artifact]
+    # Run even when another release's build failed or was skipped: needs waits
+    # for both build matrices, so a single failure would otherwise skip every
+    # attach. A release whose own build failed has no artifact, so its
+    # download fails.
     if: ${{ !cancelled() && needs.release-please.result == 'success' && needs.release-please.outputs.releases != '[]' }}
     runs-on: ubuntu-latest
     permissions:
@@ -166,16 +261,20 @@ jobs:
 
       # As cd.yml's create-github-release job does. The release already
       # exists, made by release-please, so this keeps its name, notes and
-      # draft state, and only adds the files.
+      # draft state, and only adds the files. `files` is the zip and its sha1
+      # for a plugin, and files/* for the Renderer. `notes` is empty for a
+      # plugin. For the Renderer it is the peer dependency note, appended to
+      # release-please's notes; an empty note appends nothing. A re-run
+      # appends the note again: remove the copy from the draft.
       - name: Attach to the draft release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           tag_name: ${{ matrix.release.tag }}
           draft: true
-          files: |
-            release-assets/*.zip
-            release-assets/*.zip.sha1
+          files: ${{ matrix.release.files }}
           fail_on_unmatched_files: true
+          body_path: ${{ matrix.release.notes }}
+          append_body: true
 
   # Same cd.yml call as plugin-publish.yml, from the release tag instead of
   # main: release-reference-regex makes the tag a release reference, so cd.yml

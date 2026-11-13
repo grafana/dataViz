@@ -144,6 +144,12 @@ Differences worth knowing:
   `cd.yml`: its `lint`/`typecheck`/`test:ci`/`build` scripts delegate to the echarts package, and its
   `packageManager` and the `.nvmrc` beside it must stay synced to the workspace root, like clock-panel's. Both use the reserved link names from `plugin-metadata.md`. The other
   `src/modules/*/plugin.json` ship only inside the app.
+- **The Renderer is a third release, and its release-please package is the repo root.** `grafana-echarts-renderer`
+  is an ES module, not a plugin: `plugin-ci.json` `releases` declares it, and `release-please.yml` attaches the
+  `dist-renderer/` files unsigned. Its version is `src/renderer/version.txt`. Its package path is `.` with
+  `exclude-paths`, because it bundles `src/lib` and every module, so a new plugin package directory must be added
+  to that list. release-please-action gives the root package's outputs with no `<path>--` prefix. See "The
+  Renderer" in `.github/actions/RELEASES.md`.
 - **CI builds two plugins from it.** Its `plugin-ci.json` lists `grafana-relations-panel` (`build:relations`)
   and the app, `grafana-echarts-app` (`build`), so root CI, compatibility and bundle stats cover both. The
   two build one after another because both write `dist/`. e2e tests the plugin that ships, the standalone

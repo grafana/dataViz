@@ -5,9 +5,11 @@
 // The `delivery.6` and `delivery.2` checks compare the manifest with the functions that wrote it. So they find a
 // difference only with --no-build, for example in the files of an earlier build.
 // With --no-build, it checks the files that are there and skips the checks that need the stats.
+// With EXPECT_VERSION set, it fails if the manifest does not have that version. The release workflow sets it to the
+// version of the tag.
 // See docs/renderer.md. https://webpack.js.org/api/stats/
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -18,9 +20,14 @@ import {
   CONTRACT_DIR,
   DIST_DIR,
   ICONS_FILE,
+  LICENSE_FILE,
+  LICENSE_SOURCE,
   MANIFEST_FILE,
   PEER_PACKAGES,
+  TYPES_FILE,
+  TYPES_SOURCE,
   expectedValues,
+  releaseFileProblems,
   sha256,
   templateProblems,
   writeRendererPackage,
@@ -141,6 +148,31 @@ for (const field of ['version', 'contractVersion', 'specVersions']) {
   );
 }
 check('delivery.2', packageJson.version === manifest.version, `package.json version ${packageJson.version}`);
+// A release build: the manifest has the version of the tag.
+const expectVersion = process.env.EXPECT_VERSION;
+if (expectVersion) {
+  check(
+    'release',
+    manifest.version === expectVersion,
+    `manifest version ${manifest.version}, EXPECT_VERSION ${expectVersion}`
+  );
+}
+
+// `dist-renderer/` is the release: each release file, and no other file.
+const fileProblems = releaseFileProblems(readdirSync(DIST_DIR));
+check(
+  'release',
+  fileProblems.length === 0,
+  `dist-renderer/ ${fileProblems.join('; ') || 'has the release files only'}`
+);
+for (const [file, source] of [
+  [TYPES_FILE, TYPES_SOURCE],
+  [LICENSE_FILE, LICENSE_SOURCE],
+]) {
+  const path = join(DIST_DIR, file);
+  const same = !fileProblems.includes(`${file} is missing`) && sha256(path) === sha256(source);
+  check('release', same, `${file} ${same ? 'is' : 'is not'} a copy of its source`);
+}
 // renderer.9: the checked-in `src/renderer/renderer.package.json` agrees with the package `package.json`.
 const problems = templateProblems();
 check('renderer.9', problems.length === 0, `renderer.package.json ${problems.join('; ') || 'agrees with its sources'}`);

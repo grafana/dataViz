@@ -21,6 +21,30 @@
     { "section": "⏪ Reverts", "type": "revert", "hidden": true }
   ],
   "packages": {
+    ".": {
+      "release-type": "simple",
+      "component": "grafana-echarts-renderer",
+      "package-name": "grafana-echarts-renderer",
+      "version-file": "plugins/packages/@plugins/grafana-echarts/src/renderer/version.txt",
+      "changelog-path": "plugins/packages/@plugins/grafana-echarts/src/renderer/CHANGELOG.md",
+      "bump-minor-pre-major": true,
+      "exclude-paths": [
+        ".github",
+        ".claude",
+        ".run",
+        "plugins/provisioning",
+        "plugins/packages/@plugins/grafana-clock-panel",
+        "plugins/packages/@plugins/grafana-workspace-panel",
+        "plugins/packages/@plugins/grafana-echarts/.claude",
+        "plugins/packages/@plugins/grafana-echarts/.codex",
+        "plugins/packages/@plugins/grafana-echarts/docs",
+        "plugins/packages/@plugins/grafana-echarts/tests",
+        "plugins/packages/@plugins/grafana-echarts/tests-renderer",
+        "plugins/packages/@plugins/grafana-echarts/lgtm",
+        "plugins/packages/@plugins/grafana-echarts/provisioning",
+        "plugins/packages/@plugins/grafana-echarts/data-plane"
+      ]
+    },
     "plugins/packages/@plugins/grafana-echarts/src/modules/relations": {
       "release-type": "node",
       "component": "grafana-relations-panel",

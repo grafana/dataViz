@@ -27,7 +27,16 @@ function discover(root: string, args: string[] = [], cwd?: string, env: Record<s
 	return bash(DISCOVER, [root, ...args], cwd ? { cwd, env } : { env });
 }
 
-function ok(result: RunResult): { targets: Target[]; e2e: E2e[] } {
+interface Artifact {
+	dir: string;
+	pkg: string;
+	id: string;
+	script: string;
+	dist: string;
+	package_json: string;
+}
+
+function ok(result: RunResult): { targets: Target[]; e2e: E2e[]; artifacts: Artifact[] } {
 	assert.equal(result.status, 0, result.stderr);
 	return JSON.parse(result.stdout);
 }
@@ -74,6 +83,54 @@ describe('discover-plugins/discover.sh', () => {
 				targets.map((target) => target.id),
 				['p-panel']
 			);
+		});
+	});
+
+	describe('artifacts', () => {
+		const releases = [{ id: 'x-renderer', script: 'check:renderer', dist: 'dist-renderer', packageJson: 'src/renderer/renderer.package.json' }];
+
+		test('a package without plugin-ci.json releases has none', (t) => {
+			const root = tempDir(t);
+			mkPkg(root, 'clock', { id: 'clock-panel' });
+			assert.deepEqual(ok(discover(root)).artifacts, []);
+		});
+
+		test('lists each release that is not a plugin, and keeps the plugin targets', (t) => {
+			const root = tempDir(t);
+			const dir = mkPkg(root, 'echarts', { id: 'echarts-app', scripts: { build: 'x', 'check:renderer': 'x' }, pluginCi: { releases } });
+			writeJson(join(dir, 'src/renderer/renderer.package.json'), { name: 'x-renderer' });
+			const discovered = ok(discover(root));
+			assert.deepEqual(discovered.artifacts, [
+				{
+					dir,
+					pkg: '@t/echarts',
+					id: 'x-renderer',
+					script: 'check:renderer',
+					dist: 'dist-renderer',
+					package_json: 'src/renderer/renderer.package.json',
+				},
+			]);
+			assert.deepEqual(
+				discovered.targets.map((target) => target.id),
+				['echarts-app']
+			);
+		});
+
+		test('packageJson is optional', (t) => {
+			const root = tempDir(t);
+			mkPkg(root, 'p', { id: 'p-panel', pluginCi: { releases: [{ id: 'p-bundle', script: 'build', dist: 'out' }] } });
+			assert.equal(ok(discover(root)).artifacts[0].package_json, '');
+		});
+
+		test('rejects a release id that is a plugin target of a later package', (t) => {
+			const root = tempDir(t);
+			mkPkg(root, 'a', { id: 'a-panel', pluginCi: { releases: [{ id: 'b-panel', script: 'build', dist: 'out' }] } });
+			mkPkg(root, 'b', { id: 'b-panel' });
+			const discovery = discover(root);
+			assert.equal(discovery.status, 1);
+			assert.deepEqual(errors(discovery.stderr), [
+				`::error file=${join(root, 'a', 'plugin-ci.json')}::release id b-panel is also the id of a plugin target`,
+			]);
 		});
 	});
 
@@ -159,6 +216,20 @@ describe('discover-plugins/discover.sh', () => {
 			{ name: 'rejects an e2e suite with no grafanaDependency to pick versions from', pkg: { id: 'x', scripts: { build: 'x', e2e: 'x' }, playwright: true, grafanaDependency: '' }, error: 'no dependencies.grafanaDependency' },
 			{ name: 'rejects an e2e.target that is not one of the targets', pkg: { id: 'x', scripts: { build: 'x', e2e: 'x' }, playwright: true, pluginCi: { e2e: { target: 'nope' } } }, error: "e2e.target 'nope' is not one of" },
 			{ name: 'rejects an e2e.compose file that does not exist', pkg: { id: 'x', scripts: { build: 'x', e2e: 'x' }, playwright: true, pluginCi: { e2e: { compose: 'missing.yaml' } } }, error: "e2e.compose 'missing.yaml' does not exist" },
+			{ name: 'rejects an empty releases list', pkg: { id: 'x', pluginCi: { releases: [] } }, error: 'releases must be a non-empty array' },
+			{ name: 'rejects a releases entry that is not an object', pkg: { id: 'x', pluginCi: { releases: ['x-renderer'] } }, error: 'releases[0] must be an object' },
+			{ name: 'rejects a release with no id', pkg: { id: 'x', pluginCi: { releases: [{ script: 'build', dist: 'out' }] } }, error: "release id '' must match" },
+			{ name: 'rejects a release id that is not lowercase-kebab', pkg: { id: 'x', pluginCi: { releases: [{ id: 'Bad_Id', script: 'build', dist: 'out' }] } }, error: "release id 'Bad_Id' must match" },
+			{ name: 'rejects a release with an unknown key', pkg: { id: 'x', pluginCi: { releases: [{ id: 'x-renderer', script: 'build', dist: 'out', pluginJson: 'src/plugin.json' }] } }, error: 'release x-renderer: unknown key pluginJson' },
+			{ name: 'rejects a release script that package.json does not define', pkg: { id: 'x', pluginCi: { releases: [{ id: 'x-renderer', script: 'check:nope', dist: 'out' }] } }, error: "release x-renderer: script 'check:nope' is not in" },
+			{ name: 'rejects a release with no script', pkg: { id: 'x', pluginCi: { releases: [{ id: 'x-renderer', dist: 'out' }] } }, error: "release x-renderer: script '' is not in" },
+			{ name: 'rejects a release with no dist', pkg: { id: 'x', pluginCi: { releases: [{ id: 'x-renderer', script: 'build' }] } }, error: 'release x-renderer: dist must be a relative path' },
+			{ name: 'rejects a release dist with ..', pkg: { id: 'x', pluginCi: { releases: [{ id: 'x-renderer', script: 'build', dist: '../other/dist' }] } }, error: 'release x-renderer: dist must be a relative path' },
+			{ name: 'rejects an absolute release dist', pkg: { id: 'x', pluginCi: { releases: [{ id: 'x-renderer', script: 'build', dist: '/tmp/dist' }] } }, error: 'release x-renderer: dist must be a relative path' },
+			{ name: 'rejects a release packageJson that does not exist', pkg: { id: 'x', pluginCi: { releases: [{ id: 'x-renderer', script: 'build', dist: 'out', packageJson: 'src/missing.json' }] } }, error: "release x-renderer: packageJson 'src/missing.json' does not exist" },
+			{ name: 'rejects a release packageJson with ..', pkg: { id: 'x', pluginCi: { releases: [{ id: 'x-renderer', script: 'build', dist: 'out', packageJson: '../package.json' }] } }, error: 'release x-renderer: packageJson must be a relative path' },
+			{ name: 'rejects the same release id two times', pkg: { id: 'x', pluginCi: { releases: [{ id: 'x-renderer', script: 'build', dist: 'out' }, { id: 'x-renderer', script: 'build', dist: 'out2' }] } }, error: 'release id x-renderer is declared more than once' },
+			{ name: 'rejects a release id that is the id of a plugin target, because the two would share tags', pkg: { id: 'x', pluginCi: { releases: [{ id: 'x', script: 'build', dist: 'out' }] } }, error: 'release id x is also the id of a plugin target' },
 		];
 
 		for (const { name, pkg, error } of cases) {
@@ -289,6 +360,21 @@ describe('discover-plugins/discover.sh', () => {
 			const { cwd, root, base } = repo(t);
 			change(cwd, `${root}/clock/src/module.ts`);
 			assert.deepEqual(selected(cwd, root, base), { targets: ['clock-panel'], e2e: ['@t/clock'] });
+		});
+
+		test('a change inside one package keeps only the releases of that package', (t) => {
+			const { cwd, root, base } = repo(t);
+			writeJson(join(cwd, root, 'echarts/plugin-ci.json'), { releases: [{ id: 'echarts-renderer', script: 'build', dist: 'out' }] });
+			git(cwd, 'add', '-A');
+			git(cwd, 'commit', '-qm', 'release');
+			const artifactIds = () => ok(discover(root, [base], cwd)).artifacts.map((artifact) => artifact.id);
+			assert.deepEqual(artifactIds(), ['echarts-renderer']);
+			const before = git(cwd, 'rev-parse', 'HEAD');
+			change(cwd, `${root}/clock/src/module.ts`);
+			assert.deepEqual(
+				ok(discover(root, [before], cwd)).artifacts.map((artifact) => artifact.id),
+				[]
+			);
 		});
 
 		test('no relevant change selects nothing', (t) => {

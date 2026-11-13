@@ -11,8 +11,9 @@ export const PEER = /^(react|react-dom)(\/.*)?$|^@grafana\/(ui|data)(\/.*)?$|^@e
 /** The output directory. `scripts/renderer-manifest.mjs` has the same path in `DIST_DIR`. */
 export const RENDERER_DIST_DIR = 'dist-renderer';
 
-// Decision 1 of the plan: the Renderer `version` is the package version, until the Renderer has its own package.
-const packageVersion: string = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'package.json'), 'utf8')).version;
+// The Renderer `version`. release-please writes this file with a newline at the end. `scripts/renderer-manifest.mjs`
+// reads the same file for the manifest.
+const rendererVersion: string = fs.readFileSync(path.resolve(process.cwd(), 'src/renderer/version.txt'), 'utf8').trim();
 
 const config = (env: { development?: boolean }): Configuration => ({
   mode: env.development ? 'development' : 'production',
@@ -57,7 +58,7 @@ const config = (env: { development?: boolean }): Configuration => ({
     new webpack.DefinePlugin({
       // The i18n namespace of the modules and the `lib/publicPath` side effect read it.
       __PLUGIN_ID__: JSON.stringify('grafana-echarts-app'),
-      __RENDERER_VERSION__: JSON.stringify(packageVersion),
+      __RENDERER_VERSION__: JSON.stringify(rendererVersion),
     }),
     // `asyncChunks: false` covers `import()`. This makes sure that no other split adds a file.
     new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),

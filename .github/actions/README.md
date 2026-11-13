@@ -63,12 +63,38 @@ that ships, served by its own compose file on 4001.
 - `e2e.compose` is the compose file that serves Grafana, relative to the package. It must mount `dist/`.
   The default is `docker-compose.yaml`.
 
+A package can also declare `releases`: what it releases that is not a plugin. echarts declares the Renderer:
+
+```json
+{
+  "releases": [
+    {
+      "id": "grafana-echarts-renderer",
+      "script": "check:renderer",
+      "dist": "dist-renderer",
+      "packageJson": "src/renderer/renderer.package.json"
+    }
+  ]
+}
+```
+
+- `id` is the `component` of its package in `release-please-config.json`. It must not be the id of a plugin
+  target, because the release tag is `<id>/v<version>`.
+- `script` builds and checks the release. `dist` is the directory that it writes, relative to the package.
+  Every file in `dist` becomes a release asset.
+- `packageJson` is optional: the checked-in source of the built `<dist>/package.json`. The release notes name
+  each `peerDependencies` range that changed since the last release.
+
+Only `release-please.yml` reads `releases` (the `artifacts` output of `discover-plugins`). Plugin CI, e2e and
+bundle stats do not. See [RELEASES.md](RELEASES.md#the-renderer).
+
 ## When a check fails
 
 - **Discover plugins** fails with an annotation on the file at fault: a target `script` that isn't in
   `package.json`, a `pluginJson` whose id doesn't match the target, the same id declared twice, an `e2e`
-  script without a Playwright config (or the reverse), an `e2e.target` that is not a declared target, or an
-  `e2e.compose` file that does not exist.
+  script without a Playwright config (or the reverse), an `e2e.target` that is not a declared target, an
+  `e2e.compose` file that does not exist, or a `releases` entry with an unknown key, a `script` that isn't in
+  `package.json`, or an id that a plugin target has.
 - **Build** fails when a target's script built a different plugin than declared, or wrote no
   `dist/plugin.json`.
 - **Compatibility** doesn't fail. levitate flags any type change in an export the plugin uses, and most of

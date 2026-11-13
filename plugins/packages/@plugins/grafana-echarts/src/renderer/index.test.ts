@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import constants from '@grafana/viz-contract/registry/constants.json';
 import type * as RendererApi from '@grafana/viz-contract/renderer-api';
 import * as renderer from './index';
@@ -11,8 +13,11 @@ describe('Renderer module', () => {
   });
 
   // contract-rule: delivery.2
-  it('has the package version as its version', () => {
-    expect(renderer.version).toBe(require('../../package.json').version);
+  it('has the version of version.txt as its version', () => {
+    // release-please writes the file with a newline at the end.
+    const text = readFileSync(join(__dirname, 'version.txt'), 'utf8');
+    expect(renderer.version).toBe(text.trim());
+    expect(renderer.version).toMatch(/^\d+\.\d+\.\d+/);
   });
 
   it('supports the specVersion of the contract', () => {
