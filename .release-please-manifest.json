@@ -1,4 +1,4 @@
 {
-  ".": "0.0.1",
+  ".": "0.1.0",
   "plugins/packages/@plugins/grafana-echarts/src/modules/relations": "0.2.0"
 }
