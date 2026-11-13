@@ -9,6 +9,7 @@ import { PanelDataErrorViewContext } from 'lib/components/panelDataErrorViewCont
 import { PanelErrorContext, type PanelErrorSignal } from 'lib/components/panelErrorContext';
 import { TimeZoomOutContext } from 'lib/components/TimeZoomOutContext';
 import React, { useEffect, useMemo } from 'react';
+import { CommitSignal } from './CommitSignal';
 import { dataIssueText } from './dataIssueText';
 import { TITLE_HEIGHT_PX, TOOLBAR_HEIGHT_PX } from './layout';
 import { errorMessage } from './messages';
@@ -27,6 +28,8 @@ interface Props {
   height: number;
   /** Called after a view with no chart (an error, no data) is on screen. */
   onViewShown: () => void;
+  /** Called in the effects of the commit that shows `prepared`, immediately before the chart draws it. */
+  onCommit: (prepared: Prepared) => void;
   /** The panel shows its own error view (`message`), or the view goes (`null`). */
   onPanelError: PanelErrorSignal;
   /** A child threw while it rendered. */
@@ -52,6 +55,7 @@ export const RendererView = ({
   width,
   height,
   onViewShown,
+  onCommit,
   onPanelError,
   onRenderError,
   onChartInit,
@@ -77,6 +81,8 @@ export const RendererView = ({
         <TimeZoomOutContext.Provider value={null}>
           <PanelErrorContext.Provider value={onPanelError}>
             <PanelDataErrorViewContext.Provider value={renderDataIssue}>
+              {/* Before the chart, so its effect runs before the effect of the chart. */}
+              <CommitSignal prepared={prepared} onCommit={onCommit} />
               <div className={rootClass} style={{ width, height }}>
                 {refresh && (
                   <RendererToolbar

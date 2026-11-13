@@ -41,6 +41,8 @@ class Renderer {
   /** Set when `el` had a box once, and `setDefaultHeight` looked at its height. */
   private heightChecked = false;
   private prepared: Prepared | undefined;
+  /** The `prepared` of the last view that React committed. Until it is `prepared`, the chart shows an earlier spec. */
+  private committed: Prepared | undefined;
   private signals = newSignals();
   private size: { width: number; height: number };
   private destroyed = false;
@@ -174,13 +176,21 @@ class Renderer {
     }
   };
 
+  private readonly onCommit = (prepared: Prepared) => {
+    this.committed = prepared;
+  };
+
   /**
    * `state.1`: the first draw is complete at the first ECharts `finished` event. A later draw (a resize, an
-   * `update`) reports again, and the reporter calls `onState` only for a change.
+   * `update`) reports again, and the reporter calls `onState` only for a change. A `finished` event before React
+   * commits the view of the current spec comes from the draw of an earlier spec, so it does not count.
    * https://echarts.apache.org/en/api.html#events.finished
    */
   private readonly onChartInit = (chart: EChartsType) => {
     chart.on('finished', () => {
+      if (this.committed !== this.prepared) {
+        return;
+      }
       this.signals.drawn = true;
       this.report();
     });
@@ -198,6 +208,7 @@ class Renderer {
         width={this.size.width}
         height={this.size.height}
         onViewShown={this.onViewShown}
+        onCommit={this.onCommit}
         onPanelError={this.onPanelError}
         onRenderError={this.onRenderError}
         onChartInit={this.onChartInit}

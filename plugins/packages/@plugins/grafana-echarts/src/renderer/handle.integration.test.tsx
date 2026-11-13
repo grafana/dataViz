@@ -87,6 +87,23 @@ describe('the handle', () => {
     expect(states).toHaveLength(1);
   });
 
+  // contract-rule: state.1
+  it.each([
+    ['the same chart', 'smoke-barchart'],
+    ['a new chart', 'smoke-piechart'],
+  ])('ignores a late finished event of the earlier spec after update, with %s', async (_name, next) => {
+    const { el, handle } = draw(fixtureSpec('smoke-timeseries'));
+    await waitFor(() => expect(el.querySelector('[_echarts_instance_]')).not.toBeNull());
+    const earlier = chartOf(el);
+    act(() => {
+      handle.update(fixtureSpec(next));
+      // React did not commit the new view yet, so this event comes from the draw of the earlier spec.
+      earlier.trigger('finished');
+      expect(el.getAttribute('data-viz-state')).toBe('rendering');
+    });
+    await waitForState(el, 'ready');
+  });
+
   // contract-rule: renderer.5
   it('removes the chart and the attributes on destroy, and then update and setRefreshed do nothing', async () => {
     const el = withLayout(document.createElement('div'));
