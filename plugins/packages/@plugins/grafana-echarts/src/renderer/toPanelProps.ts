@@ -58,7 +58,7 @@ export type SpecPanelProps = Omit<PanelComponentProps, 'width' | 'height'>;
 export const toPanelProps = (spec: VizSpec, entry: PanelEntry): SpecPanelProps => preparePanel(spec, entry).props;
 
 /**
- * `toPanelProps`, and the number of series that the `series-truncated` cut leaves out (`state.10`). The cut runs
+ * `toPanelProps`, and the number of series that the `series-truncated` cut leaves out (`state.19`). The cut runs
  * before the field overrides, only for the families of `TRUNCATED_FAMILIES`. A candlestick or boxplot is not cut: it
  * draws one series from several number fields of the first frame, as `PanelContent` resolves the series type.
  */

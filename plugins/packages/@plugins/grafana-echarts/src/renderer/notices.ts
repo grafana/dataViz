@@ -3,19 +3,11 @@
 import { type Notice } from '@grafana/viz-contract/renderer-api';
 import { type ChartNotice } from 'lib/echarts/charts/types';
 import { geoNotices } from './geoNotices';
-import { fillPattern, noticeMessage } from './messages';
+import { noticeMessage } from './messages';
 import { MAX_SERIES, panelType } from './registry';
 import { orderedResults } from './results';
 import { isUnitId } from './units';
 import { type VizSpec } from './vizSpec';
-
-/**
- * The `series-truncated` message of the Renderer. It is not the `notices.json` message ("series with the smallest
- * peak values are not shown"): the Renderer draws the first `maxSeries` series, not the largest ones (decision 2 of
- * the plan, `state.10`). The follow-up issue "Renderer: choose the best series and add a show-all control for
- * series-truncated" changes the cut, and then this message goes back to the registry one.
- */
-export const SERIES_TRUNCATED_PATTERN = '<omitted> series are not shown. The first <maxSeries> series are drawn.';
 
 /** The notices that the Renderer raises, in the order of `notices.json`. `omittedSeries` comes from the cut. */
 export function rendererNotices(spec: VizSpec, omittedSeries: number): Notice[] {
@@ -42,7 +34,7 @@ export function rendererNotices(spec: VizSpec, omittedSeries: number): Notice[] 
   if (omittedSeries > 0) {
     notices.push({
       code: 'series-truncated',
-      message: fillPattern(SERIES_TRUNCATED_PATTERN, { omitted: omittedSeries, maxSeries: MAX_SERIES }),
+      message: noticeMessage('series-truncated', { omitted: omittedSeries, maxSeries: MAX_SERIES }),
     });
   }
 

@@ -2,11 +2,10 @@ import { css } from '@emotion/css';
 import { type GrafanaTheme2, type TimeRange } from '@grafana/data';
 import { type TimeZone } from '@grafana/schema';
 import { useStyles2 } from '@grafana/ui';
-import { type RefreshRequest } from '@grafana/viz-contract/renderer-api';
 import React from 'react';
 import { TOOLBAR_HEIGHT_PX } from './layout';
 import { RefreshButton } from './RefreshButton';
-import { type RefreshStatus } from './refresh';
+import { type RefreshCause, type RefreshStatus } from './refresh';
 import { TimePicker } from './TimePicker';
 
 interface Props {
@@ -14,7 +13,7 @@ interface Props {
   /** `data.range` of the viz spec. With no valid viz spec, there is no range and no time picker. */
   timeRange?: TimeRange;
   timeZone: TimeZone;
-  onRequest: (request: RefreshRequest) => void;
+  onRequest: (cause: RefreshCause) => void;
 }
 
 /**

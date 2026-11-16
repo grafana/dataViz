@@ -171,7 +171,7 @@ describe('preparePanel: the series-truncated cut', () => {
     };
   };
 
-  // contract-rule: state.10
+  // contract-rule: state.19
   it('draws the first 50 series of a cartesian panel and counts the rest', () => {
     const { props, omittedSeries } = preparePanel(wide('grafana-echartscartesian-panel', 53), cartesian);
     expect(omittedSeries).toBe(3);
@@ -188,7 +188,7 @@ describe('preparePanel: the series-truncated cut', () => {
     expect(preparePanel(wide('grafana-echartsstream-panel', 60), stream).omittedSeries).toBe(10);
   });
 
-  // contract-rule: state.10
+  // contract-rule: state.19
   it('does not cut an Auto candlestick, which draws one series from the number fields of the first frame', () => {
     const spec = wide('grafana-echartscartesian-panel', 0);
     const ohlc = (refId: string) => ({

@@ -1,13 +1,13 @@
 import { t } from '@grafana/i18n';
 import { RefreshPicker } from '@grafana/ui';
-import { type RefreshRequest } from '@grafana/viz-contract/renderer-api';
 import React from 'react';
+import { type RefreshCause } from './refresh';
 
 const noop = () => {};
 
 interface Props {
   busy: boolean;
-  onRequest: (request: RefreshRequest) => void;
+  onRequest: (cause: RefreshCause) => void;
 }
 
 /**
