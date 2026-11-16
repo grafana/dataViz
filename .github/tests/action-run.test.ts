@@ -4,15 +4,20 @@
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { describe, test, type TestContext } from 'node:test';
-import { ACTION_RUN, bash, outputFile, readOutputs, tempDir, writeText } from './helpers.ts';
+import { ACTION_RUN, bash, git, outputFile, readOutputs, tempDir, writeText } from './helpers.ts';
 
-function runEntryPoint(t: TestContext, env: Record<string, string>): { args: string[]; e2e: string; artifacts: string } {
+function runEntryPoint(
+	t: TestContext,
+	env: Record<string, string>,
+	cwd?: string
+): { args: string[]; e2e: string; artifacts: string } {
 	const stubDir = tempDir(t);
 	// Echoes its arguments back as `targets`, so the test can see what was passed.
 	writeText(join(stubDir, 'discover.sh'), `jq -nc '{targets: $ARGS.positional, e2e: [], artifacts: [{id: "x"}]}' --args "$@"\n`);
 	const output = outputFile(t);
 	const entryPoint = bash(ACTION_RUN, [], {
 		env: { ROOT: 'plugins/packages/@plugins', CHANGED_ONLY: 'false', PR_BASE: '', PUSH_BEFORE: '', ACTION_PATH: stubDir, GITHUB_OUTPUT: output, ...env },
+		cwd,
 	});
 	assert.equal(entryPoint.status, 0, entryPoint.stderr);
 	const outputs = readOutputs(output);
@@ -36,6 +41,43 @@ describe('discover-plugins/run.sh', () => {
 				assert.deepEqual(runEntryPoint(t, env).args, args);
 			});
 		}
+
+		// What actions/checkout gives a pull_request run: GitHub's test merge of the
+		// PR head into the base branch as it is now, which has moved on since the
+		// PR's base.sha.
+		function testMergeRepo(t: TestContext): { cwd: string; oldBase: string; newBase: string; head: string } {
+			const cwd = tempDir(t);
+			git(cwd, 'init', '-q', '-b', 'main');
+			git(cwd, 'commit', '-q', '--allow-empty', '-m', 'old base');
+			const oldBase = git(cwd, 'rev-parse', 'HEAD');
+			git(cwd, 'checkout', '-q', '-b', 'pr');
+			git(cwd, 'commit', '-q', '--allow-empty', '-m', 'pr change');
+			const head = git(cwd, 'rev-parse', 'HEAD');
+			git(cwd, 'checkout', '-q', 'main');
+			git(cwd, 'commit', '-q', '--allow-empty', '-m', 'merged to main since');
+			const newBase = git(cwd, 'rev-parse', 'HEAD');
+			git(cwd, 'merge', '-q', '--no-ff', '-m', 'test merge', 'pr');
+			return { cwd, oldBase, newBase, head };
+		}
+
+		test('pull_request on the test merge uses its first parent, not an older PR base', (t) => {
+			const { cwd, oldBase, newBase, head } = testMergeRepo(t);
+			const env = { CHANGED_ONLY: 'true', PR_BASE: oldBase, PR_HEAD: head };
+			assert.deepEqual(runEntryPoint(t, env, cwd).args, [ROOT, newBase]);
+		});
+
+		test('pull_request keeps the PR base when HEAD is not the test merge of PR_HEAD', (t) => {
+			const { cwd, oldBase } = testMergeRepo(t);
+			const env = { CHANGED_ONLY: 'true', PR_BASE: oldBase, PR_HEAD: 'f'.repeat(40) };
+			assert.deepEqual(runEntryPoint(t, env, cwd).args, [ROOT, oldBase]);
+		});
+
+		test('pull_request keeps the PR base when the checkout is the PR head itself', (t) => {
+			const { cwd, oldBase, head } = testMergeRepo(t);
+			git(cwd, 'checkout', '-q', head);
+			const env = { CHANGED_ONLY: 'true', PR_BASE: oldBase, PR_HEAD: head };
+			assert.deepEqual(runEntryPoint(t, env, cwd).args, [ROOT, oldBase]);
+		});
 	});
 
 	test('writes targets, e2e and artifacts as compact single-line outputs', (t) => {

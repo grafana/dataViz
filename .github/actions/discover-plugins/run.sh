@@ -4,7 +4,8 @@
 # `artifacts`.
 #
 # Env: ROOT, CHANGED_ONLY ('true' to filter), PR_BASE
-# (github.event.pull_request.base.sha), PUSH_BEFORE (github.event.before),
+# (github.event.pull_request.base.sha), PR_HEAD
+# (github.event.pull_request.head.sha), PUSH_BEFORE (github.event.before),
 # ACTION_PATH (directory holding discover.sh), GITHUB_OUTPUT. SHARED_PATHS is
 # read by discover.sh itself.
 set -euo pipefail
@@ -12,6 +13,15 @@ set -euo pipefail
 base=''
 if [ "$CHANGED_ONLY" = true ]; then
 	base="${PR_BASE:-$PUSH_BEFORE}"
+	# A pull_request checkout is GitHub's test merge of the PR head into the
+	# base branch as it is now, but PR_BASE can be an older base commit. Diffing
+	# from PR_BASE then also counts everything merged to the base branch since,
+	# and one lockfile bump there selects every package. The merge's first
+	# parent is the base it was made from, so the diff is only the PR's changes.
+	if [ -n "$PR_BASE" ] && [ -n "${PR_HEAD:-}" ] &&
+		[ "$(git rev-parse -q --verify 'HEAD^2' 2>/dev/null)" = "$PR_HEAD" ]; then
+		base="$(git rev-parse 'HEAD^1')"
+	fi
 	# A push that creates a branch has an all-zero `before`.
 	if [[ "$base" =~ ^0+$ ]]; then
 		base=''
