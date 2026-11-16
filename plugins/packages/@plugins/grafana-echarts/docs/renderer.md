@@ -28,7 +28,7 @@ The Renderer does not bundle React or the Grafana UI packages. The App gives the
 - `@grafana/data`
 - `@emotion/css`
 
-The build writes a `package.json` next to the bundle. Its `peerDependencies` list these packages, with caret ranges of the versions in the package `package.json`. All other code is in the bundle, for example ECharts, rxjs and `@grafana/i18n`. The bundle has no `@grafana/runtime` module: the build replaces `src/lib/grafana/GrafanaPanelServices.tsx`, the only panel file that uses it, with `src/renderer/GrafanaPanelServices.tsx`.
+The build writes a `package.json` next to the bundle. Its `peerDependencies` list these packages, with caret ranges of the versions in the package `package.json`. All other code is in the bundle, for example ECharts, rxjs and `@grafana/i18n`. The bundle has no `@grafana/runtime` module: the build replaces `src/lib/grafana/GrafanaPanelServices.tsx`, the only entry point of the panel code to it, with `src/renderer/GrafanaPanelServices.tsx`.
 
 ## Build
 

@@ -8,7 +8,8 @@ const renderGrafanaErrorView = (props: PanelDataErrorViewProps) => <PanelDataErr
 
 /**
  * Gives the panel the services of Grafana: the annotation tag search and the Grafana error view. This is the only
- * file of the panel code that uses `@grafana/runtime`. The Renderer build replaces it with
+ * entry point of the panel code to `@grafana/runtime`: only this file imports `./annotationTags`, which uses
+ * `getBackendSrv`. The Renderer build replaces it with
  * `src/renderer/GrafanaPanelServices.tsx`, so the Renderer bundle has no `@grafana/runtime` module.
  * https://github.com/grafana/grafana/blob/main/packages/grafana-runtime/src/components/PanelDataErrorView.tsx
  */
