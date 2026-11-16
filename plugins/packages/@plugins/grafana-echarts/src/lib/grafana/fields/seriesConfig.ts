@@ -210,6 +210,57 @@ export function getSeriesColorOverride(
   return undefined;
 }
 
+/**
+ * What the user changed with the legend: the `hideSeriesFrom` override and the fixed colors by series name. The
+ * Renderer keeps this apart from the viz spec, so a new viz spec does not remove it (`renderer.35`).
+ */
+export interface LegendOverrides {
+  /** The `hideSeriesFrom` override. `null` when the user showed every series, `undefined` when the legend did not change it. */
+  hide?: ConfigOverrideRule | null;
+  /** The `color` property of the legend, by series name. */
+  colors: ReadonlyMap<string, DynamicConfigValue>;
+}
+
+/** The color property of the `byName(name)` override, or `undefined`. */
+const colorPropertyOf = (overrides: ConfigOverrideRule[], name: string): DynamicConfigValue | undefined =>
+  overrides.find((rule) => matcherName(rule) === name)?.properties.find((p) => p.id === COLOR_PROP_ID);
+
+// The overrides are plain JSON, and the legend and the viz spec write them in the same key order.
+const sameJson = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
+
+/**
+ * The legend changes in `next`: the difference to `base`, the field config before the legend changed it. `next` has
+ * all the changes of the user, because the legend starts from the field config that the panel draws with.
+ */
+export function readLegendOverrides(next: FieldConfigSource, base: FieldConfigSource): LegendOverrides {
+  const nextHide = next.overrides.find(isHideSeriesOverride);
+  const baseHide = base.overrides.find(isHideSeriesOverride);
+  const colors = new Map<string, DynamicConfigValue>();
+  for (const rule of next.overrides) {
+    const name = matcherName(rule);
+    const color = name === undefined ? undefined : colorPropertyOf(next.overrides, name);
+    if (name !== undefined && color && !sameJson(color.value, colorPropertyOf(base.overrides, name)?.value)) {
+      colors.set(name, color);
+    }
+  }
+  return { hide: sameJson(nextHide, baseHide) ? undefined : (nextHide ?? null), colors };
+}
+
+/** `fieldConfig` with the legend changes on top: they win over the overrides that are there (`renderer.35`). */
+export function applyLegendOverrides(fieldConfig: FieldConfigSource, legend: LegendOverrides): FieldConfigSource {
+  let overrides = fieldConfig.overrides;
+  if (legend.hide !== undefined) {
+    overrides = overrides.filter((rule) => !isHideSeriesOverride(rule));
+    if (legend.hide) {
+      overrides = [...overrides, legend.hide];
+    }
+  }
+  for (const [name, color] of legend.colors) {
+    overrides = upsertProperty(overrides, name, color);
+  }
+  return { ...fieldConfig, overrides };
+}
+
 /** Build the `hideSeriesFrom` system override for the given kept (visible) names. */
 function createHideOverride(keptNames: string[]): SystemConfigOverrideRule {
   return {

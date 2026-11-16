@@ -19,6 +19,8 @@ The module has three exports. Their types are in `renderer-api.d.ts` of the cont
 - `onState` receives each new final state: `ready`, `no-data` or `error`, with the notices. The same state is in the `data-viz-state` and `data-viz-error` attributes of `el`.
 - `onRefresh` receives a request when the user clicks Refresh or selects a time range. Each request has a new `id`. Two handles of the same Renderer module never give the same `id`. `setRefreshed` gives the result of the request with that `id`, and does nothing for the `id` of an older request. The Renderer shows Refresh and the time picker only when the App gives `onRefresh`.
 
+The user can hide, show and color the items of the legend. The Renderer keeps these legend overrides in memory until `destroy`, and draws each new viz spec with them (`renderer.34` to `renderer.37`). A legend override finds an item by its name, so it stays for a name that is not in the new data. It does not change the viz spec, and the App does not get it. A new `render` starts with none.
+
 ## Peers
 
 The Renderer does not bundle React or the Grafana UI packages. The App gives them, and the bundle imports them with bare specifiers:
@@ -159,9 +161,7 @@ The contract package has no contract chapters, so it does not give the rule ids.
 
 The Renderer does not obey all of the contract yet.
 
-These rules are in the `pending` list of `contractRules.json`:
-
-- The legend overrides (`renderer.34` to `renderer.37`, [#209](https://github.com/grafana/dataViz/issues/209)): the Renderer does not keep the legend changes of the user after `update`. A refresh, a new theme or a new time zone removes them.
+No rule is in the `pending` list of `contractRules.json`.
 
 This difference has a test that fails when the difference is fixed:
 

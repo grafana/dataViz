@@ -1,9 +1,10 @@
 // The handle of `render`: one React root in `el`, the state of each draw, the size of `el`, and the refresh
-// (`renderer.2` to `renderer.5`, `renderer.10`, `state.1` to `state.13`, `refresh.1` to `refresh.7`, `refresh.13`,
+// (`renderer.2` to `renderer.5`, `renderer.10`, `renderer.34` to `renderer.37`, `state.1` to `state.13`, `refresh.1` to `refresh.7`, `refresh.13`,
 // `refresh.15`).
 // https://react.dev/reference/react-dom/client/createRoot
 import { type RenderError, type RenderHandle, type RenderOptions } from '@grafana/viz-contract/renderer-api';
 import { type EChartsType } from 'lib/echarts/echarts';
+import { type LegendOverrides } from 'lib/grafana/fields/seriesConfig';
 import React from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { computeState } from './computeState';
@@ -14,6 +15,7 @@ import { type RefreshCause, RefreshController } from './refresh';
 import { DEFAULT_HEIGHT_PX } from './registry';
 import { RendererView } from './RendererView';
 import { StateReporter } from './stateReporter';
+import { type LegendHook } from './toPanelProps';
 
 /** The signals of the draw of one viz spec. `update` starts new signals. */
 interface DrawSignals {
@@ -37,6 +39,13 @@ class Renderer {
   /** Set when `el` had a box once, and `setDefaultHeight` looked at its height. */
   private heightChecked = false;
   private prepared: Prepared | undefined;
+  /** The last viz spec, so a legend change can draw it again. */
+  private spec: unknown;
+  /**
+   * The legend changes of the user (`renderer.34` to `renderer.37`). They live here, in memory, until `destroy`:
+   * `update` draws each new viz spec with them. They go to no other object, and a new `render` starts with none.
+   */
+  private legend: LegendOverrides | undefined;
   private signals = newSignals();
   private size: { width: number; height: number };
   private destroyed = false;
@@ -63,9 +72,14 @@ class Renderer {
     }
     this.reporter.rendering();
     this.signals = newSignals();
-    this.prepared = prepare(spec);
+    this.spec = spec;
+    this.prepared = prepare(spec, this.legendHook());
     this.refresh?.updated();
     this.draw();
+  }
+
+  private legendHook(): LegendHook {
+    return { overrides: this.legend, onChange: this.onLegendChange };
   }
 
   setRefreshed(id: string, ok: boolean, error?: string): void {
@@ -152,6 +166,19 @@ class Renderer {
     } else if (prepared.kind === 'no-data') {
       this.reporter.report(computeState({ kind: 'no-data', notices: prepared.notices }));
     }
+  };
+
+  /**
+   * `renderer.34`: a legend action draws the same viz spec with the new legend changes. The state and the notices do
+   * not change, so there is no new signal, and the reporter gives `onState` no call.
+   */
+  private readonly onLegendChange = (overrides: LegendOverrides) => {
+    if (this.destroyed || this.spec === undefined) {
+      return;
+    }
+    this.legend = overrides;
+    this.prepared = prepare(this.spec, this.legendHook());
+    this.draw();
   };
 
   private readonly onPanelError = (message: string | null) => {
