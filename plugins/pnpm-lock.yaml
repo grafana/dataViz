@@ -121,8 +121,8 @@ importers:
         specifier: 30.0.0
         version: 30.0.0
       '@types/lodash':
-        specifier: 4.17.20
-        version: 4.17.20
+        specifier: 4.17.27
+        version: 4.17.27
       '@types/node':
         specifier: 24.10.3
         version: 24.10.3
