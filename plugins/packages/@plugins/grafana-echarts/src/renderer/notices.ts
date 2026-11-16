@@ -11,9 +11,9 @@ import { type VizSpec } from './vizSpec';
 
 /**
  * The `series-truncated` message of the Renderer. It is not the `notices.json` message ("series with the smallest
- * peak values are not shown"): the Renderer draws the first `maxSeries` series, not the largest ones (decision 2 of
- * the plan, `state.10`). The follow-up issue "Renderer: choose the best series and add a show-all control for
- * series-truncated" changes the cut, and then this message goes back to the registry one.
+ * peak values are not shown"): the Renderer draws the first `maxSeries` series in frame and field order, not the
+ * largest ones (`state.10`, #143). The follow-up issue "Renderer: choose the best series and add a show-all control
+ * for series-truncated" changes the cut, and then this message goes back to the registry one.
  */
 export const SERIES_TRUNCATED_PATTERN = '<omitted> series are not shown. The first <maxSeries> series are drawn.';
 
