@@ -28,7 +28,7 @@ The Renderer does not bundle React or the Grafana UI packages. The App gives the
 - `@grafana/data`
 - `@emotion/css`
 
-The build writes a `package.json` next to the bundle. Its `peerDependencies` list these packages, with caret ranges of the versions in the package `package.json`. All other code is in the bundle, for example ECharts, rxjs and `@grafana/i18n`. Four small modules of `@grafana/runtime` are in the bundle too, and no Renderer code calls them.
+The build writes a `package.json` next to the bundle. Its `peerDependencies` list these packages, with caret ranges of the versions in the package `package.json`. All other code is in the bundle, for example ECharts, rxjs and `@grafana/i18n`. The bundle has no `@grafana/runtime` module: the build replaces `src/lib/grafana/GrafanaPanelServices.tsx`, the only panel file that uses it, with `src/renderer/GrafanaPanelServices.tsx`.
 
 ## Build
 
@@ -57,7 +57,7 @@ The manifest has `version`, `sha256` (the hash of `renderer.js`), `contractVersi
 - The fields of the manifest have the values of their sources.
 - Each bare import is a peer, and the bundle has no copy of a peer.
 - The bundle has no `eval` and no dynamic `import()`.
-- The bundle has only the four known `@grafana/runtime` modules.
+- The bundle has no `@grafana/runtime` module.
 - `dist-renderer/` has each release file and no other file. `renderer.d.ts` and `LICENSE` are equal to their sources.
 - If the environment variable `EXPECT_VERSION` is set, the manifest `version` is equal to it. The release workflow sets it to the version of the tag.
 

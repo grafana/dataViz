@@ -1,14 +1,15 @@
 import { LoadingState } from '@grafana/data';
-import { PanelDataErrorView } from '@grafana/runtime';
 import { debug, LOG_LEVELS } from 'development';
 import { type InteractedRelationsView } from 'lib/echarts/relations/options/view';
-import React, { useRef } from 'react';
+import React, { useContext, useRef } from 'react';
 import { PanelContent } from './PanelContent';
+import { PanelDataErrorViewContext } from './panelDataErrorViewContext';
 import { type PanelComponentProps } from './types';
 
 const PanelComponent: React.FC<PanelComponentProps> = (props) => {
   const { data, fieldConfig, id } = props;
   const relationsViewRef = useRef<InteractedRelationsView>(undefined);
+  const renderErrorView = useContext(PanelDataErrorViewContext);
 
   if (data.state === LoadingState.Streaming) {
     return null;
@@ -20,7 +21,7 @@ const PanelComponent: React.FC<PanelComponentProps> = (props) => {
   // chart data and use the same empty view as a response with no frames.
   if (data.series.length === 0 || data.series.every((frame) => frame.length === 0)) {
     debug('PanelDataErrorView', LOG_LEVELS.debug);
-    return <PanelDataErrorView fieldConfig={fieldConfig} panelId={id} data={data} needsStringField />;
+    return renderErrorView({ fieldConfig, panelId: id, data, needsStringField: true });
   }
 
   return <PanelContent {...props} relationsViewRef={relationsViewRef} />;
