@@ -6,7 +6,9 @@ import {
   getHiddenSeriesNames,
   getMarkPositionOverride,
   getSeriesColorOverride,
-  readLegendOverrides,
+  type LegendOverrides,
+  mergeLegendOverrides,
+  readLegendChange,
   setMarkPositionsConfig,
   toggleSeriesVisibilityConfig,
 } from 'lib/grafana/fields/seriesConfig';
@@ -259,38 +261,66 @@ describe('toggleSeriesVisibilityConfig', () => {
   });
 });
 
-describe('readLegendOverrides and applyLegendOverrides', () => {
-  const specColor = changeSeriesColorConfig(emptyConfig(), 'cpu', '#111111');
+describe('the legend state', () => {
   const hideMem = (config: FieldConfigSource) =>
     toggleSeriesVisibilityConfig(config, 'mem', SeriesVisibilityChangeMode.AppendToSelection, names);
+  /** The state after the legend gives `next` while the panel draws with `current`. */
+  const change = (state: LegendOverrides | undefined, next: FieldConfigSource, current: FieldConfigSource) =>
+    mergeLegendOverrides(state, readLegendChange(next, current));
 
   it('reads no change when the legend changed nothing', () => {
-    expect(readLegendOverrides(specColor, specColor)).toEqual({ hide: undefined, colors: new Map() });
+    const config = changeSeriesColorConfig(emptyConfig(), 'cpu', '#111111');
+    expect(readLegendChange(config, config)).toEqual({ colors: new Map() });
   });
 
-  it('reads the visibility change and the color change of the legend, and not the overrides of the viz spec', () => {
-    const next = hideMem(changeSeriesColorConfig(specColor, 'mem', '#222222'));
-    const legend = readLegendOverrides(next, specColor);
-    expect([...legend.colors.keys()]).toEqual(['mem']);
-    expect(legend.hide).toBeDefined();
-    const applied = applyLegendOverrides(specColor, legend);
+  it('reads one visibility change, and one color change', () => {
+    const base = emptyConfig();
+    expect(readLegendChange(hideMem(base), base).hide).toBeDefined();
+    const color = readLegendChange(changeSeriesColorConfig(base, 'mem', '#222222'), base);
+    expect([...color.colors.keys()]).toEqual(['mem']);
+    expect(color.hide).toBeUndefined();
+  });
+
+  it('keeps the earlier changes of the user when a later change is another one', () => {
+    const base = emptyConfig();
+    const first = change(undefined, hideMem(base), base);
+    const drawn = applyLegendOverrides(base, first);
+    const second = change(first, changeSeriesColorConfig(drawn, 'cpu', '#222222'), drawn);
+    const applied = applyLegendOverrides(base, second);
     expect(getHiddenSeriesNames(applied, names)).toEqual(new Set(['mem']));
-    expect(getSeriesColorOverride(applied, 'cpu', theme)).toBe('#111111');
-    expect(getSeriesColorOverride(applied, 'mem', theme)).toBe('#222222');
+    expect(getSeriesColorOverride(applied, 'cpu', theme)).toBe('#222222');
+  });
+
+  it('keeps a change that equals the overrides of the current viz spec', () => {
+    // The viz spec hides `mem`, as the user did. A later color change must not drop the choice of the user.
+    const specHidesMem = hideMem(emptyConfig());
+    const first = change(undefined, hideMem(emptyConfig()), emptyConfig());
+    const drawn = applyLegendOverrides(specHidesMem, first);
+    const second = change(first, changeSeriesColorConfig(drawn, 'cpu', '#222222'), drawn);
+    // A later viz spec has no hidden series, and the user still hides `mem`.
+    expect(getHiddenSeriesNames(applyLegendOverrides(emptyConfig(), second), names)).toEqual(new Set(['mem']));
+  });
+
+  it('keeps a color that equals the color of the current viz spec', () => {
+    const specColor = changeSeriesColorConfig(emptyConfig(), 'cpu', '#111111');
+    const first = change(undefined, changeSeriesColorConfig(emptyConfig(), 'cpu', '#111111'), emptyConfig());
+    const drawn = applyLegendOverrides(specColor, first);
+    const second = change(first, hideMem(drawn), drawn);
+    const newSpec = changeSeriesColorConfig(emptyConfig(), 'cpu', '#999999');
+    expect(getSeriesColorOverride(applyLegendOverrides(newSpec, second), 'cpu', theme)).toBe('#111111');
   });
 
   it('reads that the user showed each series, also when the viz spec hides some', () => {
     const specHides = hideMem(emptyConfig());
-    const legend = readLegendOverrides(hideMem(specHides), specHides);
+    const legend = change(undefined, hideMem(specHides), specHides);
     expect(legend.hide).toBeNull();
     expect(getHiddenSeriesNames(applyLegendOverrides(specHides, legend), names)).toEqual(new Set());
   });
 
-  it('gives the legend changes priority over the overrides of the viz spec', () => {
-    const legend = readLegendOverrides(
-      hideMem(changeSeriesColorConfig(emptyConfig(), 'cpu', '#222222')),
-      emptyConfig()
-    );
+  it('gives the legend state priority over the viz spec, with each color in a rule at the end', () => {
+    const hidden = change(undefined, hideMem(emptyConfig()), emptyConfig());
+    const drawn = applyLegendOverrides(emptyConfig(), hidden);
+    const legend = change(hidden, changeSeriesColorConfig(drawn, 'cpu', '#222222'), drawn);
     // A new viz spec hides `disk` and gives `cpu` another color.
     const newSpec = changeSeriesColorConfig(
       toggleSeriesVisibilityConfig(emptyConfig(), 'disk', SeriesVisibilityChangeMode.AppendToSelection, names),
@@ -299,6 +329,9 @@ describe('readLegendOverrides and applyLegendOverrides', () => {
     );
     const applied = applyLegendOverrides(newSpec, legend);
     expect(getHiddenSeriesNames(applied, names)).toEqual(new Set(['mem']));
-    expect(getSeriesColorOverride(applied, 'cpu', theme)).toBe('#222222');
+    expect(applied.overrides.at(-1)).toMatchObject({ matcher: { id: FieldMatcherID.byName, options: 'cpu' } });
+    expect(applied.overrides.at(-1)?.properties).toEqual([
+      { id: 'color', value: { mode: FieldColorModeId.Fixed, fixedColor: '#222222' } },
+    ]);
   });
 });

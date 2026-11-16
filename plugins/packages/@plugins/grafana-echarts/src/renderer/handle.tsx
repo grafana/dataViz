@@ -4,7 +4,7 @@
 // https://react.dev/reference/react-dom/client/createRoot
 import { type RenderError, type RenderHandle, type RenderOptions } from '@grafana/viz-contract/renderer-api';
 import { type EChartsType } from 'lib/echarts/echarts';
-import { type LegendOverrides } from 'lib/grafana/fields/seriesConfig';
+import { type LegendOverrides, mergeLegendOverrides } from 'lib/grafana/fields/seriesConfig';
 import React from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { computeState } from './computeState';
@@ -174,11 +174,11 @@ class Renderer {
    * `renderer.34`: a legend action draws the same viz spec with the new legend changes. The state and the notices do
    * not change, so there is no new signal, and the reporter gives `onState` no call.
    */
-  private readonly onLegendChange = (overrides: LegendOverrides) => {
+  private readonly onLegendChange = (change: LegendOverrides) => {
     if (this.destroyed || this.spec === undefined) {
       return;
     }
-    this.legend = overrides;
+    this.legend = mergeLegendOverrides(this.legend, change);
     this.prepared = prepare(this.spec, this.legendHook());
     this.draw();
   };

@@ -10,7 +10,7 @@ import { seriesTypePath } from 'editor/constants';
 import { resolveSeriesType } from 'lib/echarts/charts/autoSeriesType';
 import { isMultiValueSeriesType } from 'lib/echarts/charts/narrowing';
 import { type PanelComponentProps } from 'lib/components/types';
-import { applyLegendOverrides, type LegendOverrides, readLegendOverrides } from 'lib/grafana/fields/seriesConfig';
+import { applyLegendOverrides, type LegendOverrides, readLegendChange } from 'lib/grafana/fields/seriesConfig';
 import { type PanelOptions } from 'types';
 import { withoutCallOuts } from './callOuts';
 import { isObject } from './parseSpec';
@@ -45,10 +45,13 @@ const isPanelOptions = (options: unknown): options is PanelOptions => isObject(o
 const identity = (value: string) => value;
 const noop = () => {};
 
-/** The legend changes of the user: the ones to draw with, and where a new change goes (`renderer.34`, `renderer.35`). */
+/**
+ * The legend changes of the user: the state to draw with, and where one new change goes (`renderer.34`,
+ * `renderer.35`). The owner of the hook merges the change into the state.
+ */
 export interface LegendHook {
   overrides?: LegendOverrides;
-  onChange: (overrides: LegendOverrides) => void;
+  onChange: (change: LegendOverrides) => void;
 }
 
 /** `Panel` props with no size. The size comes from `el` when the Renderer draws. */
@@ -115,7 +118,7 @@ export function preparePanel(
     replaceVariables: identity,
     onOptionsChange: noop,
     // `renderer.34`: a legend action gives the new field config. The viz spec does not change.
-    onFieldConfigChange: (next) => legend?.onChange(readLegendOverrides(next, specFieldConfig)),
+    onFieldConfigChange: (next) => legend?.onChange(readLegendChange(next, fieldConfig)),
     onChangeTimeRange: noop,
   };
   return { props, omittedSeries: cut.omitted };

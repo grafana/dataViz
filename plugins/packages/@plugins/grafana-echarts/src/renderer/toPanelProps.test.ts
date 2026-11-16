@@ -1,9 +1,17 @@
-import { FieldType } from '@grafana/data';
+import { FieldColorModeId, FieldType, getFieldDisplayName } from '@grafana/data';
+import { SeriesVisibilityChangeMode } from '@grafana/ui';
+import {
+  changeSeriesColorConfig,
+  getHiddenSeriesNames,
+  type LegendOverrides,
+  mergeLegendOverrides,
+  toggleSeriesVisibilityConfig,
+} from 'lib/grafana/fields/seriesConfig';
 import { fixtureSets, fixtureSpec } from 'test/rendererFixtures';
 import { PANELS } from './panels';
 import { parseSpec } from './parseSpec';
 import { withoutCallOuts } from './callOuts';
-import { preparePanel, themeOf, toPanelProps } from './toPanelProps';
+import { preparePanel, type SpecPanelProps, themeOf, toPanelProps } from './toPanelProps';
 import { type VizSpec } from './vizSpec';
 
 const parse = (input: unknown): VizSpec => {
@@ -221,5 +229,93 @@ describe('preparePanel: the series-truncated cut', () => {
     );
     expect(omittedSeries).toBe(0);
     expect(props.data.series).toHaveLength(11);
+  });
+});
+
+// `renderer.35`: the legend state of the user wins over the overrides of each viz spec, and stays until `destroy`.
+describe('the legend state in preparePanel', () => {
+  const KEPT = '/api/health';
+  const fixed = (fixedColor: string) => ({ mode: FieldColorModeId.Fixed, fixedColor });
+
+  const specWith = (overrides: unknown[]) => {
+    const spec = fixtureSpec('prometheus-line');
+    (spec.panel as Record<string, unknown>).fieldConfig = { defaults: {}, overrides };
+    return parse(spec);
+  };
+
+  /** The state of one Renderer: each draw reads it, and each legend action merges into it. */
+  const renderer = () => {
+    let state: LegendOverrides | undefined;
+    const hook = () => ({
+      overrides: state,
+      onChange: (change: LegendOverrides) => {
+        state = mergeLegendOverrides(state, change);
+      },
+    });
+    return { draw: (spec: VizSpec) => preparePanel(spec, cartesian, hook()).props };
+  };
+
+  const colorOf = (props: SpecPanelProps, name: string) =>
+    props.data.series
+      .flatMap((frame) => frame.fields.map((field) => ({ frame, field })))
+      .find(({ frame, field }) => field.type === FieldType.number && getFieldDisplayName(field, frame) === name)?.field
+      .config.color;
+  const seriesNames = (props: SpecPanelProps) =>
+    props.data.series.flatMap((frame) =>
+      frame.fields.filter((f) => f.type === FieldType.number).map((f) => getFieldDisplayName(f, frame))
+    );
+
+  const byName = (name: string, properties: unknown[]) => ({ matcher: { id: 'byName', options: name }, properties });
+  const color = (fixedColor: string) => ({ id: 'color', value: fixed(fixedColor) });
+  const hideRule = (kept: string[]) => ({
+    __systemRef: 'hideSeriesFrom',
+    matcher: { id: 'byNames', options: { mode: 'exclude', names: kept, prefix: 'All except:', readOnly: true } },
+    properties: [{ id: 'custom.hideFrom', value: { viz: true, legend: false, tooltip: true } }],
+  });
+
+  it('gives a legend color priority over a broader color rule that is after the byName rule of the viz spec', () => {
+    const spec = () =>
+      specWith([
+        byName(KEPT, [{ id: 'unit', value: 'ms' }]),
+        { matcher: { id: 'byRegexp', options: '.*' }, properties: [color('red')] },
+      ]);
+    const draw = renderer().draw;
+    const first = draw(spec());
+    expect(colorOf(first, KEPT)).toEqual(fixed('red'));
+    first.onFieldConfigChange(changeSeriesColorConfig(first.fieldConfig, KEPT, 'blue'));
+    expect(colorOf(draw(spec()), KEPT)).toEqual(fixed('blue'));
+    // The color stays after each later viz spec.
+    expect(colorOf(draw(spec()), KEPT)).toEqual(fixed('blue'));
+  });
+
+  it('keeps a legend change that is equal to the overrides of the viz spec when a later spec is not', () => {
+    const draw = renderer().draw;
+    const first = draw(specWith([]));
+    const names = seriesNames(first);
+    expect(names.length).toBeGreaterThan(2);
+    // 1. The user shows only `KEPT`.
+    first.onFieldConfigChange(
+      toggleSeriesVisibilityConfig(first.fieldConfig, KEPT, SeriesVisibilityChangeMode.ToggleSelection, names)
+    );
+    // 2. The viz spec has the same override as the user.
+    const second = draw(specWith([hideRule([KEPT])]));
+    expect(getHiddenSeriesNames(second.fieldConfig, names).size).toBe(names.length - 1);
+    // 3. The user changes a color.
+    second.onFieldConfigChange(changeSeriesColorConfig(second.fieldConfig, KEPT, 'blue'));
+    // 4. A viz spec with no hidden series does not show the series again.
+    const third = draw(specWith([]));
+    expect(getHiddenSeriesNames(third.fieldConfig, names).size).toBe(names.length - 1);
+    expect(colorOf(third, KEPT)).toEqual(fixed('blue'));
+  });
+
+  it('keeps a legend color that is equal to the color of the viz spec when a later spec is not', () => {
+    const draw = renderer().draw;
+    const first = draw(specWith([byName(KEPT, [color('red')])]));
+    first.onFieldConfigChange(changeSeriesColorConfig(first.fieldConfig, KEPT, 'blue'));
+    const second = draw(specWith([byName(KEPT, [color('blue')])]));
+    second.onFieldConfigChange(
+      toggleSeriesVisibilityConfig(second.fieldConfig, KEPT, SeriesVisibilityChangeMode.ToggleSelection, [KEPT, 'x'])
+    );
+    expect(colorOf(draw(specWith([byName(KEPT, [color('red')])])), KEPT)).toEqual(fixed('blue'));
   });
 });
