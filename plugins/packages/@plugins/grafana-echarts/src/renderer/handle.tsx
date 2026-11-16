@@ -1,6 +1,6 @@
 // The handle of `render`: one React root in `el`, the state of each draw, the size of `el`, and the refresh
-// (`renderer.2` to `renderer.5`, `renderer.10`, `renderer.34` to `renderer.37`, `state.1` to `state.13`, `refresh.1` to `refresh.7`, `refresh.13`,
-// `refresh.15`).
+// (`renderer.2` to `renderer.5`, `renderer.10`, `renderer.34` to `renderer.37`, `state.1` to `state.13`,
+// `refresh.1` to `refresh.7`, `refresh.13`, `refresh.15`).
 // https://react.dev/reference/react-dom/client/createRoot
 import { type RenderError, type RenderHandle, type RenderOptions } from '@grafana/viz-contract/renderer-api';
 import { type EChartsType } from 'lib/echarts/echarts';
@@ -46,6 +46,8 @@ class Renderer {
    * `update` draws each new viz spec with them. They go to no other object, and a new `render` starts with none.
    */
   private legend: LegendOverrides | undefined;
+  /** The `prepared` of the last view that React committed. Until it is `prepared`, the chart shows an earlier spec. */
+  private committed: Prepared | undefined;
   private signals = newSignals();
   private size: { width: number; height: number };
   private destroyed = false;
@@ -197,13 +199,21 @@ class Renderer {
     }
   };
 
+  private readonly onCommit = (prepared: Prepared) => {
+    this.committed = prepared;
+  };
+
   /**
    * `state.1`: the first draw is complete at the first ECharts `finished` event. A later draw (a resize, an
-   * `update`) reports again, and the reporter calls `onState` only for a change.
+   * `update`) reports again, and the reporter calls `onState` only for a change. A `finished` event before React
+   * commits the view of the current spec comes from the draw of an earlier spec, so it does not count.
    * https://echarts.apache.org/en/api.html#events.finished
    */
   private readonly onChartInit = (chart: EChartsType) => {
     chart.on('finished', () => {
+      if (this.committed !== this.prepared) {
+        return;
+      }
       this.signals.drawn = true;
       this.report();
     });
@@ -221,6 +231,7 @@ class Renderer {
         width={this.size.width}
         height={this.size.height}
         onViewShown={this.onViewShown}
+        onCommit={this.onCommit}
         onPanelError={this.onPanelError}
         onRenderError={this.onRenderError}
         onChartInit={this.onChartInit}

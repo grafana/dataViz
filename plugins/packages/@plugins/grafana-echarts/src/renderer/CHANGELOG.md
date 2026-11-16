@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/grafana/dataViz/compare/grafana-echarts-renderer/v0.2.0...grafana-echarts-renderer/v0.2.1) (2026-11-16)
+
+
+### 🐛 Bug Fixes
+
+* **ECharts:** Renderer ignores a late finished event from an earlier … ([#195](https://github.com/grafana/dataViz/issues/195)) ([47af7e4](https://github.com/grafana/dataViz/commit/47af7e4a492b656eece8a9248a6ad34dda654e03))
+
 ## [0.2.0](https://github.com/grafana/dataViz/compare/grafana-echarts-renderer/v0.1.0...grafana-echarts-renderer/v0.2.0) (2026-11-16)
 
 
