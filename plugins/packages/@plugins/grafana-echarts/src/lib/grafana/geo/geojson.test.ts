@@ -85,9 +85,11 @@ describe('GeoJSON layer styles', () => {
     ]);
   });
 
-  it('gives a src that is not text as text, and the core default for an empty src', () => {
+  it('gives the core default for a src that is not a non-empty string', () => {
     const src = (value: unknown) => getLayerSrc({ type: 'geojson', config: { src: value as string } });
-    expect(src(5)).toBe('5');
+    expect(src(5)).toBe('public/maps/countries.geojson');
+    expect(src(true)).toBe('public/maps/countries.geojson');
+    expect(src(null)).toBe('public/maps/countries.geojson');
     expect(src('')).toBe('public/maps/countries.geojson');
   });
 });

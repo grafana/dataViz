@@ -214,10 +214,10 @@ export const isGeoJsonLayer = (layer: { type?: unknown }): layer is MapLayerOpti
   layer.type === GEOJSON_LAYER_TYPE;
 
 /**
- * The `config.src` of a layer, as text. An unset or empty value gives the core default. A layer of a viz spec is not
- * checked, so `src` can be any JSON value, such as `5` or `true`.
+ * The `config.src` of a layer, as text. A value that is not a non-empty string gives the core default. A layer of a
+ * viz spec is not checked, so `src` can be any JSON value, such as `5` or `true`.
  */
 export function getLayerSrc(layer: Partial<MapLayerOptions<GeoJsonConfig>>): string {
   const src: unknown = layer.config?.src;
-  return src ? String(src) : COUNTRIES_GEOJSON_SRC;
+  return typeof src === 'string' && src !== '' ? src : COUNTRIES_GEOJSON_SRC;
 }
