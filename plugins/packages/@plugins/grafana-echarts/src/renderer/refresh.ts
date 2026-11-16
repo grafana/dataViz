@@ -9,6 +9,12 @@ type WithoutId<T> = T extends unknown ? Omit<T, 'id'> : never;
 /** A `RefreshRequest` with no `id`. `RefreshController.request` gives the id (`refresh.13`). */
 export type RefreshCause = WithoutId<RefreshRequest>;
 
+/**
+ * The number of `onRefresh` calls of all handles. Each call gets the next number as its `id` (`refresh.13`). One
+ * counter for the module, so a late result for an earlier handle of the same `el` is not taken for a new request.
+ */
+let requestCount = 0;
+
 export interface RefreshStatus {
   /** True after a call of `onRefresh`, until its result (`refresh.4`). */
   busy: boolean;
@@ -20,9 +26,7 @@ export class RefreshController {
   /** `busy` is true while the last `onRefresh` call has no result. Only that call gets a result (`refresh.6`). */
   private status: RefreshStatus = { busy: false };
   private timer: ReturnType<typeof setTimeout> | undefined;
-  /** The number of `onRefresh` calls. Each call gets the next number as its `id` (`refresh.13`). */
-  private count = 0;
-  /** The `id` of the last `RefreshRequest`. */
+  /** The `id` of the last `RefreshRequest` of this controller. */
   private lastId: string | undefined;
 
   constructor(
@@ -39,8 +43,8 @@ export class RefreshController {
     if (this.status.busy) {
       return;
     }
-    this.count++;
-    const id = String(this.count);
+    requestCount++;
+    const id = String(requestCount);
     this.lastId = id;
     this.set({ busy: true });
     this.timer = setTimeout(() => this.finish(refreshMessage('refresh-timeout')), REFRESH_TIMEOUT_MS);

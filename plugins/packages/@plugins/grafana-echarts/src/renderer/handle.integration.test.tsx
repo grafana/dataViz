@@ -92,16 +92,19 @@ describe('the handle', () => {
     const el = withLayout(document.createElement('div'));
     el.style.width = '600px';
     document.body.appendChild(el);
-    const { handle, states } = draw(fixtureSpec('smoke-timeseries'), { onRefresh: jest.fn() }, el);
+    const onRefresh = jest.fn();
+    const { handle, states } = draw(fixtureSpec('smoke-timeseries'), { onRefresh }, el);
     await waitForState(el, 'ready');
     expect(el.style.height).toBe('400px');
+    // A busy refresh, so that only `destroy` stops its late result.
+    await userEvent.click(within(el).getByRole('button', { name: /refresh/i }));
     act(() => handle.destroy());
     expect(el.childElementCount).toBe(0);
     expect(el.hasAttribute('data-viz-state')).toBe(false);
     expect(el.style.height).toBe('');
     act(() => {
       handle.update(fixtureSpec('no-data'));
-      handle.setRefreshed('1', false, 'late');
+      handle.setRefreshed(onRefresh.mock.calls[0][0].id, false, 'late');
     });
     expect(el.childElementCount).toBe(0);
     expect(states).toHaveLength(1);

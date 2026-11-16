@@ -2,7 +2,7 @@
 // field order. It does not sort the series.
 import { type DataFrame, FieldType } from '@grafana/data';
 
-/** The families that raise `series-truncated` (decision 2 of the plan). The other families never cut series. */
+/** The families that raise `series-truncated`. Their charts draw one series for each number field. */
 export const TRUNCATED_FAMILIES = new Set(['cartesian', 'stream']);
 
 /**

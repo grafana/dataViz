@@ -35,6 +35,16 @@ describe('RefreshController', () => {
     expect(new Set(ids).size).toBe(3);
   });
 
+  it('gives ids that two controllers do not share, so a result for an old handle does nothing', () => {
+    const first = controller();
+    first.refresh.request({ cause: 'refresh' });
+    const second = controller();
+    second.refresh.request({ cause: 'refresh' });
+    expect(second.lastId()).not.toBe(first.lastId());
+    second.refresh.setRefreshed(first.lastId(), false, 'old handle');
+    expect(second.last()).toEqual({ busy: true });
+  });
+
   // contract-rule: refresh.5
   it('ends the busy state with each result', () => {
     const { refresh, last, lastId } = controller();
