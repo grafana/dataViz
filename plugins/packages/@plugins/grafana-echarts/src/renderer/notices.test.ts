@@ -1,5 +1,5 @@
 import { fixtureSpec, fixtureState } from 'test/rendererFixtures';
-import { allNotices, rendererNotices, SERIES_TRUNCATED_PATTERN, toChartNotices } from './notices';
+import { allNotices, rendererNotices, toChartNotices } from './notices';
 import { parseSpec } from './parseSpec';
 import { type VizSpec } from './vizSpec';
 
@@ -30,16 +30,15 @@ describe('rendererNotices', () => {
   // contract-rule: state.9
   it('gives unit-unknown for a unit that is not a unit id, and nothing for an empty unit', () => {
     expect(rendererNotices(withUnit('foo'), 0)).toEqual([
-      { code: 'unit-unknown', message: 'Unit foo is not a Grafana unit. The values show with no unit.' },
+      { code: 'unit-unknown', message: 'Unit foo is not a Grafana unit. The values show with foo as a suffix.' },
     ]);
     expect(rendererNotices(withUnit('reqps'), 0)).toEqual([]);
     expect(rendererNotices(withUnit(''), 0)).toEqual([]);
     expect(rendererNotices(withUnit(3), 0)).toEqual([]);
   });
 
-  // contract-rule: state.10
-  it('gives series-truncated with the own message of the Renderer', () => {
-    expect(SERIES_TRUNCATED_PATTERN).not.toContain('peak');
+  // contract-rule: state.19
+  it('gives series-truncated with the registry message', () => {
     expect(rendererNotices(parse(fixtureSpec('smoke-timeseries')), 7)).toEqual([
       { code: 'series-truncated', message: '7 series are not shown. The first 50 series are drawn.' },
     ]);

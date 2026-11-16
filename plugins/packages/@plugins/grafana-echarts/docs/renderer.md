@@ -2,7 +2,7 @@
 
 The Renderer is one ES module that draws a viz spec with the panels of this package. A viz spec is a JSON document that holds one panel and the data of its queries. The App of [grafana/mcp-grafana](https://github.com/grafana/mcp-grafana) loads the Renderer in an MCP Apps sandbox iframe. That iframe has no network and no Grafana server.
 
-The rules come from the viz contract 1.2.0, the `@grafana/viz-contract` npm package from [grafana/viz-contract](https://github.com/grafana/viz-contract). The package is a dependency in `package.json`, so `pnpm install` gets it. This repository has no copy of the contract. The source code is in `src/renderer/`.
+The rules come from the viz contract 1.7.0, the `@grafana/viz-contract` npm package from [grafana/viz-contract](https://github.com/grafana/viz-contract). The package is a dependency in `package.json`, so `pnpm install` gets it. This repository has no copy of the contract. The source code is in `src/renderer/`.
 
 ## The module
 
@@ -14,10 +14,10 @@ The module has three exports. Their types are in `renderer-api.d.ts` of the cont
 | `specVersions`              | The viz spec versions that the Renderer supports, from `src/renderer/specVersions.json`. |
 | `render(el, spec, options)` | Draws `spec` into `el` and returns a handle at once.                                     |
 
-`render` throws only if `el` is not an `HTMLElement`. A spec that is not correct gives the `error` state. The handle has `update(spec)`, `setRefreshed(ok, error)` and `destroy()`. The App gives two callbacks in `options`:
+`render` throws only if `el` is not an `HTMLElement`. A spec that is not correct gives the `error` state. The handle has `update(spec)`, `setRefreshed(id, ok, error)` and `destroy()`. The App gives two callbacks in `options`:
 
 - `onState` receives each new final state: `ready`, `no-data` or `error`, with the notices. The same state is in the `data-viz-state` and `data-viz-error` attributes of `el`.
-- `onRefresh` receives a request when the user clicks Refresh or selects a time range. The Renderer shows Refresh and the time picker only when the App gives `onRefresh`.
+- `onRefresh` receives a request when the user clicks Refresh or selects a time range. Each request has a new `id`. `setRefreshed` gives the result of the request with that `id`, and does nothing for the `id` of an older request. The Renderer shows Refresh and the time picker only when the App gives `onRefresh`.
 
 ## Peers
 
@@ -159,10 +159,11 @@ The contract package has no contract chapters, so it does not give the rule ids.
 
 The Renderer does not obey all of the contract yet.
 
-The `pending` list of `contractRules.json` is empty: each rule that the Renderer owns has a test or a check.
+These rules are in the `pending` list of `contractRules.json`:
+
+- The legend overrides (`renderer.34` to `renderer.37`, [#209](https://github.com/grafana/dataViz/issues/209)): the Renderer does not keep the legend changes of the user after `update`. A refresh, a new theme or a new time zone removes them.
 
 Each of these differences has a test that fails when the difference is fixed:
 
-- `series-truncated` (`state.10`): The contract draws the series with the largest peak values. The Renderer draws the first 50 series, in the order of the frames and fields. It does this only for the `cartesian` and `stream` families. Its message is "`<omitted>` series are not shown. The first `<maxSeries>` series are drawn." The registry message is not used, because it names the peak values. The constant is `SERIES_TRUNCATED_PATTERN` in `src/renderer/notices.ts`.
 - Icons (`renderer.7`, [grafana/viz-contract#1](https://github.com/grafana/viz-contract/issues/1)): `@grafana/ui` `Icon` gets each SVG file from the network. The sandbox blocks the request, so the icons are blank. Grafana core fills the icon cache of `react-inlinesvg` when it starts. Contract 1.2.0 makes the App do the same for its copy of `@grafana/ui` (`renderer.15`), from the `icons.json` of the Renderer build (`delivery.9`, pending). The sandbox test "the icons load with no network request" is marked `test.fail` until the sandbox test fills the icon cache from `icons.json` (`delivery.8`, pending).
 - Radar and parallel ([#148](https://github.com/grafana/dataViz/issues/148)): the multivariate panel reads each row as one axis, but the contract reads each number field as one axis. `smoke-radar` gives `panel-error`, and `smoke-parallel` draws its axes transposed. `KNOWN_MISMATCHES` in `conformance.integration.test.tsx` records both.

@@ -101,7 +101,7 @@ describe('the handle', () => {
     expect(el.style.height).toBe('');
     act(() => {
       handle.update(fixtureSpec('no-data'));
-      handle.setRefreshed(false, 'late');
+      handle.setRefreshed('1', false, 'late');
     });
     expect(el.childElementCount).toBe(0);
     expect(states).toHaveLength(1);
@@ -263,12 +263,12 @@ describe('refresh', () => {
     const { el, handle } = draw(fixtureSpec('smoke-timeseries'), { onRefresh });
     await waitForState(el, 'ready');
     await userEvent.click(within(el).getByRole('button', { name: /refresh/i }));
-    expect(onRefresh).toHaveBeenCalledWith({ cause: 'refresh' });
+    expect(onRefresh).toHaveBeenCalledWith({ id: expect.any(String), cause: 'refresh' });
     const fieldset = el.querySelector('fieldset')!;
     expect(fieldset).toBeDisabled();
     expect(el.querySelector('[_echarts_instance_]')).not.toBeNull();
 
-    act(() => handle.setRefreshed(false, 'bad_data: parse error'));
+    act(() => handle.setRefreshed(onRefresh.mock.calls[0][0].id, false, 'bad_data: parse error'));
     expect(fieldset).not.toBeDisabled();
     expect(within(el).getByRole('status').textContent).toBe('Refresh failed: bad_data: parse error');
 
@@ -285,7 +285,7 @@ describe('refresh', () => {
     await waitForState(el, 'ready');
     await userEvent.click(within(el).getByTestId(/TimePicker Open Button/i));
     await userEvent.click(await screen.findByText('Last 6 hours'));
-    expect(onRefresh).toHaveBeenCalledWith({ cause: 'timeRange', from: 'now-6h', to: 'now' });
+    expect(onRefresh).toHaveBeenCalledWith({ id: expect.any(String), cause: 'timeRange', from: 'now-6h', to: 'now' });
   });
 
   it('calls onRefresh with an absolute range for the move back button', async () => {
@@ -296,7 +296,12 @@ describe('refresh', () => {
     await waitForState(el, 'ready');
     await userEvent.click(within(el).getByRole('button', { name: /move time range backwards/i }));
     const half = (to - from) / 2;
-    expect(onRefresh).toHaveBeenCalledWith({ cause: 'timeRange', from: String(from - half), to: String(to - half) });
+    expect(onRefresh).toHaveBeenCalledWith({
+      id: expect.any(String),
+      cause: 'timeRange',
+      from: String(from - half),
+      to: String(to - half),
+    });
   });
 });
 

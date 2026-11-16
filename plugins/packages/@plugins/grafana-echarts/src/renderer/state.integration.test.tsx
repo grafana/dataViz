@@ -104,7 +104,9 @@ describe('the state of a draw', () => {
     expect(states.at(-1)).toEqual({
       state: 'error',
       error: { code: 'panel-error', message },
-      notices: [{ code: 'unit-unknown', message: 'Unit foo is not a Grafana unit. The values show with no unit.' }],
+      notices: [
+        { code: 'unit-unknown', message: 'Unit foo is not a Grafana unit. The values show with foo as a suffix.' },
+      ],
     });
     expect(screen.getByRole('alert').textContent).toBe(message);
   });

@@ -1,12 +1,8 @@
 // The handle of `render`: one React root in `el`, the state of each draw, the size of `el`, and the refresh
-// (`renderer.2` to `renderer.5`, `renderer.10`, `state.1` to `state.13`, `refresh.1` to `refresh.7`).
+// (`renderer.2` to `renderer.5`, `renderer.10`, `state.1` to `state.13`, `refresh.1` to `refresh.7`, `refresh.13`,
+// `refresh.15`).
 // https://react.dev/reference/react-dom/client/createRoot
-import {
-  type RefreshRequest,
-  type RenderError,
-  type RenderHandle,
-  type RenderOptions,
-} from '@grafana/viz-contract/renderer-api';
+import { type RenderError, type RenderHandle, type RenderOptions } from '@grafana/viz-contract/renderer-api';
 import { type EChartsType } from 'lib/echarts/echarts';
 import React from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -14,7 +10,7 @@ import { computeState } from './computeState';
 import { LOG_PREFIX } from './log';
 import { errorMessage } from './messages';
 import { type Prepared, prepare } from './prepare';
-import { RefreshController } from './refresh';
+import { type RefreshCause, RefreshController } from './refresh';
 import { DEFAULT_HEIGHT_PX } from './registry';
 import { RendererView } from './RendererView';
 import { StateReporter } from './stateReporter';
@@ -72,9 +68,9 @@ class Renderer {
     this.draw();
   }
 
-  setRefreshed(ok: boolean, error?: string): void {
+  setRefreshed(id: string, ok: boolean, error?: string): void {
     if (!this.destroyed) {
-      this.refresh?.setRefreshed(ok, error);
+      this.refresh?.setRefreshed(id, ok, error);
     }
   }
 
@@ -186,7 +182,7 @@ class Renderer {
     });
   };
 
-  private readonly onRefreshRequest = (request: RefreshRequest) => this.refresh?.request(request);
+  private readonly onRefreshRequest = (cause: RefreshCause) => this.refresh?.request(cause);
 
   private draw(): void {
     if (this.destroyed || !this.prepared) {
@@ -218,7 +214,7 @@ export function createRenderer(el: HTMLElement, spec: unknown, options?: RenderO
   renderer.update(spec);
   return {
     update: (next) => renderer.update(next),
-    setRefreshed: (ok, error) => renderer.setRefreshed(ok, error),
+    setRefreshed: (id, ok, error) => renderer.setRefreshed(id, ok, error),
     destroy: () => renderer.destroy(),
   };
 }

@@ -146,15 +146,16 @@ test('a refresh asks the App, and the result shows in the sandbox', async ({ pag
   const { requests } = await draw(page, fixtureSpec('smoke-timeseries'));
   const app = page.frameLocator('#app');
   await app.getByRole('button', { name: 'Refresh' }).click();
-  await expect
-    .poll(() =>
-      page.evaluate(() => (window as unknown as { messages: Message[] }).messages.filter((m) => m.type === 'refresh'))
-    )
-    .toEqual([{ type: 'refresh', request: { cause: 'refresh' } }]);
-  await page.evaluate(() =>
-    document
-      .querySelector<HTMLIFrameElement>('#app')!
-      .contentWindow!.postMessage({ type: 'setRefreshed', ok: false, error: 'boom' }, '*')
+  const refreshes = () =>
+    page.evaluate(() => (window as unknown as { messages: Message[] }).messages.filter((m) => m.type === 'refresh'));
+  await expect.poll(refreshes).toEqual([{ type: 'refresh', request: { id: expect.any(String), cause: 'refresh' } }]);
+  const { id } = (await refreshes())[0].request as { id: string };
+  await page.evaluate(
+    (refreshId) =>
+      document
+        .querySelector<HTMLIFrameElement>('#app')!
+        .contentWindow!.postMessage({ type: 'setRefreshed', id: refreshId, ok: false, error: 'boom' }, '*'),
+    id
   );
   await expect(app.getByRole('status')).toHaveText('Refresh failed: boom');
   expect(requests).toEqual([]);

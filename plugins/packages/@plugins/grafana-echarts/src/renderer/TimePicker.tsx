@@ -1,8 +1,8 @@
 import { type TimeRange } from '@grafana/data';
 import { type TimeZone } from '@grafana/schema';
 import { TimeRangePicker } from '@grafana/ui';
-import { type RefreshRequest } from '@grafana/viz-contract/renderer-api';
 import React from 'react';
+import { type RefreshCause } from './refresh';
 import { shiftTimeRange, toRefreshRequest, zoomOutTimeRange } from './timeRangeRequest';
 
 const noop = () => {};
@@ -11,7 +11,7 @@ interface Props {
   /** `data.range` of the viz spec. */
   value: TimeRange;
   timeZone: TimeZone;
-  onRequest: (request: RefreshRequest) => void;
+  onRequest: (cause: RefreshCause) => void;
 }
 
 /**

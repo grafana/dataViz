@@ -1,6 +1,5 @@
 import { type PanelDataErrorViewProps } from '@grafana/runtime';
 import { ThemeContext } from '@grafana/ui';
-import { type RefreshRequest } from '@grafana/viz-contract/renderer-api';
 import { ChartErrorBoundary } from 'lib/components/ChartErrorBoundary';
 import { ChartInitContext, type ChartInitListener } from 'lib/components/chartInitContext';
 import { ChartNotices } from 'lib/components/ChartNotices';
@@ -15,7 +14,7 @@ import { errorMessage } from './messages';
 import { NoDataView } from './NoDataView';
 import { toChartNotices } from './notices';
 import { type Prepared } from './prepare';
-import { type RefreshStatus } from './refresh';
+import { type RefreshCause, type RefreshStatus } from './refresh';
 import { RendererErrorView } from './RendererErrorView';
 import { RendererTitle } from './RendererTitle';
 import { RendererToolbar } from './RendererToolbar';
@@ -34,7 +33,7 @@ interface Props {
   /** Called with each chart instance before its first draw. It must be stable. */
   onChartInit: ChartInitListener;
   /** The Refresh and time picker bar. Only when the App gives `onRefresh` (`refresh.1`). */
-  refresh?: { status: RefreshStatus; onRequest: (request: RefreshRequest) => void };
+  refresh?: { status: RefreshStatus; onRequest: (cause: RefreshCause) => void };
 }
 
 /** The error view of a data issue: the Renderer gives its own, because only Grafana sets the view of `@grafana/runtime`. */

@@ -13,7 +13,7 @@ const frame = (name: string, numbers: number) =>
 const names = (series: DataFrame[]) => series.map((f) => f.fields.map((field) => field.name));
 
 describe('truncateSeries', () => {
-  // contract-rule: state.10
+  // contract-rule: state.19
   it('keeps the first series in frame and field order, and counts the rest', () => {
     const { series, omitted } = truncateSeries([frame('a', 2), frame('b', 2), frame('c', 1)], 3);
     expect(omitted).toBe(2);

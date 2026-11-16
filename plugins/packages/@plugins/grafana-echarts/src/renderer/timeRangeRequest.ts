@@ -1,13 +1,13 @@
 // The `RefreshRequest` of a time range pick (`refresh.3`), and the moves of the time picker buttons.
 import { dateTime, type TimeRange, isDateTime } from '@grafana/data';
-import { type RefreshRequest } from '@grafana/viz-contract/renderer-api';
+import { type RefreshCause } from './refresh';
 
 /**
  * A relative pick keeps its relative text, for example `now-6h` and `now`, so a later refresh moves with the
  * clock. An absolute pick gives epoch milliseconds, as a string.
  * https://grafana.com/docs/grafana/latest/dashboards/use-dashboards/#set-dashboard-time-range
  */
-export function toRefreshRequest(range: TimeRange): RefreshRequest {
+export function toRefreshRequest(range: TimeRange): RefreshCause {
   const raw = (value: TimeRange['raw']['from'], absolute: TimeRange['from']) =>
     isDateTime(value) ? String(value.valueOf()) : typeof value === 'string' ? value : String(absolute.valueOf());
   return { cause: 'timeRange', from: raw(range.raw.from, range.from), to: raw(range.raw.to, range.to) };
