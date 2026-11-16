@@ -148,8 +148,8 @@ importers:
         specifier: 10.0.1
         version: 10.0.1
       css-loader:
-        specifier: 7.1.4
-        version: 7.1.4(webpack@5.109.2)
+        specifier: 7.1.5
+        version: 7.1.5(webpack@5.109.2)
       eslint:
         specifier: 9.39.5
         version: 9.39.5(jiti@2.7.0)(supports-color@8.1.1)
@@ -338,8 +338,8 @@ importers:
         specifier: 14.0.0
         version: 14.0.0(webpack@5.108.4)
       css-loader:
-        specifier: 7.1.0
-        version: 7.1.0(webpack@5.108.4)
+        specifier: 7.1.5
+        version: 7.1.5(webpack@5.108.4)
       eslint:
         specifier: 9.32.0
         version: 9.32.0(jiti@2.7.0)(supports-color@8.1.1)
@@ -4021,20 +4021,8 @@ packages:
       webpack:
         optional: true
 
-  css-loader@7.1.0:
-    resolution: {integrity: sha512-VFNj47MAG84MqYDdh9puJG0h98Xs7gEYaX0aeGkfjYqBLB0seOE325sVbqWwaNu3hMZwEP4bB+F4gvF+A63qMA==}
-    engines: {node: '>= 18.12.0'}
-    peerDependencies:
-      '@rspack/core': 0.x || 1.x
-      webpack: ^5.27.0
-    peerDependenciesMeta:
-      '@rspack/core':
-        optional: true
-      webpack:
-        optional: true
-
-  css-loader@7.1.4:
-    resolution: {integrity: sha512-vv3J9tlOl04WjiMvHQI/9tmIrCxVrj6PFbHemBB1iihpeRbi/I4h033eoFIhwxBBqLhI0KYFS7yvynBFhIZfTw==}
+  css-loader@7.1.5:
+    resolution: {integrity: sha512-Q7iAfQkU2twNBryKX/vGAlE+GAmkF7quhSzAGNK8fBimxk3+tqg245rH52UPb9dioBolBc8rP0ihmHBaDTJQBA==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@rspack/core': 0.x || ^1.0.0 || ^2.0.0-0
@@ -5894,6 +5882,7 @@ packages:
 
   node-abort-controller@3.1.1:
     resolution: {integrity: sha512-AGK2yQKIjRuqnc6VkX2Xj5d+QW8xZ87pa1UK6yA6ouUyuxfHuMP6umE5QK7UmTeOAymo+Zx1Fxiuw9rVx8taHQ==}
+    deprecated: This package is no longer needed on supported Node.js versions. Node.js 16+ includes AbortController and AbortSignal as built-in globals. All Node.js versions requiring this polyfill are end-of-life. Use the built-in globals instead.
 
   node-addon-api@7.1.1:
     resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}
@@ -12448,7 +12437,7 @@ snapshots:
     optionalDependencies:
       webpack: 5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(esbuild@0.25.12)(postcss@8.5.26)(webpack-cli@5.1.4)
 
-  css-loader@7.1.0(webpack@5.108.4):
+  css-loader@7.1.5(webpack@5.108.4):
     dependencies:
       icss-utils: 5.1.0(postcss@8.5.26)
       postcss: 8.5.26
@@ -12461,7 +12450,7 @@ snapshots:
     optionalDependencies:
       webpack: 5.108.4(@swc/core@1.15.0(@swc/helpers@0.5.0))(esbuild@0.25.12)(postcss@8.5.26)(webpack-cli@6.0.0)
 
-  css-loader@7.1.4(webpack@5.109.2):
+  css-loader@7.1.5(webpack@5.109.2):
     dependencies:
       icss-utils: 5.1.0(postcss@8.5.26)
       postcss: 8.5.26
