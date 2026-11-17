@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/grafana/dataViz/compare/grafana-echarts-renderer/v0.3.1...grafana-echarts-renderer/v0.4.0) (2026-11-17)
+
+
+### 🎉 Features
+
+* **echarts:** keep the legend changes of the user after update ([#209](https://github.com/grafana/dataViz/issues/209)) ([#227](https://github.com/grafana/dataViz/issues/227)) ([ed28227](https://github.com/grafana/dataViz/commit/ed28227f9807e482d9b4a697cd029cbbddf5013b))
+
 ## [0.3.1](https://github.com/grafana/dataViz/compare/grafana-echarts-renderer/v0.3.0...grafana-echarts-renderer/v0.3.1) (2026-11-17)
 
 
