@@ -168,7 +168,7 @@ These rules are in the `pending` list of `contractRules.json`:
 These differences are not rules of the `pending` list:
 
 - The stat panel: the contract has the panel type `grafana-echartsstat-panel`, and this package does not have the panel yet. `PANEL_TYPES_NOT_IN_PACKAGE` in `src/renderer/registry.ts` has its id. A viz spec for it gives `unsupported-panel-type`, and the tests leave out its fixture sets (`smoke-stat`, `stat-no-data`, `stat-thresholds`). When the stat module is added, remove the id and add the panel to `PANELS`.
-- The `error-unsupported-panel-type` set of contract 1.10.0 lists the panel types of contract 1.7.0 in its message, with no gauge and no stat. `fixtureState` in `src/test/rendererFixtures.ts` puts the panel types that the Renderer draws in that message.
+- The `error-unsupported-panel-type` set of contract 1.10.0 lists the panel types of contract 1.7.0 in its message, with no gauge and no stat ([grafana/viz-contract#94](https://github.com/grafana/viz-contract/issues/94)). `fixtureState` in `src/test/rendererFixtures.ts` puts the panel types that the Renderer draws in that message.
 
 This difference has a test that fails when the difference is fixed:
 

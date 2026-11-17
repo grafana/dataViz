@@ -42,7 +42,8 @@ const SUPPORTED_TYPES = /Supported types: .*\.$/;
 /**
  * The `state.json` of a set, with one correction: the `unsupported-panel-type` message lists the panel types that
  * this package draws (`PANEL_IDS`). The set of contract 1.10.0 lists the panel types of contract 1.7.0, with no
- * gauge and no stat, and this package has no stat panel (`PANEL_TYPES_NOT_IN_PACKAGE`). Remove the correction when
+ * gauge and no stat (https://github.com/grafana/viz-contract/issues/94), and this package has no stat panel
+ * (`PANEL_TYPES_NOT_IN_PACKAGE`). Remove the correction when
  * the set and `PANEL_IDS` list the same panel types.
  */
 export const fixtureState = (set: string): RenderState => {
