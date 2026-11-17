@@ -45,9 +45,9 @@ describe('discover-plugins/run.sh', () => {
 				name: 'a branch-creating push (all-zero before) passes an empty base',
 				env: { CHANGED_ONLY: 'true', PUSH_BEFORE: '0'.repeat(40) },
 				args: [ROOT, ''],
-				log: `${NONE} (no base in the event)`,
+				log: `${NONE} (no usable base)`,
 			},
-			{ name: 'no event base (workflow_dispatch) passes an empty base', env: { CHANGED_ONLY: 'true' }, args: [ROOT, ''], log: `${NONE} (no base in the event)` },
+			{ name: 'no event base (workflow_dispatch) passes an empty base', env: { CHANGED_ONLY: 'true' }, args: [ROOT, ''], log: `${NONE} (no usable base)` },
 		];
 
 		for (const { name, env, args, log } of cases) {

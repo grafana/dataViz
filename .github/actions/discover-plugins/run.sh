@@ -35,7 +35,7 @@ if [ "$CHANGED_ONLY" = true ]; then
 		base=''
 	fi
 	if [ -z "$base" ]; then
-		source='no base in the event'
+		source='no usable base'
 	fi
 fi
 echo "changed-only base: ${base:-none, every package selected} ($source)"
