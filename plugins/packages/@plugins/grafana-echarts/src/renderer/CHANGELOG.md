@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/grafana/dataViz/compare/grafana-echarts-renderer/v0.3.0...grafana-echarts-renderer/v0.3.1) (2026-11-17)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** check only the plugins a PR changes, and update clock-panel to @grafana/* 13.3.0 ([#228](https://github.com/grafana/dataViz/issues/228)) ([641ee4b](https://github.com/grafana/dataViz/commit/641ee4ba7c67f02710639e3286b11286a271f287))
+
 ## [0.3.0](https://github.com/grafana/dataViz/compare/grafana-echarts-renderer/v0.2.1...grafana-echarts-renderer/v0.3.0) (2026-11-17)
 
 
