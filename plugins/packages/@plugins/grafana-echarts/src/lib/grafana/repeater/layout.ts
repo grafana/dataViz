@@ -34,12 +34,23 @@ function gridCounts(width: number, height: number, count: number): { columns: nu
 /** The size of one of `count` equal parts of `total`, with `spacing` between the parts. */
 const partSize = (total: number, count: number, spacing: number) => total / count - spacing + spacing / count;
 
+export interface RepeaterLayoutInput {
+  /** The width of the panel in pixels. */
+  width: number;
+  /** The height of the panel in pixels. */
+  height: number;
+  /** The number of values. */
+  count: number;
+  /** The space between two cells in pixels. */
+  spacing: number;
+}
+
 /**
  * The cells of `count` values in a panel of `width` x `height`, in row order. The cells of the last row are wider
  * when the row is not full, so the row fills the panel width. The result is empty when there is no value or no
  * space.
  */
-export function layoutRepeaterCells(width: number, height: number, count: number, spacing: number): RepeaterCell[] {
+export function layoutRepeaterCells({ width, height, count, spacing }: RepeaterLayoutInput): RepeaterCell[] {
   if (count <= 0 || width <= 0 || height <= 0) {
     return [];
   }

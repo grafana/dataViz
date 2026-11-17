@@ -23,25 +23,39 @@ export interface FieldDisplayInput {
   replaceVariables: InterpolateFunction;
   theme: GrafanaTheme2;
   timeZone?: string;
+  /** Add the values of the field over time to each result (`FieldDisplay.sparkline`). */
+  sparkline?: boolean;
+  /** Add the change from the first value to the last value, in percent, to each result (`DisplayValue.percentChange`). */
+  percentChange?: boolean;
 }
 
 /**
  * The values that the panel shows, in the order of the frames and the fields. Grafana does the reduction, the
- * display name, the color, the unit and the value mappings. The result is empty when no field matches: Grafana
- * gives a "No data" placeholder with no column index for that case, and this function removes it.
+ * display name, the color, the unit and the value mappings.
+ *
+ * The result is empty when no field matches. For that case Grafana gives one placeholder with no column index,
+ * and this function removes it. The text of the placeholder is the `noValue` field option, or "No data". The
+ * caller owns that case: its data issue view shows the message, and reads `fieldConfig.defaults.noValue` if it
+ * shows the text of the option.
  */
 export function resolveFieldDisplays(input: FieldDisplayInput): FieldDisplay[] {
-  const { frames, fieldConfig, reduceOptions, defaultCalc, replaceVariables, theme, timeZone } = input;
+  const { frames, reduceOptions, defaultCalc, ...rest } = input;
   const calcs = reduceOptions?.calcs?.length ? reduceOptions.calcs : [defaultCalc];
 
-  return getFieldDisplayValues({
-    data: frames,
-    fieldConfig,
-    reduceOptions: { ...reduceOptions, calcs },
-    replaceVariables,
-    theme,
-    timeZone,
-  }).filter((display) => display.colIndex !== undefined);
+  return getFieldDisplayValues({ ...rest, data: frames, reduceOptions: { ...reduceOptions, calcs } }).filter(
+    (display) => display.colIndex !== undefined
+  );
+}
+
+/**
+ * A copy of the field with a new range. The copy has a new display processor, because the processor reads the
+ * range for the color and the percent of a value. The input field does not change.
+ */
+export function withFieldRange(field: Field, range: { min: number; max: number }, theme: GrafanaTheme2): Field {
+  const { min, max } = range;
+  const ranged: Field = { ...field, state: { ...field.state, range: { min, max, delta: max - min } } };
+  ranged.display = getDisplayProcessor({ field: ranged, theme });
+  return ranged;
 }
 
 const PERCENT_UNIT_MAX: Record<string, number> = { percent: 100, percentunit: 1 };
@@ -52,12 +66,7 @@ function withPercentUnitRange(field: Field, theme: GrafanaTheme2): Field {
   if (unitMax === undefined) {
     return field;
   }
-  const min = field.config.min ?? 0;
-  const max = field.config.max ?? unitMax;
-  const ranged: Field = { ...field, state: { ...field.state, range: { min, max, delta: max - min } } };
-  // The display processor reads the range for the color of the value, so it must see the new range.
-  ranged.display = getDisplayProcessor({ field: ranged, theme });
-  return ranged;
+  return withFieldRange(field, { min: field.config.min ?? 0, max: field.config.max ?? unitMax }, theme);
 }
 
 /**
