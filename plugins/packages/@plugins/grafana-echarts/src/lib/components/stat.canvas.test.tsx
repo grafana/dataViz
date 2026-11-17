@@ -146,6 +146,26 @@ describe('stat canvas snapshots', () => {
     });
   });
 
+  describe('text size', () => {
+    // The name is 40px and the value is 60px, and not the sizes that fit the cell. The sparkline has the
+    // space below the two texts.
+    it('a set size for the name and for the value', async () => {
+      const { defaultEvents, seriesEvents } = await renderStat([cpuFrame], {
+        ...valueAndName,
+        text: { titleSize: 40, valueSize: 60 },
+      });
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
+    });
+
+    // Four cells. Each value is 24px, and each name is fitted to not more than 70% of that size.
+    it('a set size for the value only, four values in a grid', async () => {
+      const { defaultEvents, seriesEvents } = await renderStat([seriesFrame(4)], { text: { valueSize: 24 } });
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
+    });
+  });
+
   describe('text alignment', () => {
     const centered = { ...valueAndName, justifyMode: BigValueJustifyMode.Center };
 

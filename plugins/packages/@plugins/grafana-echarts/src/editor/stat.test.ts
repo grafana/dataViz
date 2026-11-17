@@ -30,6 +30,17 @@ describe('resolveStatOptions', () => {
     expect(resolveStatOptions(options({ colorMode })).colorMode).toBe(colorMode);
   });
 
+  it('reads the text sizes from the `text` option', () => {
+    const resolved = resolveStatOptions(options({ text: { titleSize: 20, valueSize: 60 } }));
+    expect(resolved.titleSize).toBe(20);
+    expect(resolved.valueSize).toBe(60);
+  });
+
+  it('gives no text size for a size that is not set, or that is 0', () => {
+    expect(resolveStatOptions(options()).titleSize).toBeUndefined();
+    expect(resolveStatOptions(options({ text: { titleSize: 0, valueSize: 0 } })).valueSize).toBeUndefined();
+  });
+
   it('gives the default color mode for a color mode that the panel does not know', () => {
     const colorMode = 'not_a_mode' as BigValueColorMode;
     expect(resolveStatOptions(options({ colorMode })).colorMode).toBe(BigValueColorMode.Value);

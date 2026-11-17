@@ -1,5 +1,6 @@
 import { PanelPlugin, ReducerID } from '@grafana/data';
 import { initPluginTranslations } from '@grafana/i18n';
+import { commonOptionsBuilder } from '@grafana/ui';
 import { type EChartsFieldConfig } from 'editor/types';
 import { makeLazyPanel } from 'lib/components/LazyPanel';
 import { addStandardDataReduceOptions } from 'lib/grafana/editor/common/standardReducer';
@@ -27,6 +28,9 @@ export const plugin = new PanelPlugin<PanelOptions, EChartsFieldConfig>(makeLazy
     // "Value options": the reducer for each field, or one value for each row. Core Stat's default is the last
     // value that is not null.
     addStandardDataReduceOptions(builder, true, ReducerID.lastNotNull);
+    // "Text size": the font size of the name ("Title") and of the value. Unset fits the text to its cell.
+    // https://grafana.com/docs/grafana/latest/panels-visualizations/visualizations/stat/#text-size
+    commonOptionsBuilder.addTextSizeOptions(builder, { withTitle: true, withValue: true });
     addStatStyleOptions(builder);
     return builder;
   })

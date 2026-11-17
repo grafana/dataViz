@@ -182,6 +182,12 @@ interface FitInput {
   maxTextWidth: number;
   maxTextHeight: number;
   fontFamily: string;
+  /**
+   * The font sizes that the panel options set. A text with a set size is not fitted: `texts` has no text to
+   * align to for it, so its fit gives 0, and the size here replaces the fit.
+   */
+  titleSize?: number;
+  valueSize?: number;
 }
 
 /** The fit of the name: the regular weight, and not larger than `MAX_TITLE_SIZE`. */
@@ -215,8 +221,8 @@ const limitTitle = (title: number, value: number) => (title > 0 ? Math.min(value
 /** Wide cell, no sparkline: the name at the left, the value at the right. */
 function fitWideNoChart(input: FitInput): StatFontSizes {
   const { maxTextWidth, maxTextHeight, texts } = input;
-  const value = fitValue(input, maxTextWidth * (texts.titleToAlignTo ? 0.3 : 1), maxTextHeight);
-  const title = limitTitle(fitTitle(input, maxTextWidth * 0.6, maxTextHeight), value);
+  const value = input.valueSize ?? fitValue(input, maxTextWidth * (texts.titleToAlignTo ? 0.3 : 1), maxTextHeight);
+  const title = input.titleSize ?? limitTitle(fitTitle(input, maxTextWidth * 0.6, maxTextHeight), value);
   return { title, value, chartHeight: 0 };
 }
 
@@ -224,8 +230,8 @@ function fitWideNoChart(input: FitInput): StatFontSizes {
 function fitWideWithChart(input: FitInput): StatFontSizes {
   const { maxTextWidth, maxTextHeight, cell } = input;
   return {
-    title: fitTitle(input, maxTextWidth * 0.6, maxTextHeight * 0.4),
-    value: fitValue(input, maxTextWidth * 0.4, maxTextHeight * 0.5),
+    title: input.titleSize ?? fitTitle(input, maxTextWidth * 0.6, maxTextHeight * 0.4),
+    value: input.valueSize ?? fitValue(input, maxTextWidth * 0.4, maxTextHeight * 0.5),
     chartHeight: cell.height * 0.5,
   };
 }
@@ -234,8 +240,10 @@ function fitWideWithChart(input: FitInput): StatFontSizes {
 function fitStackedWithChart(input: FitInput): StatFontSizes {
   const { maxTextWidth, maxTextHeight, cell } = input;
   const fittedTitle = fitTitle(input, maxTextWidth, cell.height * 0.15);
-  const value = fitValue(input, maxTextWidth, maxTextHeight - cell.height * 0.25 - fittedTitle * STAT_LINE_HEIGHT);
-  const title = limitTitle(fittedTitle, value);
+  const value =
+    input.valueSize ??
+    fitValue(input, maxTextWidth, maxTextHeight - cell.height * 0.25 - fittedTitle * STAT_LINE_HEIGHT);
+  const title = input.titleSize ?? limitTitle(fittedTitle, value);
   return { title, value, chartHeight: cell.height - (title + value) * STAT_LINE_HEIGHT };
 }
 
@@ -243,8 +251,8 @@ function fitStackedWithChart(input: FitInput): StatFontSizes {
 function fitStackedNoChart(input: FitInput): StatFontSizes {
   const { maxTextWidth, maxTextHeight, cell } = input;
   const fittedTitle = fitTitle(input, maxTextWidth, cell.height * 0.15);
-  const value = fitValue(input, maxTextWidth, maxTextHeight - fittedTitle * STAT_LINE_HEIGHT);
-  return { title: limitTitle(fittedTitle, value), value, chartHeight: 0 };
+  const value = input.valueSize ?? fitValue(input, maxTextWidth, maxTextHeight - fittedTitle * STAT_LINE_HEIGHT);
+  return { title: input.titleSize ?? limitTitle(fittedTitle, value), value, chartHeight: 0 };
 }
 
 /**
@@ -277,6 +285,18 @@ function measureRow(
     return undefined;
   }
   return { title, total: title + gap + value + suffix };
+}
+
+/** `true` when the name and the value do not fit side by side in the width. A cell with no name has no row. */
+function isRowTooWide(
+  texts: StatTexts,
+  titleSize: number,
+  valueSize: number,
+  maxWidth: number,
+  theme: GrafanaTheme2
+): boolean {
+  const row = texts.title ? measureRow(texts, titleSize, valueSize, 0, theme) : undefined;
+  return row !== undefined && row.total > maxWidth;
 }
 
 interface StatCellColors {
@@ -331,7 +351,21 @@ function layoutCell(
   const padding = cell.height > 100 ? 12 : 8;
   const maxTextWidth = cell.width - padding * 2;
   const maxTextHeight = cell.height - padding * 2;
-  const fitInput: FitInput = { cell, texts, maxTextWidth, maxTextHeight, fontFamily: theme.typography.fontFamily };
+  const { titleSize: setTitleSize, valueSize: setValueSize } = options;
+  const fitInput: FitInput = {
+    cell,
+    // As `BigValueLayout`: a text with a set size has no text to align to, so the other text gets its space.
+    texts: {
+      ...texts,
+      titleToAlignTo: setTitleSize ? undefined : texts.titleToAlignTo,
+      valueToAlignTo: setValueSize ? '' : texts.valueToAlignTo,
+    },
+    maxTextWidth,
+    maxTextHeight,
+    fontFamily: theme.typography.fontFamily,
+    titleSize: setTitleSize,
+    valueSize: setValueSize,
+  };
 
   const sparkline = display.sparkline;
   const isWide = options.wideLayout && cell.width / cell.height > WIDE_ASPECT_RATIO;
@@ -381,6 +415,12 @@ function layoutCell(
       titleY = centerY(titleHeight + gap + valueHeight);
       valueY = titleY + titleHeight + gap;
     }
+  } else if (isWide && isRowTooWide(texts, titleSize, valueSize, maxTextWidth, theme)) {
+    // Text sizes that are set can make the row wider than the cell. The value then goes below the name, at the
+    // left, as a flexbox that wraps. With a sparkline the two lines share the free height of the cell.
+    const freeHeight = Math.max(0, maxTextHeight - titleHeight - valueHeight);
+    titleY = hasChart ? top : centerY(titleHeight + valueHeight);
+    valueY = titleY + titleHeight + (hasChart ? freeHeight / 2 : 0);
   } else if (isWide) {
     // Side by side. With a sparkline the texts are at the top of the cell, else at its vertical center.
     titleY = hasChart ? top : centerY(titleHeight);

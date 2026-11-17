@@ -268,6 +268,55 @@ describe('layoutStatCells', () => {
     });
   });
 
+  describe('text sizes', () => {
+    it('gives the name and the value the sizes that are set', () => {
+      const [cell] = layout([cpuFrame], 300, 300, { ...valueAndName, titleSize: 22, valueSize: 40 });
+      expect(cell.title!.fontSize).toBe(22);
+      expect(cell.value!.fontSize).toBe(40);
+    });
+
+    it('fits the value when only the name has a set size, and does not limit the name to 70% of the value', () => {
+      // A stacked cell with no sparkline.
+      const [auto] = layout([cpuFrame], 200, 90, valueAndName);
+      const [cell] = layout([cpuFrame], 200, 90, { ...valueAndName, titleSize: 60 });
+      expect(cell.title!.fontSize).toBe(60);
+      expect(cell.title!.fontSize).toBeGreaterThan(cell.value!.fontSize * 0.7);
+      // The fit of the value does not subtract the height of a name with a set size, as in core.
+      expect(cell.value!.fontSize).toBeGreaterThan(auto.value!.fontSize);
+    });
+
+    it('fits the name when only the value has a set size, to not more than 70% of that size', () => {
+      // A stacked cell with no sparkline. The fit of the name to the cell gives more than 7px.
+      const [cell] = layout([cpuFrame], 200, 90, { ...valueAndName, valueSize: 10 });
+      expect(cell.value!.fontSize).toBe(10);
+      expect(cell.title!.fontSize).toBeCloseTo(7);
+    });
+
+    it('gives the value the full width of a wide cell when the name has a set size', () => {
+      const [auto] = layout([cpuFrame], 251, 40, valueAndName);
+      const [cell] = layout([cpuFrame], 251, 40, { ...valueAndName, titleSize: 10 });
+      expect(cell.title!.fontSize).toBe(10);
+      expect(cell.value!.fontSize).toBeGreaterThanOrEqual(auto.value!.fontSize);
+    });
+
+    it('puts the value below the name, at the left, when the two do not fit side by side in a wide cell', () => {
+      // The Jest canvas measures a text much narrower than a browser, so the cell is small and the sizes large.
+      const [fits] = layout([cpuFrame], 60, 20, valueAndName);
+      expect(fits.value!.align).toBe('right');
+
+      const [cell] = layout([cpuFrame], 60, 20, { ...valueAndName, titleSize: 200, valueSize: 200 });
+      const { title, value } = cell;
+      expect(value).toMatchObject({ x: title!.x, align: 'left' });
+      expect(value!.y).toBeGreaterThanOrEqual(title!.y + title!.fontSize * STAT_LINE_HEIGHT);
+    });
+
+    it('gives the sparkline of a stacked cell the space below texts of the set sizes', () => {
+      const [cell] = layout([cpuFrame], 300, 300, { ...valueAndName, titleSize: 20, valueSize: 30 });
+      const ys = cell.sparkline!.segments.flat().map(([, y]) => y);
+      expect(Math.min(...ys)).toBeGreaterThanOrEqual((20 + 30) * STAT_LINE_HEIGHT);
+    });
+  });
+
   describe('text alignment Center', () => {
     const centered = { ...valueAndName, justifyMode: BigValueJustifyMode.Center };
     const lineHeight = (text: { fontSize: number }) => text.fontSize * STAT_LINE_HEIGHT;

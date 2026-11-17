@@ -61,6 +61,9 @@ export interface StatRenderOptions {
   graphMode: BigValueGraphMode;
   wideLayout: boolean;
   justifyMode: BigValueJustifyMode;
+  /** The font size in pixels of the name and of the value. Unset fits the text to its cell. */
+  titleSize?: number;
+  valueSize?: number;
 }
 
 /**
@@ -77,5 +80,8 @@ export function resolveStatOptions(options: PanelOptions): StatRenderOptions {
     graphMode: options.graphMode ?? STAT_GRAPH_MODE_DEFAULT,
     wideLayout: options.wideLayout ?? STAT_WIDE_LAYOUT_DEFAULT,
     justifyMode: options.justifyMode ?? STAT_JUSTIFY_MODE_DEFAULT,
+    // A size of 0 is not set, as in core.
+    titleSize: options.text?.titleSize || undefined,
+    valueSize: options.text?.valueSize || undefined,
   };
 }
