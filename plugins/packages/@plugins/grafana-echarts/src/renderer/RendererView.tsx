@@ -75,8 +75,8 @@ export const RendererView = ({
   return (
     <ThemeContext.Provider value={prepared.theme}>
       <ChartInitContext.Provider value={onChartInit}>
-        {/* `renderer.14`: a double click zoom out does nothing. The brush zoom and the pan call the
-            `onChangeTimeRange` of `toPanelProps`, which does nothing. */}
+        {/* A double click zoom out does nothing. The brush zoom and the pan call the `onChangeTimeRange` of
+            `toPanelProps`, which does nothing. The zoom rules `renderer.42` to `renderer.48` are pending. */}
         <TimeZoomOutContext.Provider value={null}>
           <PanelErrorContext.Provider value={onPanelError}>
             <PanelDataErrorViewContext.Provider value={renderDataIssue}>

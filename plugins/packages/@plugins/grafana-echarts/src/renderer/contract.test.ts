@@ -4,26 +4,26 @@ import panelTypes from '@grafana/viz-contract/registry/panel-types.json';
 import fs from 'node:fs';
 import path from 'node:path';
 import { allFixtureSets, FIXTURES_DIR, fixtureSets } from 'test/rendererFixtures';
+import { PANELS } from './panels';
+import { PANEL_IDS, PANEL_TYPES_NOT_IN_PACKAGE } from './registry';
 
 const sets = fixtureSets();
 const smokeSets = sets.filter((name) => name.startsWith('smoke-'));
-
-// The panels of this package that the installed contract does not have. The Renderer does not draw them.
-// The gauge panel is in beta: it needs a row in `panel-types.json` of grafana/viz-contract first.
-const PANELS_NOT_IN_CONTRACT = new Set(['grafana-echartsgauge-panel']);
 
 const modulesDir = path.join(__dirname, '..', 'modules');
 const pluginIds = fs
   .readdirSync(modulesDir)
   .filter((name) => fs.existsSync(path.join(modulesDir, name, 'plugin.json')))
   .map((name) => JSON.parse(fs.readFileSync(path.join(modulesDir, name, 'plugin.json'), 'utf8')).id)
-  .filter((id) => !PANELS_NOT_IN_CONTRACT.has(id))
   .sort();
+
+// The chart types and the panel types of the contract that this package has.
+const charts = chartTypes.charts.filter((chart) => !PANEL_TYPES_NOT_IN_PACKAGE.has(chart.panel));
 
 describe('viz contract', () => {
   // contract-rule: fixtures.5
   it('has one smoke set for each chart type, and no other smoke set', () => {
-    expect(smokeSets).toEqual(chartTypes.charts.map((chart) => `smoke-${chart.name}`).sort());
+    expect(smokeSets).toEqual(charts.map((chart) => `smoke-${chart.name}`).sort());
   });
 
   // contract-rule: fixtures.10
@@ -35,7 +35,13 @@ describe('viz contract', () => {
   // contract-rule: fixtures.10
   it('has no smoke or error set that is not a Renderer set', () => {
     const others = allFixtureSets().filter((set) => !sets.includes(set));
-    expect(others.filter((set) => set.startsWith('smoke-') || set.startsWith('error-'))).toEqual([]);
+    const missing = chartTypes.charts.filter((chart) => !charts.includes(chart)).map((chart) => `smoke-${chart.name}`);
+    expect(others.filter((set) => set.startsWith('smoke-') || set.startsWith('error-'))).toEqual(missing);
+  });
+
+  // contract-rule: fixtures.13
+  it('has the focus sets of the gauge chart as Renderer sets', () => {
+    expect(sets).toEqual(expect.arrayContaining(['gauge-no-data', 'gauge-thresholds']));
   });
 
   // contract-rule: fixtures.12
@@ -54,6 +60,11 @@ describe('viz contract', () => {
   });
 
   it('has one panel of this package for each panel type', () => {
-    expect(panelTypes.panels.map((panel) => panel.id).sort()).toEqual(pluginIds);
+    const ids = panelTypes.panels.map((panel) => panel.id).filter((id) => !PANEL_TYPES_NOT_IN_PACKAGE.has(id));
+    expect(ids.sort()).toEqual(pluginIds);
+  });
+
+  it('has one Renderer panel for each panel type that the Renderer draws', () => {
+    expect(Object.keys(PANELS).sort()).toEqual([...PANEL_IDS].sort());
   });
 });

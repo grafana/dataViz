@@ -4,7 +4,7 @@ This document compares the ECharts **Gauge** module ([module.tsx](./module.tsx))
 panel
 ([`public/app/plugins/panel/gauge/module.tsx`](https://github.com/grafana/grafana/blob/main/public/app/plugins/panel/gauge/module.tsx)).
 
-The panel is experimental (`"state": "beta"` in [plugin.json](./plugin.json)). The Renderer does not draw it.
+The panel is experimental (`"state": "beta"` in [plugin.json](./plugin.json)). The Renderer draws it (`src/renderer/panels.ts`): it shows at most 50 gauges, and gives the `series-truncated` notice for more.
 
 ## Design
 

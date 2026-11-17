@@ -2,8 +2,11 @@
 // field order. It does not sort the series.
 import { type DataFrame, FieldType } from '@grafana/data';
 
-/** The families that raise `series-truncated`. Their charts draw one series for each number field. */
-export const TRUNCATED_FAMILIES = new Set(['cartesian', 'stream']);
+/**
+ * The families that raise `series-truncated`. Their charts draw one series for each number field. For the gauge
+ * family, a series is one gauge.
+ */
+export const TRUNCATED_FAMILIES = new Set(['cartesian', 'gauge', 'stream']);
 
 /**
  * Keeps the first `max` number fields (series) of the frames, and every field that is not a number field. A frame

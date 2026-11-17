@@ -287,8 +287,8 @@ importers:
         specifier: 2.0.1
         version: 2.0.1
       '@grafana/viz-contract':
-        specifier: 1.7.0
-        version: 1.7.0
+        specifier: 1.10.0
+        version: 1.10.0
       '@playwright/test':
         specifier: 1.57.0
         version: 1.57.0
@@ -1677,8 +1677,8 @@ packages:
       react: '>=19'
       react-dom: '>=19'
 
-  '@grafana/viz-contract@1.7.0':
-    resolution: {integrity: sha512-cY9QTo+DNfqKGc7+mxbukjcX+JLxbFpbyb7L6ZUBRe0eGz1B6Kle9w+/5ojE6ZNvKExgSeZiMyuvTCD+Wcg89A==}
+  '@grafana/viz-contract@1.10.0':
+    resolution: {integrity: sha512-kSOBA0/c0NJ76Zdb9MqjjZ0E/Jf1hgR1N1jLYyA3JGgorpTXFX3M1plHDLqf8IsfQbRXNCRjGCMJt4K/I1oOOA==}
 
   '@hello-pangea/dnd@17.0.0':
     resolution: {integrity: sha512-LDDPOix/5N0j5QZxubiW9T0M0+1PR0rTDWeZF5pu1Tz91UQnuVK4qQ/EjY83Qm2QeX0eM8qDXANfDh3VVqtR4Q==}
@@ -9533,7 +9533,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@grafana/viz-contract@1.7.0': {}
+  '@grafana/viz-contract@1.10.0': {}
 
   '@hello-pangea/dnd@17.0.0(@types/react@18.3.26)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:

@@ -1,4 +1,4 @@
-// The panels that the Renderer draws: one entry for each row of `registry/panel-types.json` of the contract.
+// The panels that the Renderer draws: one entry for each id of `PANEL_IDS` (`./registry`).
 // `./setup` must be the first import: it fills the registries that the modules below read when they load.
 import './setup';
 import {
@@ -10,6 +10,7 @@ import {
 import { type ChartFamily } from 'lib/echarts/charts/autoSeriesType';
 import { registerGeoChart } from 'lib/echarts/geo/chart';
 import { plugin as cartesian } from 'modules/cartesian/module';
+import { plugin as gauge } from 'modules/gauge/module';
 import { plugin as geo } from 'modules/geo/module';
 import { plugin as heatmap } from 'modules/heatmap/module';
 import { plugin as hierarchy } from 'modules/hierarchy/module';
@@ -46,6 +47,7 @@ registerGeoChart();
 // is empty, so the preload gives nothing, and the panel draws the frames as they are. The Renderer does not call it.
 export const PANELS: Record<string, PanelEntry> = {
   'grafana-echartscartesian-panel': { plugin: cartesian, family: 'cartesian' },
+  'grafana-echartsgauge-panel': { plugin: gauge, family: 'gauge' },
   'grafana-echartsgeo-panel': { plugin: geo, family: 'geo' },
   'grafana-echartsheatmap-panel': { plugin: heatmap, family: 'heatmap' },
   'grafana-echartshierarchy-panel': { plugin: hierarchy, family: 'hierarchy' },
