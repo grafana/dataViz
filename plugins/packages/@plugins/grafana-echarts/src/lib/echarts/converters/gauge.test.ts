@@ -100,6 +100,16 @@ describe('resolveGaugeValues', () => {
     expect(resolveGaugeValues([display({ prefix: '$', suffix: ' k' })], theme)[0].text).toBe('$72 k');
   });
 
+  it('gives the parts of a value text that has a prefix or a suffix', () => {
+    const [both, suffixOnly, none] = resolveGaugeValues(
+      [display({ prefix: '$', suffix: ' k' }), display({ suffix: '%' }), display({})],
+      theme
+    );
+    expect(both.affixes).toEqual({ prefix: '$', body: '72', suffix: ' k' });
+    expect(suffixOnly.affixes).toEqual({ prefix: '', body: '72', suffix: '%' });
+    expect(none.affixes).toBeUndefined();
+  });
+
   it('uses the fallback color for a value with no color', () => {
     expect(resolveGaugeValues([display({ color: undefined })], theme)[0].color).toBe(FALLBACK_COLOR);
   });

@@ -6,6 +6,7 @@ import {
   getGaugeBandSeries,
   getGaugeBarSeries,
   getGaugeSeries,
+  getGaugeValueText,
 } from './gauge';
 
 const value: GaugeValue = {
@@ -34,7 +35,7 @@ const item = (extra: Partial<GaugeItem> = {}, valueExtra: Partial<GaugeValue> = 
     bandOuterRadius: 200,
     bandWidth: 5,
   },
-  text: { value: { fontSize: 40, offsetY: -10 }, name: { fontSize: 16, offsetY: 20 } },
+  text: { value: { fontSize: 40, unitFontSize: 28, offsetY: -10 }, name: { fontSize: 16, offsetY: 20 } },
   ...extra,
 });
 
@@ -75,6 +76,35 @@ describe('getGaugeBandSeries', () => {
     expect(band.detail).toEqual({ show: false });
     expect(band.title).toEqual({ show: false });
     expect(band.silent).toBe(true);
+  });
+});
+
+describe('getGaugeValueText', () => {
+  const line = { fontSize: 40, unitFontSize: 28, offsetY: 0 };
+  const textOf = (valueExtra: Partial<GaugeValue>) => {
+    const { formatter, rich } = getGaugeValueText({ ...value, ...valueExtra }, line, context.style);
+    return { text: typeof formatter === 'function' ? formatter(72) : formatter, rich };
+  };
+
+  it('has no rich text for a value with no prefix and no suffix', () => {
+    expect(textOf({ text: '72' })).toEqual({ text: '72', rich: undefined });
+  });
+
+  it('puts the prefix and the suffix in the unit style, with the unit font size', () => {
+    const { text, rich } = textOf({ text: '$72 k', affixes: { prefix: '$', body: '72', suffix: ' k' } });
+    expect(text).toBe('{unit|$}72{unit| k}');
+    expect(rich).toEqual({ unit: { fontSize: 28, fontWeight: 'normal', fontFamily: 'Inter', color: '#eee' } });
+  });
+
+  it('leaves out an empty prefix or suffix', () => {
+    expect(textOf({ text: '72%', affixes: { prefix: '', body: '72', suffix: '%' } }).text).toBe('72{unit|%}');
+  });
+
+  it.each([
+    ['a suffix with a closing brace', { prefix: '', body: '72', suffix: ' }' }, '72 }'],
+    ['a body with part syntax', { prefix: '$', body: '{a|b}', suffix: '' }, '${a|b}'],
+  ])('draws %s as plain text', (_, affixes, text) => {
+    expect(textOf({ text, affixes })).toEqual({ text, rich: undefined });
   });
 });
 
