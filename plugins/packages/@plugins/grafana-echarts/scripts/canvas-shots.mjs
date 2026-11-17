@@ -18,7 +18,10 @@
  * A changed snapshot renders three panels side by side (Expected | Actual | Diff), so a
  * single PNG is the before/after. An unchanged one renders Actual only.
  *
- * Flags: --root <payload dir> --out <dir> --viewer <url> --scale <n> --failing --no-context
+ * Flags: --root <payload dir> --out <dir> --viewer <url> --scale <n> --background <css color>
+ *        --failing --no-context
+ * The viewer paints each canvas on a fixed dark background, so a light-theme case has dark
+ * text on a dark background. Shoot such a case with `--background '#ffffff'`.
  * Run it from a checkout with `node_modules` installed (Playwright + its Chromium:
  * `npx playwright install chromium`). `--root` may point at any absolute payload
  * directory, so one viewer instance can serve payloads from several worktrees.
@@ -36,7 +39,7 @@ const PAYLOAD_DIR = '.jest-canvas-mock-compare';
 const PAYLOAD_API = '/__jest-canvas-payload__';
 
 const argv = process.argv.slice(2);
-const VALUE_FLAGS = new Set(['--root', '--out', '--viewer', '--scale']);
+const VALUE_FLAGS = new Set(['--root', '--out', '--viewer', '--scale', '--background']);
 const flag = (name, fallback) => {
   const at = argv.indexOf(`--${name}`);
   return at === -1 ? fallback : argv[at + 1];
@@ -46,6 +49,7 @@ const viewer = flag('viewer', 'http://localhost:5173').replace(/\/$/, '');
 const root = path.resolve(flag('root', path.join(process.cwd(), PAYLOAD_DIR)));
 const out = path.resolve(flag('out', path.join(root, 'shots')));
 const scale = Number(flag('scale', 2));
+const background = flag('background');
 const failingOnly = argv.includes('--failing');
 const hideContext = argv.includes('--no-context');
 const requested = argv.filter((arg, i) => !arg.startsWith('--') && !VALUE_FLAGS.has(argv[i - 1]));
@@ -85,6 +89,11 @@ for (const file of files) {
     null,
     { timeout: 15_000 }
   );
+
+  if (background) {
+    // The viewer has no option for the background of its canvases, so the style is replaced.
+    await page.addStyleTag({ content: `canvas.canvas { background: ${background} !important; }` });
+  }
 
   if (hideContext) {
     // Drops the setup layer (axis labels, background) that the matcher does not assert on.
