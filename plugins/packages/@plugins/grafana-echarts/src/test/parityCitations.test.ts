@@ -59,6 +59,13 @@ const PARITY_DOCS: ParityDocPolicy[] = [
     minimumDashboardCitations: 0,
     minimumDashboardSources: 0,
   },
+  {
+    doc: 'src/modules/stat/parity.md',
+    minimumCitations: 25,
+    minimumTestTargets: 5,
+    minimumDashboardCitations: 12,
+    minimumDashboardSources: 1,
+  },
 ];
 
 /** `[canvas: some test name][ref]` / `[integration: some test name][ref]`. */

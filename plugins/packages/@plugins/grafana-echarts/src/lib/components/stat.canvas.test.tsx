@@ -2,7 +2,7 @@ import { type FieldConfigSource, ThresholdsMode } from '@grafana/data';
 import { BigValueColorMode, BigValueGraphMode, BigValueTextMode } from '@grafana/schema';
 import { normalizeCanvasEvents } from 'test/canvas';
 import { height, width } from 'test/panel';
-import { cpuFrame, gapFrame, renderStat, seriesFrame, singlePointFrame } from 'test/statCanvas';
+import { cpuFrame, gapFrame, mappedFrame, renderStat, seriesFrame, singlePointFrame } from 'test/statCanvas';
 
 // Stat canvas snapshots: a case for each layout and for each editor option. Every test here is a snapshot
 // test: the baseline is the assertion, and a reviewer reads it as an image.
@@ -107,6 +107,15 @@ describe('stat canvas snapshots', () => {
         overrides: [],
       };
       const { defaultEvents, seriesEvents } = await renderStat([cpuFrame], {}, fieldConfig);
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
+    });
+  });
+
+  describe('value mappings', () => {
+    // The value 72 has a mapping: the panel draws the mapped text, and the text and the sparkline are red.
+    it('a mapped text in the color of the mapping', async () => {
+      const { defaultEvents, seriesEvents } = await renderStat([mappedFrame]);
 
       expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
     });

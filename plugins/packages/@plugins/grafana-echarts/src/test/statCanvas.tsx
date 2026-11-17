@@ -1,4 +1,11 @@
-import { type DataFrame, type FieldConfigSource, FieldType, type PanelProps, toDataFrame } from '@grafana/data';
+import {
+  type DataFrame,
+  type FieldConfigSource,
+  FieldType,
+  MappingType,
+  type PanelProps,
+  toDataFrame,
+} from '@grafana/data';
 import { render } from '@testing-library/react';
 import { SERIES_ZLEVEL } from 'test/canvas';
 import { getComponent, getSeriesCanvasEvents } from 'test/panel';
@@ -35,6 +42,24 @@ export const cpuFrame = toDataFrame({
   fields: [
     { name: 'time', type: FieldType.time, values: TIMES },
     { name: 'cpu', type: FieldType.number, values: [35, 52, 48, 72], config: { unit: 'percent' } },
+  ],
+});
+
+/**
+ * The base case with a value mapping for the last value, 72. The mapping is in the field config of the fixture,
+ * because the test field config registry (`test/fieldConfig.ts`) does not apply `defaults.mappings`.
+ */
+export const mappedFrame = toDataFrame({
+  fields: [
+    { name: 'time', type: FieldType.time, values: TIMES },
+    {
+      name: 'cpu',
+      type: FieldType.number,
+      values: [35, 52, 48, 72],
+      config: {
+        mappings: [{ type: MappingType.ValueToText, options: { '72': { text: 'Critical', color: 'red', index: 0 } } }],
+      },
+    },
   ],
 });
 
