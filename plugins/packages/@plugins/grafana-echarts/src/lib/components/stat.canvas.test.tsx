@@ -114,6 +114,36 @@ describe('stat canvas snapshots', () => {
 
       expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
     });
+
+    // The cell has a gradient of the red threshold color. The name and the value are light, and the sparkline
+    // is a light line with a white area.
+    it('Background Gradient', async () => {
+      const { defaultEvents, seriesEvents } = await renderStat([thresholdsFrame], {
+        ...valueAndName,
+        colorMode: BigValueColorMode.Background,
+      });
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
+    });
+
+    // The cell has the red threshold color as one fill.
+    it('Background Solid', async () => {
+      const { defaultEvents, seriesEvents } = await renderStat([thresholdsFrame], {
+        ...valueAndName,
+        colorMode: BigValueColorMode.BackgroundSolid,
+      });
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
+    });
+
+    // Four cells with a gap between them. Each cell has the gradient of its own color.
+    it('Background Gradient, four values in a grid', async () => {
+      const { defaultEvents, seriesEvents } = await renderStat([seriesFrame(4)], {
+        colorMode: BigValueColorMode.Background,
+      });
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
+    });
   });
 
   describe('value mappings', () => {

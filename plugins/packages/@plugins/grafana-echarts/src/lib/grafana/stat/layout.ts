@@ -21,6 +21,13 @@ import { type StatRenderOptions } from 'editor/stat';
 import { fitFontSize } from 'lib/grafana/fitFontSize';
 import { layoutRepeaterCells, type RepeaterCell } from 'lib/grafana/repeater/layout';
 import {
+  BACKGROUND_SPARKLINE_FILL,
+  getBackgroundGradientColors,
+  getBackgroundGradientLine,
+  getBackgroundSparklineLineColor,
+  getBackgroundTextColor,
+} from 'lib/grafana/stat/colors';
+import {
   getSparklineXRange,
   getSparklineYRange,
   layoutSparklineSegments,
@@ -71,8 +78,19 @@ export interface StatSparkline {
   fillColor: string;
 }
 
+/**
+ * The fill of a cell in a background color mode. With two colors it is a linear gradient from `start` to
+ * `end`, which are pixel positions. With one color it is a solid fill.
+ */
+export interface StatBackground {
+  colors: [string] | [string, string];
+  start: SparklinePoint;
+  end: SparklinePoint;
+}
+
 /** One value of the panel, with all positions in pixels from the top left corner of the panel. */
 export interface StatCell extends RepeaterCell {
+  background?: StatBackground;
   title?: StatText;
   value?: StatValueText;
   sparkline?: StatSparkline;
@@ -227,6 +245,47 @@ function fitStackedNoChart(input: FitInput): StatFontSizes {
   return { title: limitTitle(fittedTitle, value), value, chartHeight: 0 };
 }
 
+interface StatCellColors {
+  background?: StatBackground;
+  title: string;
+  value: string;
+  sparklineLine: string;
+  sparklineFill: string;
+}
+
+/**
+ * The colors of a cell for a color mode, as `BigValueLayout`. In the background modes the cell has the value
+ * color, and the texts and the sparkline have colors that show on it. In the other modes the cell has no fill.
+ */
+function getCellColors(
+  cell: RepeaterCell,
+  valueColor: string,
+  colorMode: BigValueColorMode,
+  theme: GrafanaTheme2
+): StatCellColors {
+  const isGradient = colorMode === BigValueColorMode.Background;
+  if (!isGradient && colorMode !== BigValueColorMode.BackgroundSolid) {
+    const textColor = theme.colors.text.primary;
+    return {
+      title: textColor,
+      value: colorMode === BigValueColorMode.None ? textColor : valueColor,
+      sparklineLine: valueColor,
+      sparklineFill: colorManipulator.alpha(valueColor, SPARKLINE_FILL_ALPHA),
+    };
+  }
+  const textColor = getBackgroundTextColor(valueColor, theme.isDark);
+  return {
+    background: {
+      ...getBackgroundGradientLine(cell),
+      colors: isGradient ? getBackgroundGradientColors(valueColor, theme.isDark) : [valueColor],
+    },
+    title: textColor,
+    value: textColor,
+    sparklineLine: getBackgroundSparklineLineColor(valueColor),
+    sparklineFill: BACKGROUND_SPARKLINE_FILL,
+  };
+}
+
 /** The cell without its sparkline. The font size of a text that has no space is 0, and the cell does not draw it. */
 function layoutCell(
   cell: RepeaterCell,
@@ -285,8 +344,11 @@ function layoutCell(
   }
 
   const valueColor = display.display.color ?? 'gray';
-  const textColor = theme.colors.text.primary;
+  const colors = getCellColors(cell, valueColor, options.colorMode, theme);
   const result: StatCell = { ...cell, display };
+  if (colors.background) {
+    result.background = colors.background;
+  }
 
   if (texts.title && titleSize > 0) {
     result.title = {
@@ -296,7 +358,7 @@ function layoutCell(
       align: 'left',
       fontSize: titleSize,
       fontWeight: theme.typography.fontWeightRegular,
-      color: textColor,
+      color: colors.title,
       maxWidth: isWide ? maxTextWidth * 0.6 : maxTextWidth,
     };
   }
@@ -310,7 +372,7 @@ function layoutCell(
       align: valueAlign,
       fontSize: valueSize,
       fontWeight: VALUE_FONT_WEIGHT,
-      color: options.colorMode === BigValueColorMode.None ? textColor : valueColor,
+      color: colors.value,
       maxWidth: maxTextWidth,
     };
   }
@@ -333,8 +395,8 @@ function layoutCell(
         rect,
       }),
       baseline: rect.y + rect.height,
-      lineColor: valueColor,
-      fillColor: colorManipulator.alpha(valueColor, SPARKLINE_FILL_ALPHA),
+      lineColor: colors.sparklineLine,
+      fillColor: colors.sparklineFill,
     };
   }
   return result;

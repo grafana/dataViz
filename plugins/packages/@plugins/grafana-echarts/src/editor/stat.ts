@@ -33,10 +33,12 @@ export const statTextModeOptions: Array<SelectableValue<BigValueTextMode>> = [
   { value: BigValueTextMode.None, label: 'None' },
 ];
 
-/** The color modes that the panel draws. The background modes of core Stat are not in this list yet. */
+/** The color modes that the panel draws: all the color modes of core Stat. */
 export const statColorModeOptions: Array<SelectableValue<BigValueColorMode>> = [
   { value: BigValueColorMode.None, label: 'None' },
   { value: BigValueColorMode.Value, label: 'Value' },
+  { value: BigValueColorMode.Background, label: 'Background Gradient' },
+  { value: BigValueColorMode.BackgroundSolid, label: 'Background Solid' },
 ];
 
 export const statGraphModeOptions: Array<SelectableValue<BigValueGraphMode>> = [
@@ -54,7 +56,7 @@ export interface StatRenderOptions {
 
 /**
  * The stat options of the panel, with the default for each option that is not set. A color mode that the panel
- * does not draw gives the default color mode.
+ * does not know gives the default color mode.
  */
 export function resolveStatOptions(options: PanelOptions): StatRenderOptions {
   const colorMode = statColorModeOptions.some((option) => option.value === options.colorMode)

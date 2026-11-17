@@ -1,5 +1,6 @@
 import { type StatCell, type StatSparkline, type StatText, type StatValueText } from 'lib/grafana/stat/layout';
 import {
+  getStatBackgroundElement,
   getStatCellElements,
   getStatSeries,
   getStatSparklineElements,
@@ -126,10 +127,55 @@ describe('getStatSparklineElements', () => {
   });
 });
 
+describe('getStatBackgroundElement', () => {
+  const line = { start: [3, -6] as [number, number], end: [97, 106] as [number, number] };
+
+  it('is a rectangle of the size of the cell, with one color as a solid fill', () => {
+    expect(getStatBackgroundElement(cell({ x: 10, y: 20 }), { ...line, colors: ['#f00'] })).toEqual({
+      type: 'rect',
+      silent: true,
+      shape: { x: 10, y: 20, width: 100, height: 100 },
+      style: { fill: '#f00' },
+    });
+  });
+
+  it('fills with a linear gradient in canvas pixels for two colors', () => {
+    const element = getStatBackgroundElement(cell(), { ...line, colors: ['#f00', '#00f'] });
+    expect(element).toMatchObject({
+      style: {
+        fill: {
+          type: 'linear',
+          global: true,
+          x: 3,
+          y: -6,
+          x2: 97,
+          y2: 106,
+          colorStops: [
+            { offset: 0, color: '#f00' },
+            { offset: 1, color: '#00f' },
+          ],
+        },
+      },
+    });
+  });
+});
+
 describe('getStatCellElements', () => {
   it('puts the sparkline below the name and the value', () => {
     const types = getStatCellElements(cell({ title, value, sparkline }), FONT).map((element) => element.type);
     expect(types).toEqual(['polygon', 'polyline', 'text', 'text']);
+  });
+
+  it('puts the background below all other parts', () => {
+    const background = {
+      start: [0, 0] as [number, number],
+      end: [100, 100] as [number, number],
+      colors: ['#f00'] as [string],
+    };
+    const types = getStatCellElements(cell({ background, title, value, sparkline }), FONT).map(
+      (element) => element.type
+    );
+    expect(types).toEqual(['rect', 'polygon', 'polyline', 'text', 'text']);
   });
 
   it('gives no element for a cell with no part', () => {

@@ -4,6 +4,7 @@
 import { type CustomSeriesOption, type CustomSeriesRenderItemReturn } from 'echarts';
 import {
   STAT_LINE_HEIGHT,
+  type StatBackground,
   type StatCell,
   type StatSparkline,
   type StatText,
@@ -112,9 +113,42 @@ export function getStatSparklineElements(sparkline: StatSparkline): StatElement[
     ]);
 }
 
-/** The elements of one cell, in paint order: the sparkline is below the text. */
+/**
+ * The fill of a cell in a background color mode: a rectangle of the size of the cell. Two colors make a linear
+ * gradient. `global` gives the gradient line in pixels of the canvas, and not as a part of the rectangle.
+ * https://echarts.apache.org/en/option.html#series-custom.renderItem.return_rect
+ * https://echarts.apache.org/en/option.html#color
+ */
+export function getStatBackgroundElement(cell: StatCell, background: StatBackground): StatElement {
+  const [from, to] = background.colors;
+  return {
+    type: 'rect',
+    silent: true,
+    shape: { x: cell.x, y: cell.y, width: cell.width, height: cell.height },
+    style: {
+      fill:
+        to === undefined
+          ? from
+          : {
+              type: 'linear',
+              global: true,
+              x: background.start[0],
+              y: background.start[1],
+              x2: background.end[0],
+              y2: background.end[1],
+              colorStops: [
+                { offset: 0, color: from },
+                { offset: 1, color: to },
+              ],
+            },
+    },
+  };
+}
+
+/** The elements of one cell, in paint order: the background, then the sparkline, then the text. */
 export function getStatCellElements(cell: StatCell, fontFamily: string): StatElement[] {
   return [
+    ...(cell.background ? [getStatBackgroundElement(cell, cell.background)] : []),
     ...(cell.sparkline ? getStatSparklineElements(cell.sparkline) : []),
     ...(cell.title ? [getStatTitleElement(cell.title, fontFamily)] : []),
     ...(cell.value ? [getStatValueElement(cell.value, fontFamily)] : []),

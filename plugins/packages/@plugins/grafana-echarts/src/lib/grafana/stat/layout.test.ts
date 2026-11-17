@@ -4,6 +4,12 @@ import { resolveStatOptions, type StatRenderOptions } from 'editor/stat';
 import { resolveFieldDisplays } from 'lib/grafana/fieldDisplays';
 import { applyGrafanaFieldDefaults, defaultTimeRange, theme } from 'test/panel';
 import { cpuFrame, seriesFrame, singlePointFrame } from 'test/statCanvas';
+import {
+  BACKGROUND_SPARKLINE_FILL,
+  getBackgroundGradientColors,
+  getBackgroundSparklineLineColor,
+  getBackgroundTextColor,
+} from './colors';
 import { layoutStatCells, resolveStatTextMode, STAT_CELL_SPACING, STAT_LINE_HEIGHT } from './layout';
 import { applyGlobalFieldRange } from './range';
 
@@ -131,6 +137,40 @@ describe('layoutStatCells', () => {
       expect(cell.sparkline!.lineColor).toBe(cell.display.display.color);
       expect(cell.sparkline!.fillColor).not.toBe(cell.sparkline!.lineColor);
     });
+
+    it('gives a cell no background in the None and Value color modes', () => {
+      expect(layout([cpuFrame], 400, 300, { colorMode: BigValueColorMode.None })[0].background).toBeUndefined();
+      expect(layout([cpuFrame], 400, 300, { colorMode: BigValueColorMode.Value })[0].background).toBeUndefined();
+    });
+
+    it('gives a cell one background color, the color of the value, in the Background Solid color mode', () => {
+      const [cell] = layout([cpuFrame], 400, 300, { colorMode: BigValueColorMode.BackgroundSolid });
+      expect(cell.background!.colors).toEqual([cell.display.display.color]);
+    });
+
+    it('gives a cell a gradient of two colors across the cell in the Background Gradient color mode', () => {
+      const cells = layout([seriesFrame(2)], 400, 300, { colorMode: BigValueColorMode.Background });
+      for (const cell of cells) {
+        const { colors, start, end } = cell.background!;
+        expect(colors).toEqual(getBackgroundGradientColors(cell.display.display.color!, theme.isDark));
+        // The gradient line goes through the center of the cell.
+        expect((start[0] + end[0]) / 2).toBeCloseTo(cell.x + cell.width / 2);
+        expect((start[1] + end[1]) / 2).toBeCloseTo(cell.y + cell.height / 2);
+      }
+    });
+
+    it.each([BigValueColorMode.Background, BigValueColorMode.BackgroundSolid])(
+      'gives the texts and the sparkline the colors for a colored background in the %s color mode',
+      (colorMode) => {
+        const [cell] = layout([cpuFrame], 400, 300, { ...valueAndName, colorMode });
+        const valueColor = cell.display.display.color!;
+        const textColor = getBackgroundTextColor(valueColor, theme.isDark);
+        expect(cell.value!.color).toBe(textColor);
+        expect(cell.title!.color).toBe(textColor);
+        expect(cell.sparkline!.lineColor).toBe(getBackgroundSparklineLineColor(valueColor));
+        expect(cell.sparkline!.fillColor).toBe(BACKGROUND_SPARKLINE_FILL);
+      }
+    );
   });
 
   describe('stacked layout with a sparkline', () => {
