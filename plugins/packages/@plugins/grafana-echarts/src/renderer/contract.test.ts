@@ -8,11 +8,16 @@ import { allFixtureSets, FIXTURES_DIR, fixtureSets } from 'test/rendererFixtures
 const sets = fixtureSets();
 const smokeSets = sets.filter((name) => name.startsWith('smoke-'));
 
+// The panels of this package that the installed contract does not have. The Renderer does not draw them.
+// The gauge panel is in beta: it needs a row in `panel-types.json` of grafana/viz-contract first.
+const PANELS_NOT_IN_CONTRACT = new Set(['grafana-echartsgauge-panel']);
+
 const modulesDir = path.join(__dirname, '..', 'modules');
 const pluginIds = fs
   .readdirSync(modulesDir)
   .filter((name) => fs.existsSync(path.join(modulesDir, name, 'plugin.json')))
   .map((name) => JSON.parse(fs.readFileSync(path.join(modulesDir, name, 'plugin.json'), 'utf8')).id)
+  .filter((id) => !PANELS_NOT_IN_CONTRACT.has(id))
   .sort();
 
 describe('viz contract', () => {

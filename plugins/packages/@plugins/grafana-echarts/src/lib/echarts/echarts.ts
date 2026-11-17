@@ -7,6 +7,7 @@ import {
   CustomChart,
   EffectScatterChart,
   FunnelChart,
+  GaugeChart,
   GraphChart,
   HeatmapChart,
   LineChart,
@@ -82,6 +83,7 @@ registerEChartsModules([
   BoxplotChart, // multi-value cartesian: [min, Q1, median, Q3, max]
   PieChart,
   FunnelChart, // part-to-whole family: stacked trapezoids sharing the pie slice model
+  GaugeChart, // gauge family: one arc for each value
   RadarChart,
   ParallelChart, // multivariate family: parallel coordinates (one axis per category, one polyline per field)
   TreemapChart, // hierarchy family: nested rectangles sized by value

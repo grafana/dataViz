@@ -96,7 +96,12 @@ describe('panelTypeToAxis', () => {
     expect(() => panelTypeToAxis(makeContext('candlestick'), false)).toThrow();
   });
 
-  it('defaults unmapped types to a category axis instead of throwing', () => {
-    expect(() => panelTypeToAxis(makeContext('gauge'))).toThrow();
+  it('throws for a type that no chart module draws', () => {
+    expect(() => panelTypeToAxis(makeContext('lines'))).toThrow();
+  });
+
+  it('gives the gauge family a category axis, with and without a time field', () => {
+    expect(panelTypeToAxis(makeContext('gauge'))).toBe('category');
+    expect(panelTypeToAxis(makeContext('gauge'), false)).toBe('category');
   });
 });

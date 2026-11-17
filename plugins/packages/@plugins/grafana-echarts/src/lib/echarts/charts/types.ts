@@ -17,6 +17,7 @@ import {
   type CustomSeriesOption,
   type EffectScatterSeriesOption,
   type FunnelSeriesOption,
+  type GaugeSeriesOption,
   type GeoComponentOption,
   type GraphSeriesOption,
   type GridComponentOption,
@@ -186,6 +187,8 @@ export type EChartScatterSeriesOption = ComposeOption<ScatterSeriesOption>;
 // Pie can add a centered `title` (the donut-center readout when label position
 // is `center`), so the compose option pulls in the title component too.
 export type EChartPieSeriesOption = ComposeOption<PieSeriesOption | TitleComponentOption>;
+/** The option of the gauge family: one or two `gauge` series for each value. */
+export type EChartGaugeSeriesOption = ComposeOption<GaugeSeriesOption>;
 // Radar needs both the series and the `radar` coordinate component.
 export type EChartRadarSeriesOption = ComposeOption<RadarSeriesOption | RadarComponentOption>;
 // The parallel-coordinates axis option, derived from the component's
@@ -282,6 +285,7 @@ export type EChartBuildOption =
   | EChartRadarSeriesOption
   | EChartParallelSeriesOption
   | EChartFunnelSeriesOption
+  | EChartGaugeSeriesOption
   | EChartTreemapSeriesOption
   | EChartSunburstSeriesOption
   | EChartGraphSeriesOption
