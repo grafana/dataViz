@@ -1,5 +1,5 @@
 import { type SelectableValue } from '@grafana/data';
-import { BigValueColorMode, BigValueGraphMode, BigValueTextMode } from '@grafana/schema';
+import { BigValueColorMode, BigValueGraphMode, BigValueJustifyMode, BigValueTextMode } from '@grafana/schema';
 import { type StatSeriesType } from 'editor/types';
 import { type PanelOptions } from 'types';
 
@@ -19,11 +19,13 @@ export const statTextModePath = 'textMode';
 export const statColorModePath = 'colorMode';
 export const statGraphModePath = 'graphMode';
 export const statWideLayoutPath = 'wideLayout';
+export const statJustifyModePath = 'justifyMode';
 
 export const STAT_TEXT_MODE_DEFAULT = BigValueTextMode.Auto;
 export const STAT_COLOR_MODE_DEFAULT = BigValueColorMode.Value;
 export const STAT_GRAPH_MODE_DEFAULT = BigValueGraphMode.Area;
 export const STAT_WIDE_LAYOUT_DEFAULT = true;
+export const STAT_JUSTIFY_MODE_DEFAULT = BigValueJustifyMode.Auto;
 
 export const statTextModeOptions: Array<SelectableValue<BigValueTextMode>> = [
   { value: BigValueTextMode.Auto, label: 'Auto' },
@@ -46,12 +48,19 @@ export const statGraphModeOptions: Array<SelectableValue<BigValueGraphMode>> = [
   { value: BigValueGraphMode.Area, label: 'Area' },
 ];
 
+/** "Text alignment" in the editor. The automatic mode puts a value with no name at the center of its cell. */
+export const statJustifyModeOptions: Array<SelectableValue<BigValueJustifyMode>> = [
+  { value: BigValueJustifyMode.Auto, label: 'Auto' },
+  { value: BigValueJustifyMode.Center, label: 'Center' },
+];
+
 /** The stat options with their defaults applied. */
 export interface StatRenderOptions {
   textMode: BigValueTextMode;
   colorMode: BigValueColorMode;
   graphMode: BigValueGraphMode;
   wideLayout: boolean;
+  justifyMode: BigValueJustifyMode;
 }
 
 /**
@@ -67,5 +76,6 @@ export function resolveStatOptions(options: PanelOptions): StatRenderOptions {
     colorMode,
     graphMode: options.graphMode ?? STAT_GRAPH_MODE_DEFAULT,
     wideLayout: options.wideLayout ?? STAT_WIDE_LAYOUT_DEFAULT,
+    justifyMode: options.justifyMode ?? STAT_JUSTIFY_MODE_DEFAULT,
   };
 }

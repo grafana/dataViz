@@ -2,6 +2,7 @@ import { type ReduceDataOptions, type StandardOptionConfig } from '@grafana/data
 import {
   type BigValueColorMode,
   type BigValueGraphMode,
+  type BigValueJustifyMode,
   type BigValueTextMode,
   type HeatmapCalculationOptions,
   type OptionsWithLegend,
@@ -276,6 +277,7 @@ export interface PanelOptions
   colorMode?: BigValueColorMode;
   graphMode?: BigValueGraphMode;
   wideLayout?: boolean;
+  justifyMode?: BigValueJustifyMode;
 
   /**
    * Pie (part-to-whole) chart type (Grafana Pie chart "Pie chart type" parity):

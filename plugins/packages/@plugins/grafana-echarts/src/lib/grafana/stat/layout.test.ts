@@ -1,5 +1,5 @@
 import { type DataFrame, ReducerID } from '@grafana/data';
-import { BigValueColorMode, BigValueGraphMode, BigValueTextMode } from '@grafana/schema';
+import { BigValueColorMode, BigValueGraphMode, BigValueJustifyMode, BigValueTextMode } from '@grafana/schema';
 import { resolveStatOptions, type StatRenderOptions } from 'editor/stat';
 import { resolveFieldDisplays } from 'lib/grafana/fieldDisplays';
 import { applyGrafanaFieldDefaults, defaultTimeRange, theme } from 'test/panel';
@@ -265,6 +265,59 @@ describe('layoutStatCells', () => {
       const ys = cell.sparkline!.segments.flat().map(([, y]) => y);
       expect(Math.min(...ys)).toBeGreaterThanOrEqual(60);
       expect(cell.sparkline!.baseline).toBe(120);
+    });
+  });
+
+  describe('text alignment Center', () => {
+    const centered = { ...valueAndName, justifyMode: BigValueJustifyMode.Center };
+    const lineHeight = (text: { fontSize: number }) => text.fontSize * STAT_LINE_HEIGHT;
+
+    it('puts the name above the value at the center of a stacked cell, with a gap between them', () => {
+      const [cell] = layout([cpuFrame], 300, 300, centered);
+      const { title, value } = cell;
+      expect(title).toMatchObject({ x: 150, align: 'center' });
+      expect(value).toMatchObject({ x: 150, align: 'center' });
+      const gap = value!.y - (title!.y + lineHeight(title!));
+      expect(gap).toBeGreaterThan(0);
+      // The name, the gap and the value are one group at the vertical center of the cell.
+      expect((title!.y + value!.y + lineHeight(value!)) / 2).toBeCloseTo(150);
+    });
+
+    it('keeps the font sizes and the sparkline of the automatic alignment', () => {
+      const [auto] = layout([cpuFrame], 300, 300, valueAndName);
+      const [center] = layout([cpuFrame], 300, 300, centered);
+      expect(center.title!.fontSize).toBe(auto.title!.fontSize);
+      expect(center.value!.fontSize).toBe(auto.value!.fontSize);
+      expect(center.sparkline).toEqual(auto.sparkline);
+    });
+
+    it('puts the name and the value in one row at the center of a wide cell', () => {
+      const [cell] = layout([cpuFrame], 600, 100, centered);
+      const { title, value } = cell;
+      expect(title!.align).toBe('left');
+      expect(value!.align).toBe('left');
+      expect(value!.x).toBeGreaterThan(title!.x);
+      // The two texts have the same vertical center, which is the center of the cell.
+      expect(title!.y + lineHeight(title!) / 2).toBeCloseTo(50);
+      expect(value!.y + lineHeight(value!) / 2).toBeCloseTo(50);
+      // The space at the left of the name is not the padding of the cell: the row is at the center.
+      expect(title!.x).toBeGreaterThan(12);
+    });
+
+    it('puts the texts at the vertical center of a wide cell with a sparkline, and not at its top', () => {
+      const [cell] = layout([cpuFrame], 600, 120, centered);
+      expect(cell.sparkline).toBeDefined();
+      expect(cell.value!.y + lineHeight(cell.value!) / 2).toBeCloseTo(60);
+    });
+
+    it('does not change a cell with no name, which is at the center in each alignment', () => {
+      const auto = layout([cpuFrame], 300, 300, { textMode: BigValueTextMode.Value });
+      const center = layout([cpuFrame], 300, 300, {
+        textMode: BigValueTextMode.Value,
+        justifyMode: BigValueJustifyMode.Center,
+      });
+      expect(center[0].title).toBeUndefined();
+      expect(center[0].value).toEqual(auto[0].value);
     });
   });
 });

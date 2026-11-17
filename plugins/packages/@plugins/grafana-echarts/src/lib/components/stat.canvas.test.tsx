@@ -1,4 +1,4 @@
-import { BigValueColorMode, BigValueGraphMode, BigValueTextMode } from '@grafana/schema';
+import { BigValueColorMode, BigValueGraphMode, BigValueJustifyMode, BigValueTextMode } from '@grafana/schema';
 import { normalizeCanvasEvents } from 'test/canvas';
 import { height, width } from 'test/panel';
 import {
@@ -140,6 +140,33 @@ describe('stat canvas snapshots', () => {
     it('Background Gradient, four values in a grid', async () => {
       const { defaultEvents, seriesEvents } = await renderStat([seriesFrame(4)], {
         colorMode: BigValueColorMode.Background,
+      });
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
+    });
+  });
+
+  describe('text alignment', () => {
+    const centered = { ...valueAndName, justifyMode: BigValueJustifyMode.Center };
+
+    // The name is above the value. The two are at the center of the cell, above the sparkline.
+    it('Center, stacked with a sparkline', async () => {
+      const { defaultEvents, seriesEvents } = await renderStat([cpuFrame], centered);
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
+    });
+
+    // The name and the value are in one row at the center of the cell, with no sparkline.
+    it('Center, wide with no sparkline', async () => {
+      const { defaultEvents, seriesEvents } = await renderStat([cpuFrame], centered, undefined, { height: 50 });
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height: 50 });
+    });
+
+    // Four cells. Each cell has its name above its value at its center.
+    it('Center, four values in a grid', async () => {
+      const { defaultEvents, seriesEvents } = await renderStat([seriesFrame(4)], {
+        justifyMode: BigValueJustifyMode.Center,
       });
 
       expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });

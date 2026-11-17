@@ -1,4 +1,4 @@
-import { BigValueColorMode, BigValueGraphMode, BigValueTextMode } from '@grafana/schema';
+import { BigValueColorMode, BigValueGraphMode, BigValueJustifyMode, BigValueTextMode } from '@grafana/schema';
 import { type PanelOptions } from 'types';
 import { resolveStatOptions } from './stat';
 
@@ -11,6 +11,7 @@ describe('resolveStatOptions', () => {
       colorMode: BigValueColorMode.Value,
       graphMode: BigValueGraphMode.Area,
       wideLayout: true,
+      justifyMode: BigValueJustifyMode.Auto,
     });
   });
 
@@ -20,6 +21,7 @@ describe('resolveStatOptions', () => {
       colorMode: BigValueColorMode.None,
       graphMode: BigValueGraphMode.None,
       wideLayout: false,
+      justifyMode: BigValueJustifyMode.Center,
     };
     expect(resolveStatOptions(options(set))).toEqual(set);
   });

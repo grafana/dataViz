@@ -16,9 +16,9 @@ import {
   type GrafanaTheme2,
   type TimeRange,
 } from '@grafana/data';
-import { BigValueColorMode, BigValueTextMode } from '@grafana/schema';
+import { BigValueColorMode, BigValueJustifyMode, BigValueTextMode } from '@grafana/schema';
 import { type StatRenderOptions } from 'editor/stat';
-import { fitFontSize } from 'lib/grafana/fitFontSize';
+import { fitFontSize, measureTextWidth } from 'lib/grafana/fitFontSize';
 import { layoutRepeaterCells, type RepeaterCell } from 'lib/grafana/repeater/layout';
 import {
   BACKGROUND_SPARKLINE_FILL,
@@ -46,6 +46,8 @@ const WIDE_ASPECT_RATIO = 2.5;
 const WIDE_CHART_MIN_HEIGHT = 50;
 const STACKED_CHART_MIN_HEIGHT = 100;
 const SPARKLINE_FILL_ALPHA = 0.2;
+/** The gap between the name and the value of a centered cell, in widths of the character "0". */
+const CENTER_GAP_CH = 0.75;
 
 export type StatTextAlign = 'left' | 'center' | 'right';
 
@@ -245,6 +247,38 @@ function fitStackedNoChart(input: FitInput): StatFontSizes {
   return { title: limitTitle(fittedTitle, value), value, chartHeight: 0 };
 }
 
+/**
+ * The space in pixels between the name and the value of a centered cell. Core gives the CSS gap `0.75ch`: 75%
+ * of the width of the character "0" in the body font.
+ */
+function getCenterGap(theme: GrafanaTheme2): number {
+  const { fontFamily, fontSize } = theme.typography;
+  return CENTER_GAP_CH * (measureTextWidth({ text: '0', fontSize, fontFamily }) ?? fontSize / 2);
+}
+
+/**
+ * The width in pixels of the name, and of the name and the value in one row with the gap between them.
+ * `undefined` when the host cannot measure text.
+ */
+function measureRow(
+  texts: StatTexts,
+  titleSize: number,
+  valueSize: number,
+  gap: number,
+  theme: GrafanaTheme2
+): { title: number; total: number } | undefined {
+  const { fontFamily, fontWeightRegular } = theme.typography;
+  const width = (text: string | undefined, fontSize: number, fontWeight: number) =>
+    text ? measureTextWidth({ text, fontSize, fontFamily, fontWeight }) : 0;
+  const title = width(texts.title, titleSize, fontWeightRegular);
+  const value = width(texts.text, valueSize, VALUE_FONT_WEIGHT);
+  const suffix = width(texts.suffix, suffixFontSize(valueSize), VALUE_FONT_WEIGHT);
+  if (title === undefined || value === undefined || suffix === undefined) {
+    return undefined;
+  }
+  return { title, total: title + gap + value + suffix };
+}
+
 interface StatCellColors {
   background?: StatBackground;
   title: string;
@@ -315,32 +349,48 @@ function layoutCell(
   const titleSize = Math.max(sizes.title, 0);
   const valueSize = Math.max(sizes.value, 0);
 
-  // The content box of the cell. A cell with no name puts its value at the center.
+  // The content box of the cell.
   const left = cell.x + padding;
   const top = cell.y + padding;
-  const isCentered = !texts.title;
   const titleHeight = texts.title ? titleSize * STAT_LINE_HEIGHT : 0;
   const valueHeight = valueSize * STAT_LINE_HEIGHT;
+  const centerX = left + maxTextWidth / 2;
   const centerY = (height: number) => top + (maxTextHeight - height) / 2;
+  // A cell with no name puts its value at the center in each text alignment, as `shouldJustifyCenter` of core.
+  const isCentered = options.justifyMode === BigValueJustifyMode.Center || !texts.title;
 
+  let titleX = left;
+  let titleAlign: StatTextAlign = 'left';
   let titleY: number;
   let valueY: number;
   let valueX = left;
   let valueAlign: StatTextAlign = 'left';
-  if (isWide) {
+  if (isCentered) {
+    // The texts are at the center of the cell, also with a sparkline. A wide cell puts the name and the value
+    // in one row when the row has space, else the name above the value, as a flexbox that wraps.
+    const gap = texts.title ? getCenterGap(theme) : 0;
+    const rowWidth = isWide && texts.title ? measureRow(texts, titleSize, valueSize, gap, theme) : undefined;
+    if (rowWidth && rowWidth.total <= maxTextWidth) {
+      titleX = left + (maxTextWidth - rowWidth.total) / 2;
+      valueX = titleX + rowWidth.title + gap;
+      titleY = centerY(titleHeight);
+      valueY = centerY(valueHeight);
+    } else {
+      titleX = valueX = centerX;
+      titleAlign = valueAlign = 'center';
+      titleY = centerY(titleHeight + gap + valueHeight);
+      valueY = titleY + titleHeight + gap;
+    }
+  } else if (isWide) {
     // Side by side. With a sparkline the texts are at the top of the cell, else at its vertical center.
-    titleY = hasChart && !isCentered ? top : centerY(titleHeight);
-    valueY = hasChart && !isCentered ? top : centerY(valueHeight);
+    titleY = hasChart ? top : centerY(titleHeight);
+    valueY = hasChart ? top : centerY(valueHeight);
     valueX = left + maxTextWidth;
     valueAlign = 'right';
   } else {
     // The name above the value. With a sparkline the texts are at the top of the cell, else at its vertical center.
-    titleY = hasChart && !isCentered ? top : centerY(titleHeight + valueHeight);
+    titleY = hasChart ? top : centerY(titleHeight + valueHeight);
     valueY = titleY + titleHeight;
-  }
-  if (isCentered) {
-    valueX = left + maxTextWidth / 2;
-    valueAlign = 'center';
   }
 
   const valueColor = display.display.color ?? 'gray';
@@ -353,9 +403,9 @@ function layoutCell(
   if (texts.title && titleSize > 0) {
     result.title = {
       text: texts.title,
-      x: left,
+      x: titleX,
       y: titleY,
-      align: 'left',
+      align: titleAlign,
       fontSize: titleSize,
       fontWeight: theme.typography.fontWeightRegular,
       color: colors.title,

@@ -3,6 +3,7 @@ import { BigValueTextMode } from '@grafana/schema';
 import {
   STAT_COLOR_MODE_DEFAULT,
   STAT_GRAPH_MODE_DEFAULT,
+  STAT_JUSTIFY_MODE_DEFAULT,
   STAT_TEXT_MODE_DEFAULT,
   STAT_WIDE_LAYOUT_DEFAULT,
   statCategoryName,
@@ -10,6 +11,8 @@ import {
   statColorModePath,
   statGraphModeOptions,
   statGraphModePath,
+  statJustifyModeOptions,
+  statJustifyModePath,
   statTextModeOptions,
   statTextModePath,
   statWideLayoutPath,
@@ -64,5 +67,13 @@ export function addStatStyleOptions(builder: PanelOptionsEditorBuilder<PanelOpti
     category,
     defaultValue: STAT_GRAPH_MODE_DEFAULT,
     settings: { options: statGraphModeOptions },
+  });
+
+  builder.addRadio({
+    path: statJustifyModePath,
+    name: 'Text alignment',
+    category,
+    defaultValue: STAT_JUSTIFY_MODE_DEFAULT,
+    settings: { options: statJustifyModeOptions },
   });
 }
