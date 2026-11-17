@@ -7,11 +7,13 @@ import {
   resolveGaugeTextParts,
 } from 'lib/grafana/gauge/layout';
 import { layoutRepeaterCells } from 'lib/grafana/repeater/layout';
-import { TITLE_HEIGHT_PX, TOOLBAR_HEIGHT_PX } from './layout';
+import { chartPadding, TITLE_HEIGHT_PX, TOOLBAR_HEIGHT_PX } from './layout';
 import { DEFAULT_HEIGHT_PX } from './registry';
 
 const FONT = 'Inter, Helvetica, Arial, sans-serif';
-const NARROW_WIDTH_PX = 480;
+/** The space that the Renderer keeps on each side of the gauge chart. */
+const PADDING_PX = 2 * chartPadding('gauge');
+const NARROW_WIDTH_PX = 480 - PADDING_PX;
 /** The smallest sizes at which a gauge and its text are readable. */
 const MIN_RADIUS_PX = 24;
 const MIN_VALUE_FONT_PX = 12;
@@ -36,13 +38,21 @@ function layout(width: number, height: number, count: number) {
 }
 
 const heights = [
-  ['the default height', DEFAULT_HEIGHT_PX],
-  ['the default height with the toolbar and the title', DEFAULT_HEIGHT_PX - TOOLBAR_HEIGHT_PX - TITLE_HEIGHT_PX],
+  ['the default height', DEFAULT_HEIGHT_PX - PADDING_PX],
+  [
+    'the default height with the toolbar and the title',
+    DEFAULT_HEIGHT_PX - TOOLBAR_HEIGHT_PX - TITLE_HEIGHT_PX - PADDING_PX,
+  ],
 ] as const;
 // 1 value, the 3 values of `gauge-thresholds`, and 10 values: the most that the pick rule `single-value` allows.
 const cases = heights.flatMap(([name, height]) => [1, 3, 10].map((count) => [count, name, height] as const));
 
 describe('the gauge layout in the sandbox', () => {
+  it('gets the panel padding of Grafana around the chart, and the other families get none', () => {
+    expect(chartPadding('gauge')).toBe(8);
+    expect(chartPadding('cartesian')).toBe(0);
+  });
+
   it.each(cases)('keeps %d gauges inside their cells and readable at 480 px wide and %s', (count, _name, height) => {
     const gauges = layout(NARROW_WIDTH_PX, height, count);
     expect(gauges).toHaveLength(count);

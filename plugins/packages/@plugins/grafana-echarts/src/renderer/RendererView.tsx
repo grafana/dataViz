@@ -10,7 +10,7 @@ import { TimeZoomOutContext } from 'lib/components/TimeZoomOutContext';
 import React, { useEffect, useMemo } from 'react';
 import { CommitSignal } from './CommitSignal';
 import { dataIssueText } from './dataIssueText';
-import { TITLE_HEIGHT_PX, TOOLBAR_HEIGHT_PX } from './layout';
+import { chartPadding, TITLE_HEIGHT_PX, TOOLBAR_HEIGHT_PX } from './layout';
 import { errorMessage } from './messages';
 import { NoDataView } from './NoDataView';
 import { toChartNotices } from './notices';
@@ -65,6 +65,7 @@ export const RendererView = ({
     0,
     height - (refresh ? TOOLBAR_HEIGHT_PX : 0) - (prepared.title !== undefined ? TITLE_HEIGHT_PX : 0)
   );
+  const padding = prepared.kind === 'chart' ? chartPadding(prepared.props.family) : 0;
   const rootClass = useMemo(() => rootClassName(prepared.theme), [prepared.theme]);
   useEffect(() => {
     if (prepared.kind !== 'chart') {
@@ -108,7 +109,13 @@ export const RendererView = ({
                         <RendererErrorView message={errorMessage('render-error', { panelName: prepared.panelName })} />
                       )}
                     >
-                      <Panel {...prepared.props} width={width} height={chartHeight} />
+                      <div style={{ padding }}>
+                        <Panel
+                          {...prepared.props}
+                          width={Math.max(0, width - 2 * padding)}
+                          height={Math.max(0, chartHeight - 2 * padding)}
+                        />
+                      </div>
                       <ChartNotices notices={toChartNotices(prepared.notices)} corner="top-left" />
                     </ChartErrorBoundary>
                   )}
