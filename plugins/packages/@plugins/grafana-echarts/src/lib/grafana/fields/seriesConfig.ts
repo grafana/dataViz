@@ -78,6 +78,8 @@ function matcherName(rule: ConfigOverrideRule): string | undefined {
 /**
  * Add or replace a single property on the `byName(name)` override, creating the
  * override when absent. Other overrides and unrelated properties are preserved.
+ * With two `byName(name)` rules, it changes the last one: a rule at the end wins,
+ * as in Grafana, so a change to the first one can have no effect.
  */
 function upsertProperty(
   overrides: ConfigOverrideRule[],
@@ -85,7 +87,11 @@ function upsertProperty(
   property: DynamicConfigValue
 ): ConfigOverrideRule[] {
   const next = [...overrides];
-  const index = next.findIndex((rule) => matcherName(rule) === name);
+  // `findLastIndex` is ES2023, and the TypeScript lib of this package is ES2022.
+  let index = next.length - 1;
+  while (index >= 0 && matcherName(next[index]) !== name) {
+    index--;
+  }
 
   if (index < 0) {
     next.push({ matcher: { id: FieldMatcherID.byName, options: name }, properties: [property] });

@@ -5,6 +5,7 @@ import {
   getHiddenSeriesNames,
   type LegendOverrides,
   mergeLegendOverrides,
+  setMarkPositionsConfig,
   toggleSeriesVisibilityConfig,
 } from 'lib/grafana/fields/seriesConfig';
 import { fixtureSets, fixtureSpec } from 'test/rendererFixtures';
@@ -317,5 +318,23 @@ describe('the legend state in preparePanel', () => {
       toggleSeriesVisibilityConfig(second.fieldConfig, KEPT, SeriesVisibilityChangeMode.ToggleSelection, [KEPT, 'x'])
     );
     expect(colorOf(draw(specWith([byName(KEPT, [color('red')])])), KEPT)).toEqual(fixed('blue'));
+  });
+
+  it('lets the user pick the color of the viz spec again after a legend color', () => {
+    const draw = renderer().draw;
+    const spec = () => specWith([byName(KEPT, [color('red')])]);
+    const first = draw(spec());
+    first.onFieldConfigChange(changeSeriesColorConfig(first.fieldConfig, KEPT, 'blue'));
+    const second = draw(spec());
+    expect(colorOf(second, KEPT)).toEqual(fixed('blue'));
+    second.onFieldConfigChange(changeSeriesColorConfig(second.fieldConfig, KEPT, 'red'));
+    expect(colorOf(draw(spec()), KEPT)).toEqual(fixed('red'));
+  });
+
+  it('gives no legend change for a write that is not one, as the positions of a relations drag', () => {
+    const onChange = jest.fn();
+    const { props } = preparePanel(specWith([]), cartesian, { onChange });
+    props.onFieldConfigChange(setMarkPositionsConfig(props.fieldConfig, new Map([[KEPT, { x: 999, y: 999 }]])));
+    expect(onChange).not.toHaveBeenCalled();
   });
 });

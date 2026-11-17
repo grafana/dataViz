@@ -118,7 +118,14 @@ export function preparePanel(
     replaceVariables: identity,
     onOptionsChange: noop,
     // `renderer.34`: a legend action gives the new field config. The viz spec does not change.
-    onFieldConfigChange: (next) => legend?.onChange(readLegendChange(next, fieldConfig)),
+    onFieldConfigChange: (next) => {
+      const change = readLegendChange(next, fieldConfig);
+      // A write that is not a legend change (the positions of a relations drag) does not draw again. A new draw sets
+      // the positions of the viz spec, and the dragged node goes back.
+      if (change.hide !== undefined || change.colors.size > 0) {
+        legend?.onChange(change);
+      }
+    },
     onChangeTimeRange: noop,
   };
   return { props, omittedSeries: cut.omitted };
