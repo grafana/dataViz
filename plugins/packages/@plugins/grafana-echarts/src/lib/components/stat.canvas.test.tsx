@@ -3,6 +3,7 @@ import { normalizeCanvasEvents } from 'test/canvas';
 import { height, width } from 'test/panel';
 import {
   cpuFrame,
+  defaultColorFrame,
   gapFrame,
   mappedFrame,
   renderStat,
@@ -102,6 +103,14 @@ describe('stat canvas snapshots', () => {
     // The value 72 is above the threshold of 60, so the value and the sparkline are red.
     it('Value, with the color of a threshold', async () => {
       const { defaultEvents, seriesEvents } = await renderStat([thresholdsFrame]);
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
+    });
+
+    // The field has thresholds and the default color scheme of the panel. The value 72 is above the threshold
+    // of 60, so the value and the sparkline are orange.
+    it('Value, with the default color scheme of the panel', async () => {
+      const { defaultEvents, seriesEvents } = await renderStat([defaultColorFrame]);
 
       expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
     });

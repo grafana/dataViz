@@ -2,8 +2,8 @@ import { PanelPlugin, ReducerID } from '@grafana/data';
 import { initPluginTranslations } from '@grafana/i18n';
 import { type EChartsFieldConfig } from 'editor/types';
 import { makeLazyPanel } from 'lib/components/LazyPanel';
-import { STANDARD_FIELD_OPTIONS } from 'lib/grafana/editor/common/fieldConfig';
 import { addStandardDataReduceOptions } from 'lib/grafana/editor/common/standardReducer';
+import { STAT_FIELD_OPTIONS } from 'lib/grafana/editor/stat/standardOptions';
 import { addStatStyleOptions } from 'lib/grafana/editor/stat/styles';
 import { type PanelOptions } from 'types';
 import { statSuggestionsSupplier } from './suggestions';
@@ -22,7 +22,7 @@ initPluginTranslations(__PLUGIN_ID__);
 // `stat` is the family's only render type, so there is no "Chart type" picker: the shared Panel's `'Auto'`
 // resolver returns it for this family. The panel has no legend and no tooltip, as core Stat.
 export const plugin = new PanelPlugin<PanelOptions, EChartsFieldConfig>(makeLazyPanel('stat'))
-  .useFieldConfig({ standardOptions: STANDARD_FIELD_OPTIONS })
+  .useFieldConfig({ standardOptions: STAT_FIELD_OPTIONS })
   .setPanelOptions((builder) => {
     // "Value options": the reducer for each field, or one value for each row. Core Stat's default is the last
     // value that is not null.

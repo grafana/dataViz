@@ -2,6 +2,7 @@ import {
   type DataFrame,
   type FieldConfigSource,
   FieldColorModeId,
+  FieldConfigProperty,
   FieldType,
   MappingType,
   type PanelProps,
@@ -9,6 +10,7 @@ import {
   toDataFrame,
 } from '@grafana/data';
 import { render } from '@testing-library/react';
+import { STAT_FIELD_OPTIONS } from 'lib/grafana/editor/stat/standardOptions';
 import { SERIES_ZLEVEL } from 'test/canvas';
 import { getComponent, getSeriesCanvasEvents } from 'test/panel';
 import { type PanelOptions } from 'types';
@@ -84,6 +86,33 @@ export const thresholdsFrame = toDataFrame({
           steps: [
             { value: -Infinity, color: 'green' },
             { value: 60, color: 'red' },
+          ],
+        },
+      },
+    },
+  ],
+});
+
+/**
+ * The base case as a new panel gives it: thresholds, and no color scheme in the field config. Grafana then
+ * applies the Color default that the panel registers. The harness applies `palette-classic` to a field with no
+ * color (`test/fieldConfig.ts`), so this fixture takes the color from the registered default of the stat panel.
+ */
+export const defaultColorFrame = toDataFrame({
+  fields: [
+    { name: 'time', type: FieldType.time, values: TIMES },
+    {
+      name: 'cpu',
+      type: FieldType.number,
+      values: [35, 52, 48, 72],
+      config: {
+        unit: 'percent',
+        color: STAT_FIELD_OPTIONS[FieldConfigProperty.Color].defaultValue,
+        thresholds: {
+          mode: ThresholdsMode.Absolute,
+          steps: [
+            { value: -Infinity, color: 'green' },
+            { value: 60, color: 'orange' },
           ],
         },
       },

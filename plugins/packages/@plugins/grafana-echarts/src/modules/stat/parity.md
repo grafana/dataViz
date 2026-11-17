@@ -47,11 +47,18 @@ editor, and the panel ignores them in saved panel JSON.
 
 A panel that has a `Planned` color mode draws with the `value` color mode.
 
+The default color scheme is `thresholds`, as in core Stat, and not `palette-classic` as in the other ECharts
+panels ([standardOptions.ts](../../lib/grafana/editor/stat/standardOptions.ts)). A new panel thus draws each
+value in the color of its threshold. Regression tests: [standardOptions.test.ts][standard-options],
+[canvas: Value, with the default color scheme of the panel][canvas]. Demo panel:
+[Thresholds, default color scheme][db-basics].
+
 [canvas]: ../../lib/components/stat.canvas.test.tsx
 [integration]: ../../lib/components/stat.integration.test.tsx
 [layout]: ../../lib/grafana/stat/layout.test.ts
 [field-displays]: ../../lib/grafana/fieldDisplays.test.ts
 [issue]: ../../lib/echarts/charts/statIssue.test.ts
+[standard-options]: ../../lib/grafana/editor/stat/standardOptions.test.ts
 [db-basics]: ../../../provisioning/dashboards/stat/stat-basics.json
 
 ## Design decisions
