@@ -4,7 +4,8 @@ The Git root is above `plugins/`. Run pnpm, Turbo, and development Docker comman
 
 ## Every change
 
-- Validate: `pnpm install --frozen-lockfile`, then `pnpm check`.
+- Validate: `pnpm install --frozen-lockfile`, then `pnpm check`. When intentionally changing
+  dependencies, use `pnpm install` and commit the lockfile update.
   For one package: `pnpm --filter <package-name> run test:ci`. Do not use watch-mode `test`.
 - All packages use Jest. Preserve canvas snapshots and their documented review workflow.
 - The clock and ECharts packages keep their own toolchains. Do not apply workspace Biome
