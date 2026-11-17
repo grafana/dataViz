@@ -88,8 +88,8 @@ importers:
         specifier: 0.7.0
         version: 0.7.0(@types/eslint@9.6.1)(eslint@9.39.5(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)
       '@grafana/plugin-e2e':
-        specifier: 3.11.0
-        version: 3.11.0(@playwright/test@1.62.1)
+        specifier: 3.15.4
+        version: 3.15.4(@playwright/test@1.62.1)
       '@grafana/sign-plugin':
         specifier: 3.3.3
         version: 3.3.3(supports-color@8.1.1)
@@ -1532,9 +1532,6 @@ packages:
   '@grafana/e2e-selectors@12.2.10':
     resolution: {integrity: sha512-HFijeB/cqZvK6AgY4J43naj26IcKeQC2MjQ6rS7SOL32Un9uovjFgbb//nJ9mWu2rAzUUBoFrNyrM+ojMKAsDw==}
 
-  '@grafana/e2e-selectors@13.2.0-30594044109':
-    resolution: {integrity: sha512-CRN0CTsSkAC3qQvufbR7duUzSX2Jfgc/g5ap+eSrjcFcS+vAVUDGfQVLK6y5ojN+B0gATNIbmVlCGngQxmm+eA==}
-
   '@grafana/e2e-selectors@13.3.0':
     resolution: {integrity: sha512-WEEwaTlbyMyrAkkKsHCxboi4TD5xxZ3pGnkMLPy4Fh++59YoyV1dHpqhtF9gchpLyCl4zk/BGAd1JRvMXUKENQ==}
 
@@ -1601,16 +1598,6 @@ packages:
     resolution: {integrity: sha512-MAury6clNwxoPoYlZ9BIIVwhMuxdIVU4qYIvX9uv+VGOjQoRK3uF+UNObRWe3BIMzey04p0xju+To7eb1HoT7g==}
     engines: {node: '>=18.19'}
     hasBin: true
-
-  '@grafana/plugin-e2e@3.11.0':
-    resolution: {integrity: sha512-kStVAbkmuQzgMaYwzm1leRGG+vRzuFj2JgojKeLFwPyZhL80OyVLC4L96ePmx2PZGmUXA9enMtMG8YqBx3uJdw==}
-    engines: {node: '>=20 <=24'}
-    peerDependencies:
-      '@axe-core/playwright': ^4.11.1
-      '@playwright/test': ^1.52.0
-    peerDependenciesMeta:
-      '@axe-core/playwright':
-        optional: true
 
   '@grafana/plugin-e2e@3.15.4':
     resolution: {integrity: sha512-NC/AA3lajw6OLvi26TMSOkkaOl8uP+Ax5eiRmraZdUbaDKF0FLxBwuKz2qgYCbK7PrWuDoIHrBJ3n1VMGmyjMw==}
@@ -9036,10 +9023,6 @@ snapshots:
       tslib: 2.8.1
       typescript: 5.9.2
 
-  '@grafana/e2e-selectors@13.2.0-30594044109':
-    dependencies:
-      semver: 7.8.5
-
   '@grafana/e2e-selectors@13.3.0':
     dependencies:
       semver: 7.8.5
@@ -9170,15 +9153,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@grafana/plugin-e2e@3.11.0(@playwright/test@1.62.1)':
-    dependencies:
-      '@grafana/e2e-selectors': 13.2.0-30594044109
-      '@playwright/test': 1.62.1
-      yaml: 2.9.0
-
   '@grafana/plugin-e2e@3.15.4(@playwright/test@1.57.0)':
     dependencies:
       '@playwright/test': 1.57.0
+      yaml: 2.9.0
+
+  '@grafana/plugin-e2e@3.15.4(@playwright/test@1.62.1)':
+    dependencies:
+      '@playwright/test': 1.62.1
       yaml: 2.9.0
 
   '@grafana/react-data-grid@7.0.0-beta.57(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
