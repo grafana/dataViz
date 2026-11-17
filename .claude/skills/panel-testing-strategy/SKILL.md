@@ -5,8 +5,10 @@ description: Test visualization data, rendering, interactions, and accessibility
 
 # Panel testing strategy
 
-Read [frontend-testing-strategy](../frontend-testing-strategy/SKILL.md) first, then the local
-visualization adapter. Use the existing rendering harness; do not import Grafana core-only helpers
+Read [frontend-testing-strategy](../frontend-testing-strategy/SKILL.md) if not already loaded.
+The local visualization conventions are supplied by `contribute/testing.md`, "Visualization adapter".
+Do not reload that guide when it already supplied the task context. Use the existing rendering
+harness; do not import Grafana core-only helpers
 into standalone plugins or prescribe one rendering engine to every repository.
 
 - Use a consistent data builder per file and explicit overrides. Ensure field configuration reaches

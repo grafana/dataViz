@@ -26,23 +26,21 @@ This monorepo is scoped to **panel and app plugins only** — no Go backend plug
 
 ## Commands (run from `plugins/`)
 
-```bash
-pnpm install
+Install and validation commands live in [AGENTS.md](AGENTS.md#every-change).
 
+```bash
 pnpm build          # turbo build (production, all packages)
 pnpm build:dev      # turbo build:dev
 pnpm dev            # turbo dev (watch mode)
 pnpm test           # turbo test
-pnpm test:ci        # turbo test:ci
 pnpm lint           # turbo lint (biome)
 pnpm lint:fix
 pnpm format         # biome format check
 pnpm format:fix
 pnpm type-check     # turbo type-check (tsc --build, project references)
-pnpm check          # format + test:ci + lint + type-check — run before considering work done
 ```
 
-Single package: `cd packages/@plugins/<name> && pnpm test` (watch) / `pnpm test:ci`, or from `plugins/` use `pnpm --filter <pkg> run test:ci`.
+Use the focused validation command in AGENTS.md for a single package. `pnpm test` watches for changes.
 
 **Every package uses Jest.** There is no Vitest in this repo — each package has its own `jest.config.js` (`@swc/jest` transform, jsdom for the panel plugins, node for `@shared/core`). Panel plugin configs must set `jsc.transform.react.runtime: 'automatic'` to match webpack; source files import React as a type only, so the classic runtime fails at test time with `React is not defined`.
 

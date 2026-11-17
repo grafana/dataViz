@@ -1,7 +1,7 @@
 # Per-plugin CI beyond root ci.yml's format/lint/type-check/test/build:
 # levitate API compatibility for every build target, and Playwright e2e for
 # every package with an e2e suite. Both lists come from discover-plugins
-# (see plugin-ci.json in CLAUDE.md), limited to packages this change touches.
+# (see plugin-ci.json in DEVELOPING.md), limited to packages this change touches.
 # Design notes: .github/actions/README.md.
 #
 # No `paths:` filter: discover-plugins decides what a change affects, and a

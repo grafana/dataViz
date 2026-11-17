@@ -1,27 +1,28 @@
 # Agent guidance
 
-## Contribution workflow
+The Git root is above `plugins/`. Run pnpm, Turbo, and development Docker commands from `plugins/`.
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) and applicable directory instructions before editing.
-Keep changes focused and follow surrounding conventions. Add comments for non-obvious reasons,
-not to narrate self-explanatory code. Read [contribute/testing.md](contribute/testing.md) before
-writing or running tests; it routes to the checked-in shared testing skills and local commands.
+## Every change
 
-Use the contributor's configured signing identity for every commit. Never disable signing to get
-past an error or fabricate an identity. Preserve authorship; get explicit approval before rewriting
-published history. Follow the signing setup in CONTRIBUTING.md.
+- Validate: `pnpm install --frozen-lockfile`, then `pnpm check`.
+  For one package: `pnpm --filter <package-name> run test:ci`. Do not use watch-mode `test`.
+- All packages use Jest. Preserve canvas snapshots and their documented review workflow.
+- The clock and ECharts packages keep their own toolchains. Do not apply workspace Biome
+  conventions to them. Read the package-local AGENTS.md before modifying ECharts.
+- Turbo matches exact script names. A renamed script can silently stop checking a package.
 
-Before `git push`, stop, summarize changes and validation, and obtain explicit human approval.
-A request to open a PR does not by itself authorize pushing. Report unavailable or skipped checks.
+## Read only when needed
 
-## Repository essentials
+- Writing or reviewing tests: [contribute/testing.md](contribute/testing.md).
+- Changing CI: "GitHub Actions workflows" and "Testing CI changes locally" in DEVELOPING.md.
+- Adding a package: "Adding a new plugin package" or "Adding a new shared package" in DEVELOPING.md.
+- Importing a plugin: "Bringing a plugin into this monorepo" in DEVELOPING.md.
+- Editing `src/plugin.json`: `.claude/commands/plugin-metadata.md`.
+- Signing error: [Signed commits](CONTRIBUTING.md#signed-commits). Never disable signing.
 
-The Git root is above `plugins/`; run pnpm, Turbo, and development Docker commands from `plugins/`.
-Read [DEVELOPING.md](DEVELOPING.md) for architecture, CI, import, and release instructions.
+## Git
 
-- All packages use Jest. Run focused `test:ci`, not watch-mode `test`, during automated validation.
-- Imported clock and ECharts packages retain their own toolchains. Do not apply workspace Biome
-  conventions indiscriminately. Read package-local agent instructions before modifying ECharts.
-- Preserve canvas snapshots and their documented review workflow.
-- Turbo matches exact script names; a renamed script can silently stop checking a package.
-- Before changing CI, read DEVELOPING.md's workflow security and local validation sections.
+- Sign every commit with the contributor's configured identity.
+- Get explicit approval before `git push` and before rewriting published history.
+  A request to open a PR does not authorize a push.
+- Report checks you skipped or could not run.
