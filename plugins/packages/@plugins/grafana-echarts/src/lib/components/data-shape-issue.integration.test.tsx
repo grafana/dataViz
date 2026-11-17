@@ -1,9 +1,9 @@
 import { FieldType, toDataFrame } from '@grafana/data';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { type SeriesType } from 'editor/types';
 import { type ChartFamily } from 'lib/echarts/charts/autoSeriesType';
 import React from 'react';
-import { getComponent } from 'test/panel';
+import { getComponent, renderWithGrafana } from 'test/panel';
 import { STREAM_ISSUE_MESSAGES } from 'lib/echarts/charts/streamIssue';
 
 // Each chart kind shows the Grafana error view, and no chart, for a frame that it cannot draw (#189).
@@ -50,7 +50,7 @@ describe('data shape issue view', () => {
   beforeEach(() => mockPanelDataErrorView.mockClear());
 
   it.each(cases)('%s %s shows the error view and no chart', (family, seriesType, frame, needs) => {
-    const { container } = render(getComponent([frame], seriesType, {}, {}, {}, family));
+    const { container } = renderWithGrafana(getComponent([frame], seriesType, {}, {}, {}, family));
 
     expect(screen.getByTestId('panel-data-error-view')).toBeInTheDocument();
     expect(mockPanelDataErrorView).toHaveBeenCalledWith(expect.objectContaining(needs));

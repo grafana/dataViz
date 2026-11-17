@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.4.0](https://github.com/grafana/dataViz/compare/grafana-echarts-renderer/v0.3.1...grafana-echarts-renderer/v0.4.0) (2026-11-17)
+
+
+### 🎉 Features
+
+* **echarts:** keep the legend changes of the user after update ([#209](https://github.com/grafana/dataViz/issues/209)) ([#227](https://github.com/grafana/dataViz/issues/227)) ([ed28227](https://github.com/grafana/dataViz/commit/ed28227f9807e482d9b4a697cd029cbbddf5013b))
+
+## [0.3.1](https://github.com/grafana/dataViz/compare/grafana-echarts-renderer/v0.3.0...grafana-echarts-renderer/v0.3.1) (2026-11-17)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** check only the plugins a PR changes, and update clock-panel to @grafana/* 13.3.0 ([#228](https://github.com/grafana/dataViz/issues/228)) ([641ee4b](https://github.com/grafana/dataViz/commit/641ee4ba7c67f02710639e3286b11286a271f287))
+
+## [0.3.0](https://github.com/grafana/dataViz/compare/grafana-echarts-renderer/v0.2.1...grafana-echarts-renderer/v0.3.0) (2026-11-17)
+
+
+### 🎉 Features
+
+* **echarts:** remove @grafana/runtime from the Renderer bundle ([#140](https://github.com/grafana/dataViz/issues/140)) ([#211](https://github.com/grafana/dataViz/issues/211)) ([73d4df0](https://github.com/grafana/dataViz/commit/73d4df0f215c560d18737a60573a3a9cc0fc0959))
+
 ## [0.2.1](https://github.com/grafana/dataViz/compare/grafana-echarts-renderer/v0.2.0...grafana-echarts-renderer/v0.2.1) (2026-11-16)
 
 

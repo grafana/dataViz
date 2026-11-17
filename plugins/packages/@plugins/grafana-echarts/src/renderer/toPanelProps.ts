@@ -10,6 +10,7 @@ import { seriesTypePath } from 'editor/constants';
 import { resolveSeriesType } from 'lib/echarts/charts/autoSeriesType';
 import { isMultiValueSeriesType } from 'lib/echarts/charts/narrowing';
 import { type PanelComponentProps } from 'lib/components/types';
+import { applyLegendOverrides, type LegendOverrides, readLegendChange } from 'lib/grafana/fields/seriesConfig';
 import { type PanelOptions } from 'types';
 import { withoutCallOuts } from './callOuts';
 import { isObject } from './parseSpec';
@@ -44,6 +45,15 @@ const isPanelOptions = (options: unknown): options is PanelOptions => isObject(o
 const identity = (value: string) => value;
 const noop = () => {};
 
+/**
+ * The legend changes of the user: the state to draw with, and where one new change goes (`renderer.34`,
+ * `renderer.35`). The owner of the hook merges the change into the state.
+ */
+export interface LegendHook {
+  overrides?: LegendOverrides;
+  onChange: (change: LegendOverrides) => void;
+}
+
 /** `Panel` props with no size. The size comes from `el` when the Renderer draws. */
 export type SpecPanelProps = Omit<PanelComponentProps, 'width' | 'height'>;
 
@@ -62,14 +72,20 @@ export const toPanelProps = (spec: VizSpec, entry: PanelEntry): SpecPanelProps =
  * before the field overrides, only for the families of `TRUNCATED_FAMILIES`. A candlestick or boxplot is not cut: it
  * draws one series from several number fields of the first frame, as `PanelContent` resolves the series type.
  */
-export function preparePanel(spec: VizSpec, entry: PanelEntry): { props: SpecPanelProps; omittedSeries: number } {
+export function preparePanel(
+  spec: VizSpec,
+  entry: PanelEntry,
+  legend?: LegendHook
+): { props: SpecPanelProps; omittedSeries: number } {
   const theme = themeOf(spec.theme);
-  const { options, fieldConfig } = getPanelOptionsWithDefaults({
+  const { options, fieldConfig: specFieldConfig } = getPanelOptionsWithDefaults({
     plugin: entry.plugin,
     currentOptions: spec.panel.options,
     currentFieldConfig: withoutCallOuts(spec.panel.fieldConfig),
     isAfterPluginChange: false,
   });
+  // `renderer.35`: the legend changes of the user win over the overrides of the viz spec.
+  const fieldConfig = legend?.overrides ? applyLegendOverrides(specFieldConfig, legend.overrides) : specFieldConfig;
   if (!isPanelOptions(options)) {
     throw new Error(`The options of ${spec.panel.type} are not an object`);
   }
@@ -101,7 +117,15 @@ export function preparePanel(spec: VizSpec, entry: PanelEntry): { props: SpecPan
     eventBus: new EventBusSrv(),
     replaceVariables: identity,
     onOptionsChange: noop,
-    onFieldConfigChange: noop,
+    // `renderer.34`: a legend action gives the new field config. The viz spec does not change.
+    onFieldConfigChange: (next) => {
+      const change = readLegendChange(next, fieldConfig);
+      // A write that is not a legend change (the positions of a relations drag) does not draw again. A new draw sets
+      // the positions of the viz spec, and the dragged node goes back.
+      if (change.hide !== undefined || change.colors.size > 0) {
+        legend?.onChange(change);
+      }
+    },
     onChangeTimeRange: noop,
   };
   return { props, omittedSeries: cut.omitted };
