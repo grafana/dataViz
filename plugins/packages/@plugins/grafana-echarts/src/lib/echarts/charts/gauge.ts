@@ -121,7 +121,12 @@ export const gaugeChartModule: ChartModule = {
 
   buildOption(ctx: ChartContext, { plotWidth, plotHeight }: BaseOptionParts): EChartGaugeSeriesOption | null {
     const values = resolveGaugeModel(ctx);
-    const cells = layoutRepeaterCells(plotWidth ?? 0, plotHeight ?? 0, values.length, GAUGE_CELL_SPACING);
+    const cells = layoutRepeaterCells({
+      width: plotWidth ?? 0,
+      height: plotHeight ?? 0,
+      count: values.length,
+      spacing: GAUGE_CELL_SPACING,
+    });
     // No value, or no space to draw in.
     if (cells.length === 0) {
       return null;
