@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/grafana/dataViz/compare/grafana-echarts-renderer/v0.2.1...grafana-echarts-renderer/v0.3.0) (2026-11-17)
+
+
+### 🎉 Features
+
+* **echarts:** remove @grafana/runtime from the Renderer bundle ([#140](https://github.com/grafana/dataViz/issues/140)) ([#211](https://github.com/grafana/dataViz/issues/211)) ([73d4df0](https://github.com/grafana/dataViz/commit/73d4df0f215c560d18737a60573a3a9cc0fc0959))
+
 ## [0.2.1](https://github.com/grafana/dataViz/compare/grafana-echarts-renderer/v0.2.0...grafana-echarts-renderer/v0.2.1) (2026-11-16)
 
 

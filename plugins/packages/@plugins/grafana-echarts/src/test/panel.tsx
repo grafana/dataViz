@@ -10,13 +10,14 @@ import {
   type TimeRange,
 } from '@grafana/data';
 import { LegendDisplayMode, TooltipDisplayMode, type VizLegendOptions, type VizTooltipOptions } from '@grafana/schema';
-import { waitFor } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { type EChartsType } from 'echarts';
 import { seriesTypePath } from 'editor/constants';
 import { type SeriesType } from 'editor/types';
 import { Panel } from 'lib/components/Panel';
 import { type ChartFamily } from 'lib/echarts/charts/autoSeriesType';
-import React from 'react';
+import { GrafanaPanelServices } from 'lib/grafana/GrafanaPanelServices';
+import React, { type ReactElement } from 'react';
 import {
   DEFAULT_LAYER_SELECTOR,
   getChart,
@@ -57,6 +58,9 @@ export const applyGrafanaFieldDefaults = (
   frames: DataFrame[],
   fieldConfig: FieldConfigSource = emptyFieldConfig
 ): DataFrame[] => applyTestFieldConfig(frames, fieldConfig, theme);
+
+/** Renders `ui` with the Grafana services that `LazyPanel` gives, for example the Grafana error view. */
+export const renderWithGrafana = (ui: ReactElement) => render(ui, { wrapper: GrafanaPanelServices });
 
 /**
  * Returns the Panel component with overrideable default props

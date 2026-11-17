@@ -39,12 +39,12 @@ interface Props {
   refresh?: { status: RefreshStatus; onRequest: (cause: RefreshCause) => void };
 }
 
-/** The error view of a data issue: the Renderer gives its own, because only Grafana sets the view of `@grafana/runtime`. */
 const renderDataIssue = (props: PanelDataErrorViewProps) => <RendererErrorView message={dataIssueText(props)} />;
 
 /**
  * What the Renderer shows for a viz spec, with the theme of the spec. The chart is `Panel`, not `plugin.panel`: that
- * adds the tag search and the error view of Grafana (see `lib/components/LazyPanel.tsx`). The notices are a badge in
+ * adds the tag search and the error view of Grafana (see `lib/grafana/GrafanaPanelServices.tsx`, which the Renderer
+ * build replaces with `src/renderer/GrafanaPanelServices.tsx`). The notices are a badge in
  * the top-left corner, so they do not cover the notices of the panel in the top-right corner. `panel.title` is above
  * the chart, below the Refresh bar (`renderer.17`).
  * https://github.com/grafana/grafana/blob/main/packages/grafana-ui/src/themes/ThemeContext.tsx

@@ -38,14 +38,6 @@ import { iconProblems, writeIcons } from './renderer-icons.mjs';
 const PACKAGE_DIR = join(dirname(fileURLToPath(import.meta.url)), '..');
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
 
-/** Decision 4 of the plan: the only `@grafana/runtime` modules in the bundle. No Renderer path calls them. */
-const ALLOWED_RUNTIME_MODULES = [
-  'dist/esm/index.mjs',
-  'dist/esm/services/index.mjs',
-  'dist/esm/services/backendSrv.mjs',
-  'dist/esm/components/PanelDataErrorView.mjs',
-];
-
 /** The one `new Function` that is known: the JSON fallback of the ECharts geo loader, after a `JSON.parse` test. */
 const KNOWN_NEW_FUNCTION = /new Function\("return \("\+/y;
 
@@ -243,14 +235,9 @@ if (stats) {
   // renderer.9: the bundle has no copy of a peer.
   const peerCopies = [...new Set(packages.filter((p) => PEER_PACKAGES.includes(p.name)).map((p) => p.name))];
   check('renderer.9', peerCopies.length === 0, `bundled peer packages: ${peerCopies.join(', ') || 'none'}`);
-  // Decision 4: only the known `@grafana/runtime` modules.
+  // Decision 4: no `@grafana/runtime` module. `webpack.renderer.config.ts` replaces the Grafana services.
   const runtime = [...new Set(packages.filter((p) => p.name === '@grafana/runtime').map((p) => p.file))];
-  const other = runtime.filter((file) => !ALLOWED_RUNTIME_MODULES.includes(file));
-  check(
-    'decision 4',
-    other.length === 0,
-    `@grafana/runtime modules: ${runtime.join(', ')}${other.length ? `; not allowed: ${other.join(', ')}` : ''}`
-  );
+  check('decision 4', runtime.length === 0, `@grafana/runtime modules: ${runtime.join(', ') || 'none'}`);
 } else {
   console.log('skip renderer.9 (bundled peers), decision 4 (@grafana/runtime modules): --no-build has no stats');
 }
