@@ -10,7 +10,7 @@ import { PANELS } from './panels';
 import { isObject, parseSpec } from './parseSpec';
 import { panelType } from './registry';
 import { toTimeRange } from './toPanelData';
-import { preparePanel, type SpecPanelProps, themeOf } from './toPanelProps';
+import { type LegendHook, preparePanel, type SpecPanelProps, themeOf } from './toPanelProps';
 
 export type Prepared = {
   theme: GrafanaTheme2;
@@ -25,7 +25,7 @@ export type Prepared = {
   | { kind: 'chart'; props: SpecPanelProps; notices: Notice[]; panelName: string }
 );
 
-export function prepare(input: unknown): Prepared {
+export function prepare(input: unknown, legend?: LegendHook): Prepared {
   const parsed = parseSpec(input);
   if (!parsed.ok) {
     // `renderer.3`: the error also goes to the console. A spec that is not correct can still name its theme.
@@ -43,7 +43,7 @@ export function prepare(input: unknown): Prepared {
   // `state.6`: `<panelName>` is the `name` of the panel row.
   const panelName = panelType(spec.panel.type)?.name ?? spec.panel.type;
   try {
-    const { props, omittedSeries } = preparePanel(spec, PANELS[spec.panel.type]);
+    const { props, omittedSeries } = preparePanel(spec, PANELS[spec.panel.type], legend);
     const notices = allNotices(spec, omittedSeries);
     if (hasNoRows(props.data.series)) {
       return { ...base, kind: 'no-data', notices, noValue: props.fieldConfig.defaults.noValue };
