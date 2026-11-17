@@ -183,6 +183,40 @@ function steps(jobLines: string[]): string[][] {
 	return found;
 }
 
+// Immutable releases are on, so a release published before its files are
+// uploaded stays empty for good. release-please.yml publishes each release
+// itself, as the last step of the job that uploads the files.
+describe('release-please.yml publishes a release only after its files', () => {
+	const attach = jobs('.github/workflows/release-please.yml').find((job) => job.name === 'attach');
+	const attachSteps = steps(attach?.lines ?? []).map((step) => step.join('\n'));
+	const upload = attachSteps.findIndex((text) => /uses: softprops\/action-gh-release@/.test(text));
+	const publish = attachSteps.findIndex((text) => /gh release edit "\$TAG" --draft=false/.test(text));
+
+	test('the upload keeps the release a draft', () => {
+		assert.notEqual(upload, -1, 'no softprops/action-gh-release step in the attach job');
+		assert.match(attachSteps[upload], /^\s+draft: true$/m);
+		assert.match(attachSteps[upload], /^\s+fail_on_unmatched_files: true$/m);
+	});
+
+	test('publishing is the last step, after the upload', () => {
+		assert.equal(publish, attachSteps.length - 1);
+		assert.ok(upload < publish);
+		// A step with `if:` could run after a failed upload.
+		assert.doesNotMatch(attachSteps[publish], /^\s+if:/m);
+	});
+
+	test('nothing else publishes a release', () => {
+		for (const file of workflows) {
+			const publishers = lines(file).filter((line) => /--draft=false|^\s+draft: false/.test(line));
+			assert.equal(publishers.length, file.endsWith('/release-please.yml') ? 1 : 0, file);
+		}
+	});
+
+	test('release-guard.yml runs when a release is published', () => {
+		assert.deepEqual(triggers('.github/workflows/release-guard.yml'), ['release']);
+	});
+});
+
 // Jobs that can write to a PR or to the repo must not execute anything a PR
 // controls:
 // no checkout of this repo, no package-manager or Node commands, no repo

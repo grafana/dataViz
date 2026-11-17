@@ -1,0 +1,39 @@
+name: Release guard
+
+# Fails when a release is published with no files.
+#
+# release-please.yml publishes each release itself, after it uploads the
+# files. A release published with GITHUB_TOKEN starts no workflow, so this
+# runs only when a person (or another token) publishes a draft. Immutable
+# releases are on: a published release takes no more files and its tag can
+# never be reused, so an empty one cannot be repaired. This cannot stop the
+# publish; it makes the failure visible (GitHub notifies whoever published)
+# and says what to do next.
+
+on:
+  release:
+    types:
+      - published
+
+permissions: {}
+
+jobs:
+  guard:
+    name: Check ${{ github.event.release.tag_name }} has files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read # read the release
+    steps:
+      - name: Count the release files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          count="$(gh release view "$TAG" --json assets --jq '.assets | length')"
+          if [ "$count" -eq 0 ]; then
+            echo "::error::Release $TAG was published with no files. It is immutable, so files cannot be added and the tag cannot be reused: release the next version, and let release-please.yml publish it. See .github/actions/RELEASES.md."
+            exit 1
+          fi
+          echo "Release $TAG has $count files."
