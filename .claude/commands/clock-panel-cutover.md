@@ -112,7 +112,7 @@ Verified blocker already fixed: its setup action passes
 `package_json_file: <plugin-directory>/package.json` to `pnpm/action-setup`,
 which hard-errors with `No pnpm version is specified` if the plugin's own
 `package.json` lacks a `packageManager` field. That field was restored for this
-reason — see `CLAUDE.md`.
+reason — see `DEVELOPING.md`.
 
 **Unverified:** whether `pm-detect --working-dir <plugin-directory>` walks up to
 find `plugins/pnpm-lock.yaml`. Only a real publish run will confirm.
@@ -131,5 +131,5 @@ find `plugins/pnpm-lock.yaml`. Only a real publish run will confirm.
       two stock files, `bundle-stats.yml` and `is-compatible.yml`, were deleted:
       `plugin-bundle-stats.yml` and `plugin-ci.yml` cover them.)
 - [ ] Decide whether to eject clock-panel's `.config/` scaffolding onto
-      `.shared/`. The archive decision unblocked this — see `CLAUDE.md` for
+      `.shared/`. The archive decision unblocked this — see `DEVELOPING.md` for
       what `.config/` still drives.

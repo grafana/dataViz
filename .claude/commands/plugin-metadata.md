@@ -149,7 +149,7 @@ for s in d['info']['screenshots']:
 
 The schema sets `additionalProperties: false` at **both** the root and `info`,
 so a `"//"`-style comment key fails metadata validation. Track TODOs in
-`CLAUDE.md` or a command doc instead.
+`DEVELOPING.md` or a command doc instead.
 
 ## 5. Validate before publishing
 
@@ -176,4 +176,4 @@ workflow runs.
   host the LICENSE and other linked assets here instead.
 - **Keep the plugin's own `packageManager` field.** It looks redundant with the
   workspace root, but Grafana's shared CD workflow reads it from the *plugin's*
-  `package.json` — see `CLAUDE.md`.
+  `package.json` — see `DEVELOPING.md`.
