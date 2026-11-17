@@ -84,6 +84,8 @@ their meaning.
 - The panel has no tooltip and no legend, as core.
 - A value text with the rich text syntax of ECharts (`{name|text}`), or a prefix or a suffix with `}`, draws at one
   font size.
+- When no field gives a value and the "No value" option is set, core draws one empty gauge with the text of the
+  option. The ECharts gauge shows its message view, because the message tells the user how to correct the data.
 
 [canvas]: ../../lib/components/gauge.canvas.test.tsx
 [integration]: ../../lib/components/gauge.integration.test.tsx
