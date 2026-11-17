@@ -4,6 +4,7 @@ import {
   STAT_COLOR_MODE_DEFAULT,
   STAT_GRAPH_MODE_DEFAULT,
   STAT_JUSTIFY_MODE_DEFAULT,
+  STAT_ORIENTATION_DEFAULT,
   STAT_PERCENT_CHANGE_COLOR_MODE_DEFAULT,
   STAT_SHOW_PERCENT_CHANGE_DEFAULT,
   STAT_TEXT_MODE_DEFAULT,
@@ -15,6 +16,8 @@ import {
   statGraphModePath,
   statJustifyModeOptions,
   statJustifyModePath,
+  statOrientationOptions,
+  statOrientationPath,
   statPercentChangeColorModeOptions,
   statPercentChangeColorModePath,
   statShowPercentChangePath,
@@ -32,6 +35,15 @@ import { type PanelOptions } from 'types';
  */
 export function addStatStyleOptions(builder: PanelOptionsEditorBuilder<PanelOptions>) {
   const category = [statCategoryName];
+
+  builder.addRadio({
+    path: statOrientationPath,
+    name: 'Orientation',
+    description: 'Layout orientation',
+    category,
+    defaultValue: STAT_ORIENTATION_DEFAULT,
+    settings: { options: statOrientationOptions },
+  });
 
   builder.addSelect({
     path: statTextModePath,

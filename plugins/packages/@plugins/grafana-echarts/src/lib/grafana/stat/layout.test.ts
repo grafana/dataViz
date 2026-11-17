@@ -1,4 +1,4 @@
-import { type DataFrame, ReducerID } from '@grafana/data';
+import { type DataFrame, ReducerID, VizOrientation } from '@grafana/data';
 import {
   BigValueColorMode,
   BigValueGraphMode,
@@ -75,6 +75,25 @@ describe('layoutStatCells', () => {
 
     it('gives no cell for a panel with no size', () => {
       expect(layout([cpuFrame], 0, 300)).toEqual([]);
+    });
+
+    it('puts the cells one below the other, as wide as the panel, with the Horizontal orientation', () => {
+      const cells = layout([seriesFrame(3)], 400, 300, { orientation: VizOrientation.Horizontal });
+      expect(cells.map((cell) => cell.width)).toEqual([400, 400, 400]);
+      expect(cells[1].y - (cells[0].y + cells[0].height)).toBeCloseTo(STAT_CELL_SPACING, 9);
+      // A cell of 400 x 98 is wide, so the name is at the left and the value at the right.
+      expect(cells[0].value!.align).toBe('right');
+    });
+
+    it('puts the cells side by side, as high as the panel, with the Vertical orientation', () => {
+      // The automatic grid puts four values in a panel of 400 x 300 in two rows.
+      expect(new Set(layout([seriesFrame(4)], 400, 300).map((cell) => cell.y)).size).toBe(2);
+
+      const cells = layout([seriesFrame(4)], 400, 300, { orientation: VizOrientation.Vertical });
+      expect(cells.map((cell) => cell.height)).toEqual([300, 300, 300, 300]);
+      expect(cells[1].x - (cells[0].x + cells[0].width)).toBeCloseTo(STAT_CELL_SPACING, 9);
+      // A cell of 97.75 x 300 is not wide, so the name is above the value.
+      expect(cells[0].value!.y).toBeGreaterThan(cells[0].title!.y);
     });
 
     it('keeps the value that each cell shows', () => {

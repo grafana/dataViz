@@ -1,6 +1,8 @@
 // Splits a panel into one cell for each value. The gauge and the stat panels use it.
-// It is the automatic grid of the `VizRepeater` component of `@grafana/ui`, as pixel arithmetic with no React.
+// It is the `VizRepeater` component of `@grafana/ui` with its automatic grid, as pixel arithmetic with no React:
+// the automatic grid, and the two orientations that put the cells in one column or in one row.
 // https://github.com/grafana/grafana/blob/main/packages/grafana-ui/src/components/VizRepeater/VizRepeater.tsx
+import { VizOrientation } from '@grafana/data';
 
 /** One cell of the grid, in pixels from the top left corner of the panel. */
 export interface RepeaterCell {
@@ -43,16 +45,41 @@ export interface RepeaterLayoutInput {
   count: number;
   /** The space between two cells in pixels. */
   spacing: number;
+  /**
+   * How the cells are put in the panel. Unset or `auto` gives the automatic grid. `horizontal` gives one cell
+   * for each row of the panel: the cells are as wide as the panel, one below the other. `vertical` gives one
+   * cell for each column: the cells are as high as the panel, side by side.
+   */
+  orientation?: VizOrientation;
 }
 
 /**
- * The cells of `count` values in a panel of `width` x `height`, in row order. The cells of the last row are wider
- * when the row is not full, so the row fills the panel width. The result is empty when there is no value or no
- * space.
+ * The cells of `count` values in a panel of `width` x `height`, in row order. In the automatic grid, the cells of
+ * the last row are wider when the row is not full, so the row fills the panel width. The result is empty when
+ * there is no value or no space.
  */
-export function layoutRepeaterCells({ width, height, count, spacing }: RepeaterLayoutInput): RepeaterCell[] {
+export function layoutRepeaterCells(input: RepeaterLayoutInput): RepeaterCell[] {
+  const { width, height, count, spacing, orientation } = input;
   if (count <= 0 || width <= 0 || height <= 0) {
     return [];
+  }
+  if (orientation === VizOrientation.Horizontal) {
+    const cellHeight = partSize(height, count, spacing);
+    return Array.from({ length: count }, (_, index) => ({
+      x: 0,
+      y: index * (cellHeight + spacing),
+      width,
+      height: cellHeight,
+    }));
+  }
+  if (orientation === VizOrientation.Vertical) {
+    const cellWidth = partSize(width, count, spacing);
+    return Array.from({ length: count }, (_, index) => ({
+      x: index * (cellWidth + spacing),
+      y: 0,
+      width: cellWidth,
+      height,
+    }));
   }
   const { columns, rows } = gridCounts(width, height, count);
   const cellHeight = partSize(height, rows, spacing);

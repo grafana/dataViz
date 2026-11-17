@@ -1,3 +1,4 @@
+import { VizOrientation } from '@grafana/data';
 import {
   BigValueColorMode,
   BigValueGraphMode,
@@ -13,6 +14,7 @@ const options = (extra: Partial<PanelOptions> = {}) => extra as PanelOptions;
 describe('resolveStatOptions', () => {
   it('gives the defaults of core Stat for options that are not set', () => {
     expect(resolveStatOptions(options())).toEqual({
+      orientation: VizOrientation.Auto,
       textMode: BigValueTextMode.Auto,
       colorMode: BigValueColorMode.Value,
       graphMode: BigValueGraphMode.Area,
@@ -25,6 +27,7 @@ describe('resolveStatOptions', () => {
 
   it('keeps the options that are set', () => {
     const set = {
+      orientation: VizOrientation.Horizontal,
       textMode: BigValueTextMode.Name,
       colorMode: BigValueColorMode.None,
       graphMode: BigValueGraphMode.None,

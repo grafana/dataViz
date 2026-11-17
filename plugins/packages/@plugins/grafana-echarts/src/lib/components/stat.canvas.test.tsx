@@ -1,3 +1,4 @@
+import { VizOrientation } from '@grafana/data';
 import { BigValueColorMode, BigValueGraphMode, BigValueJustifyMode, BigValueTextMode } from '@grafana/schema';
 import { normalizeCanvasEvents } from 'test/canvas';
 import { height, width } from 'test/panel';
@@ -21,6 +22,27 @@ import {
 const valueAndName = { textMode: BigValueTextMode.ValueAndName };
 
 describe('stat canvas snapshots', () => {
+  describe('orientation', () => {
+    // Three cells, one below the other, each as wide as the panel. The cells are wide and lower than 100px:
+    // the name is at the left, the value is at the right, and the sparkline is in the lower half.
+    it('Horizontal: one cell for each row of the panel', async () => {
+      const { defaultEvents, seriesEvents } = await renderStat([seriesFrame(3)], {
+        orientation: VizOrientation.Horizontal,
+      });
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
+    });
+
+    // Four cells side by side, each as high as the panel: the name is above the value, with a sparkline below.
+    it('Vertical: one cell for each column of the panel', async () => {
+      const { defaultEvents, seriesEvents } = await renderStat([seriesFrame(4)], {
+        orientation: VizOrientation.Vertical,
+      });
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
+    });
+  });
+
   describe('layouts', () => {
     // One value with no name: the value at the center, and the sparkline in the space below the text.
     it('one value, stacked with a sparkline', async () => {

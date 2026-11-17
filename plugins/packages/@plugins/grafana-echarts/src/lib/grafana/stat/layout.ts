@@ -524,7 +524,13 @@ function layoutCell(
  */
 export function layoutStatCells(input: StatLayoutInput): StatCell[] {
   const { width, height, values } = input;
-  const cells = layoutRepeaterCells({ width, height, count: values.length, spacing: STAT_CELL_SPACING });
+  const cells = layoutRepeaterCells({
+    width,
+    height,
+    count: values.length,
+    spacing: STAT_CELL_SPACING,
+    orientation: input.options.orientation,
+  });
   const factors = getDisplayValueAlignmentFactors(values);
   return cells.map((cell, index) => layoutCell(cell, values[index], factors, input));
 }

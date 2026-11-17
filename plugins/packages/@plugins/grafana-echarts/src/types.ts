@@ -228,6 +228,9 @@ export interface PanelOptions
   /**
    * Cartesian bar orientation (core Bar chart `orientation`). `auto` draws
    * horizontal bars when the panel is taller than it is wide. Category x-axis only.
+   *
+   * The stat panel reads the same option (core Stat `orientation`): `auto` puts the cells in a grid,
+   * `horizontal` gives one cell for each row of the panel, and `vertical` one cell for each column.
    */
   orientation?: VizOrientation;
 

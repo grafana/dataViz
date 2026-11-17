@@ -1,4 +1,4 @@
-import { type SelectableValue } from '@grafana/data';
+import { type SelectableValue, VizOrientation } from '@grafana/data';
 import {
   BigValueColorMode,
   BigValueGraphMode,
@@ -21,6 +21,7 @@ export const statSeriesTypes: StatSeriesType[] = ['stat'];
 /** The editor category of the stat options, as core Stat names it. */
 export const statCategoryName = 'Stat styles';
 
+export const statOrientationPath = 'orientation';
 export const statTextModePath = 'textMode';
 export const statColorModePath = 'colorMode';
 export const statGraphModePath = 'graphMode';
@@ -29,6 +30,7 @@ export const statJustifyModePath = 'justifyMode';
 export const statShowPercentChangePath = 'showPercentChange';
 export const statPercentChangeColorModePath = 'percentChangeColorMode';
 
+export const STAT_ORIENTATION_DEFAULT = VizOrientation.Auto;
 export const STAT_TEXT_MODE_DEFAULT = BigValueTextMode.Auto;
 export const STAT_COLOR_MODE_DEFAULT = BigValueColorMode.Value;
 export const STAT_GRAPH_MODE_DEFAULT = BigValueGraphMode.Area;
@@ -36,6 +38,16 @@ export const STAT_WIDE_LAYOUT_DEFAULT = true;
 export const STAT_JUSTIFY_MODE_DEFAULT = BigValueJustifyMode.Auto;
 export const STAT_SHOW_PERCENT_CHANGE_DEFAULT = false;
 export const STAT_PERCENT_CHANGE_COLOR_MODE_DEFAULT = PercentChangeColorMode.Standard;
+
+/**
+ * How the cells are put in the panel. Auto: a grid. Horizontal: one cell for each row of the panel. Vertical:
+ * one cell for each column of the panel.
+ */
+export const statOrientationOptions: Array<SelectableValue<VizOrientation>> = [
+  { value: VizOrientation.Auto, label: 'Auto' },
+  { value: VizOrientation.Horizontal, label: 'Horizontal' },
+  { value: VizOrientation.Vertical, label: 'Vertical' },
+];
 
 export const statTextModeOptions: Array<SelectableValue<BigValueTextMode>> = [
   { value: BigValueTextMode.Auto, label: 'Auto' },
@@ -76,6 +88,7 @@ export const statPercentChangeColorModeOptions: Array<SelectableValue<PercentCha
 
 /** The stat options with their defaults applied. */
 export interface StatRenderOptions {
+  orientation: VizOrientation;
   textMode: BigValueTextMode;
   colorMode: BigValueColorMode;
   graphMode: BigValueGraphMode;
@@ -100,6 +113,7 @@ export function resolveStatOptions(options: PanelOptions): StatRenderOptions {
     ? (options.colorMode ?? STAT_COLOR_MODE_DEFAULT)
     : STAT_COLOR_MODE_DEFAULT;
   return {
+    orientation: options.orientation ?? STAT_ORIENTATION_DEFAULT,
     textMode: options.textMode ?? STAT_TEXT_MODE_DEFAULT,
     colorMode,
     graphMode: options.graphMode ?? STAT_GRAPH_MODE_DEFAULT,

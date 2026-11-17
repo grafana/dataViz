@@ -1,9 +1,49 @@
+import { VizOrientation } from '@grafana/data';
 import { layoutRepeaterCells } from './layout';
 
 const SPACING = 16;
 
 const layout = (width: number, height: number, count: number) =>
   layoutRepeaterCells({ width, height, count, spacing: SPACING });
+
+describe('layoutRepeaterCells with an orientation', () => {
+  const oriented = (orientation: VizOrientation, count = 3) =>
+    layoutRepeaterCells({ width: 400, height: 300, count, spacing: SPACING, orientation });
+
+  it('gives the automatic grid for the orientation Auto, as for no orientation', () => {
+    expect(oriented(VizOrientation.Auto, 4)).toEqual(layout(400, 300, 4));
+  });
+
+  it('Horizontal: cells as wide as the panel, one below the other, with the spacing between them', () => {
+    // (300 - 2 * 16) / 3 = 89.33
+    const cells = oriented(VizOrientation.Horizontal);
+    expect(cells.map((cell) => cell.x)).toEqual([0, 0, 0]);
+    expect(cells.map((cell) => cell.width)).toEqual([400, 400, 400]);
+    expect(cells[0].height).toBeCloseTo(89.33, 1);
+    expect(cells[1].y).toBeCloseTo(89.33 + 16, 1);
+    expect(cells[2].y + cells[2].height).toBeCloseTo(300);
+  });
+
+  it('Vertical: cells as high as the panel, side by side, with the spacing between them', () => {
+    // (400 - 2 * 16) / 3 = 122.67
+    const cells = oriented(VizOrientation.Vertical);
+    expect(cells.map((cell) => cell.y)).toEqual([0, 0, 0]);
+    expect(cells.map((cell) => cell.height)).toEqual([300, 300, 300]);
+    expect(cells[0].width).toBeCloseTo(122.67, 1);
+    expect(cells[1].x).toBeCloseTo(122.67 + 16, 1);
+    expect(cells[2].x + cells[2].width).toBeCloseTo(400);
+  });
+
+  it('gives one value the full panel in each orientation', () => {
+    const full = [{ x: 0, y: 0, width: 400, height: 300 }];
+    expect(oriented(VizOrientation.Horizontal, 1)).toEqual(full);
+    expect(oriented(VizOrientation.Vertical, 1)).toEqual(full);
+  });
+
+  it('gives no cell for no value', () => {
+    expect(oriented(VizOrientation.Horizontal, 0)).toEqual([]);
+  });
+});
 
 describe('layoutRepeaterCells', () => {
   it('gives one value the full panel', () => {
