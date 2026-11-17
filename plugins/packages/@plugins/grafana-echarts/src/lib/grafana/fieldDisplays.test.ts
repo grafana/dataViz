@@ -1,6 +1,6 @@
 import { createTheme, FieldType, ReducerID, toDataFrame } from '@grafana/data';
 import { applyGrafanaFieldDefaults } from 'test/panel';
-import { applyPercentUnitRange, resolveFieldDisplays } from './fieldDisplays';
+import { applyPercentUnitRange, resolveFieldDisplays, withFieldRange } from './fieldDisplays';
 
 const theme = createTheme();
 const fieldConfig = { defaults: {}, overrides: [] };
@@ -62,6 +62,74 @@ describe('resolveFieldDisplays', () => {
 
   it('gives no value when no field is a number field', () => {
     expect(resolve(frames({ host: ['a', 'b'] }))).toEqual([]);
+  });
+});
+
+describe('resolveFieldDisplays options', () => {
+  const timeSeries = () =>
+    applyGrafanaFieldDefaults([
+      toDataFrame({
+        fields: [
+          { name: 'time', type: FieldType.time, values: [1000, 2000, 3000] },
+          { name: 'cpu', type: FieldType.number, values: [50, 60, 75] },
+        ],
+      }),
+    ]);
+
+  const resolveWith = (extra: Partial<Parameters<typeof resolveFieldDisplays>[0]>) =>
+    resolveFieldDisplays({
+      frames: timeSeries(),
+      fieldConfig,
+      reduceOptions: undefined,
+      defaultCalc: ReducerID.lastNotNull,
+      replaceVariables,
+      theme,
+      ...extra,
+    })[0];
+
+  it('gives no sparkline and no percent change when they are not requested', () => {
+    const display = resolveWith({});
+    expect(display.sparkline).toBeUndefined();
+    expect(display.display.percentChange).toBeUndefined();
+  });
+
+  it('adds the values over time when the sparkline is requested', () => {
+    const { sparkline } = resolveWith({ sparkline: true });
+    expect(sparkline?.y.values).toEqual([50, 60, 75]);
+    expect(sparkline?.x?.values).toEqual([1000, 2000, 3000]);
+  });
+
+  it('adds the change from the first value to the last value, in percent, when it is requested', () => {
+    // From 50 to 75: the `diffperc` reducer of Grafana gives 50.
+    expect(resolveWith({ percentChange: true }).display.percentChange).toBeCloseTo(50, 9);
+  });
+
+  it('removes the placeholder of a `noValue` option too', () => {
+    const noNumbers = frames({ host: ['a', 'b'] });
+    const withNoValue = { defaults: { noValue: 'N/A' }, overrides: [] };
+    expect(resolveWith({ frames: noNumbers, fieldConfig: withNoValue })).toBeUndefined();
+  });
+});
+
+describe('withFieldRange', () => {
+  const field = () => toDataFrame({ fields: [{ name: 'load', type: FieldType.number, values: [45, 55] }] }).fields[0];
+
+  it('gives a copy with the range and its delta', () => {
+    const input = field();
+    const ranged = withFieldRange(input, { min: 20, max: 80 }, theme);
+    expect(ranged.state?.range).toEqual({ min: 20, max: 80, delta: 60 });
+    expect(ranged).not.toBe(input);
+    expect(input.state?.range).toBeUndefined();
+  });
+
+  it('gives the copy a display processor that reads the new range', () => {
+    const ranged = withFieldRange(field(), { min: 0, max: 200 }, theme);
+    expect(ranged.display?.(50).percent).toBeCloseTo(0.25, 9);
+  });
+
+  it('keeps the other state of the field', () => {
+    const input = { ...field(), state: { displayName: 'Load' } };
+    expect(withFieldRange(input, { min: 0, max: 1 }, theme).state?.displayName).toBe('Load');
   });
 });
 

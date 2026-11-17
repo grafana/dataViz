@@ -1,6 +1,16 @@
+import type * as fitFontSizeModule from './fitFontSize';
 import { fitFontSize } from './fitFontSize';
 
 const base = { text: '72', lineHeight: 1.2, fontFamily: 'Inter, sans-serif' };
+
+/** A new copy of the module, so that a test starts with no canvas context, no font listener and no cache. */
+const loadFresh = (): typeof fitFontSize => {
+  let fresh: typeof fitFontSize | undefined;
+  jest.isolateModules(() => {
+    fresh = jest.requireActual<typeof fitFontSizeModule>('./fitFontSize').fitFontSize;
+  });
+  return fresh!;
+};
 
 describe('fitFontSize', () => {
   it('is limited by the height of a wide box', () => {
@@ -25,10 +35,78 @@ describe('fitFontSize', () => {
     expect(long).toBeLessThan(short);
   });
 
-  it('is smaller for a heavier font weight only when the font is wider', () => {
-    // The Jest canvas measures with a width table that does not read the weight, so the sizes are equal.
-    const normal = fitFontSize({ ...base, width: 50, height: 600 });
-    const bold = fitFontSize({ ...base, width: 50, height: 600, fontWeight: 700 });
-    expect(bold).toBeLessThanOrEqual(normal);
+  describe('maxSize', () => {
+    it('limits a size that the box permits', () => {
+      expect(fitFontSize({ ...base, width: 10000, height: 60, maxSize: 30 })).toBe(30);
+    });
+
+    it('does not change a size below it', () => {
+      expect(fitFontSize({ ...base, width: 10000, height: 60, maxSize: 80 })).toBe(50);
+    });
+  });
+
+  describe('measurement', () => {
+    const measureText = jest.spyOn(CanvasRenderingContext2D.prototype, 'measureText');
+
+    beforeEach(() => measureText.mockClear());
+
+    it('measures with the font family and the font weight of the input', () => {
+      const fonts: string[] = [];
+      measureText.mockImplementationOnce(function (this: CanvasRenderingContext2D) {
+        fonts.push(this.font);
+        return { width: 10 } as TextMetrics;
+      });
+      loadFresh()({ ...base, fontFamily: 'Helvetica', fontWeight: 500, width: 50, height: 600 });
+      expect(fonts).toEqual(['500 14px Helvetica']);
+    });
+
+    it('measures a text one time for each font', () => {
+      const fit = loadFresh();
+      fit({ ...base, width: 50, height: 600 });
+      fit({ ...base, width: 80, height: 600 });
+      expect(measureText).toHaveBeenCalledTimes(1);
+      fit({ ...base, fontWeight: 700, width: 50, height: 600 });
+      expect(measureText).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('font loading', () => {
+    const fontSet = new EventTarget();
+
+    beforeEach(() => Object.defineProperty(document, 'fonts', { value: fontSet, configurable: true }));
+    afterEach(() => Reflect.deleteProperty(document, 'fonts'));
+
+    it('measures a text again after the document loads a font', () => {
+      const measureText = jest.spyOn(CanvasRenderingContext2D.prototype, 'measureText');
+      measureText.mockClear();
+      const fit = loadFresh();
+
+      fit({ ...base, width: 50, height: 600 });
+      fit({ ...base, width: 50, height: 600 });
+      expect(measureText).toHaveBeenCalledTimes(1);
+
+      fontSet.dispatchEvent(new Event('loadingdone'));
+      fit({ ...base, width: 50, height: 600 });
+      expect(measureText).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  // A host with no document takes the same path. jsdom does not let a test remove `document`, so that guard has
+  // no test here.
+  describe('a host with no 2D canvas', () => {
+    let getContext: jest.SpyInstance;
+
+    beforeEach(() => {
+      getContext = jest.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+    });
+    afterEach(() => getContext.mockRestore());
+
+    it('fits the text to the height only', () => {
+      expect(loadFresh()({ ...base, width: 1, height: 60 })).toBe(50);
+    });
+
+    it('applies maxSize', () => {
+      expect(loadFresh()({ ...base, width: 1, height: 60, maxSize: 20 })).toBe(20);
+    });
   });
 });
