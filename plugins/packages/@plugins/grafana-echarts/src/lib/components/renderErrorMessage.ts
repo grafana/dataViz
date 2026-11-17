@@ -12,6 +12,7 @@ const CHART_NAMES: Record<ChartFamily, string> = {
   geo: 'geo map',
   timeline: 'state timeline',
   'status-history': 'status history',
+  stat: 'stat',
 };
 
 /**

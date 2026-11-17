@@ -1,0 +1,230 @@
+import { type DataFrame, ReducerID } from '@grafana/data';
+import { BigValueColorMode, BigValueGraphMode, BigValueTextMode } from '@grafana/schema';
+import { resolveStatOptions, type StatRenderOptions } from 'editor/stat';
+import { resolveFieldDisplays } from 'lib/grafana/fieldDisplays';
+import { applyGrafanaFieldDefaults, defaultTimeRange, theme } from 'test/panel';
+import { cpuFrame, seriesFrame, singlePointFrame } from 'test/statCanvas';
+import { layoutStatCells, resolveStatTextMode, STAT_CELL_SPACING, STAT_LINE_HEIGHT } from './layout';
+import { applyGlobalFieldRange } from './range';
+
+const displays = (frames: DataFrame[], sparkline = true) =>
+  resolveFieldDisplays({
+    frames: applyGlobalFieldRange(applyGrafanaFieldDefaults(frames), theme),
+    fieldConfig: { defaults: {}, overrides: [] },
+    reduceOptions: undefined,
+    defaultCalc: ReducerID.lastNotNull,
+    replaceVariables: (value) => value,
+    theme,
+    sparkline,
+  });
+
+const layout = (
+  frames: DataFrame[],
+  width: number,
+  height: number,
+  options: Partial<StatRenderOptions> = {},
+  sparkline = options.graphMode !== BigValueGraphMode.None
+) =>
+  layoutStatCells({
+    width,
+    height,
+    values: displays(frames, sparkline),
+    options: { ...resolveStatOptions({} as Parameters<typeof resolveStatOptions>[0]), ...options },
+    theme,
+    timeRange: defaultTimeRange,
+  });
+
+const valueAndName = { textMode: BigValueTextMode.ValueAndName };
+
+describe('resolveStatTextMode', () => {
+  it('keeps the automatic mode for a panel with a title', () => {
+    expect(resolveStatTextMode(BigValueTextMode.Auto, false, 'CPU')).toBe(BigValueTextMode.Auto);
+  });
+
+  it('shows the names for a panel with no title, or with a display name in the field config', () => {
+    expect(resolveStatTextMode(BigValueTextMode.Auto, false, '')).toBe(BigValueTextMode.ValueAndName);
+    expect(resolveStatTextMode(BigValueTextMode.Auto, false, undefined)).toBe(BigValueTextMode.ValueAndName);
+    expect(resolveStatTextMode(BigValueTextMode.Auto, true, 'CPU')).toBe(BigValueTextMode.ValueAndName);
+  });
+
+  it('keeps a mode that is not the automatic mode', () => {
+    expect(resolveStatTextMode(BigValueTextMode.Value, true, '')).toBe(BigValueTextMode.Value);
+  });
+});
+
+describe('layoutStatCells', () => {
+  describe('cells', () => {
+    it('gives one cell for each value, with the spacing of core Stat between the cells', () => {
+      const cells = layout([seriesFrame(2)], 400, 100);
+      expect(cells).toHaveLength(2);
+      expect(cells[1].x - (cells[0].x + cells[0].width)).toBeCloseTo(STAT_CELL_SPACING, 9);
+    });
+
+    it('gives no cell for a panel with no size', () => {
+      expect(layout([cpuFrame], 0, 300)).toEqual([]);
+    });
+
+    it('keeps the value that each cell shows', () => {
+      const cells = layout([seriesFrame(2)], 400, 300);
+      expect(cells.map((cell) => cell.display.display.title)).toEqual(['server-1', 'server-2']);
+    });
+  });
+
+  describe('texts', () => {
+    it('shows only the value for one value in the automatic mode, with its unit as the suffix', () => {
+      const [cell] = layout([cpuFrame], 400, 300);
+      expect(cell.title).toBeUndefined();
+      expect(cell.value).toMatchObject({ text: '72', suffix: '%' });
+    });
+
+    it('shows the name and the value for more than one value in the automatic mode', () => {
+      const cells = layout([seriesFrame(2)], 400, 300);
+      expect(cells.map((cell) => cell.title?.text)).toEqual(['server-1', 'server-2']);
+    });
+
+    it('shows the name as the large text in the Name mode', () => {
+      const [cell] = layout([cpuFrame], 400, 300, { textMode: BigValueTextMode.Name });
+      expect(cell.title).toBeUndefined();
+      expect(cell.value).toMatchObject({ text: 'cpu', suffix: undefined });
+    });
+
+    it('shows no text in the None mode, and keeps the sparkline', () => {
+      const [cell] = layout([cpuFrame], 400, 300, { textMode: BigValueTextMode.None });
+      expect(cell.title).toBeUndefined();
+      expect(cell.value).toBeUndefined();
+      expect(cell.sparkline).toBeDefined();
+    });
+
+    it('gives the suffix a smaller font than the value', () => {
+      const [cell] = layout([cpuFrame], 400, 300);
+      expect(cell.value!.fontSize).toBeGreaterThan(26);
+      expect(cell.value!.suffixFontSize).toBeCloseTo(cell.value!.fontSize * 0.6, 9);
+    });
+
+    it('gives all cells the same font sizes', () => {
+      const cells = layout([seriesFrame(4)], 500, 400);
+      expect(new Set(cells.map((cell) => cell.value!.fontSize)).size).toBe(1);
+      expect(new Set(cells.map((cell) => cell.title!.fontSize)).size).toBe(1);
+    });
+
+    it('draws no text that has no space', () => {
+      const [cell] = layout([cpuFrame], 14, 14, valueAndName);
+      expect(cell.title).toBeUndefined();
+      expect(cell.value).toBeUndefined();
+    });
+  });
+
+  describe('colors', () => {
+    it('gives the value the color of the value, and the name the text color of the theme', () => {
+      const [cell] = layout([cpuFrame], 400, 300, valueAndName);
+      expect(cell.value!.color).toBe(cell.display.display.color);
+      expect(cell.title!.color).toBe(theme.colors.text.primary);
+    });
+
+    it('gives the value the text color of the theme when the color mode is None', () => {
+      const [cell] = layout([cpuFrame], 400, 300, { colorMode: BigValueColorMode.None });
+      expect(cell.value!.color).toBe(theme.colors.text.primary);
+    });
+
+    it('gives the sparkline the color of the value for its line, and that color with alpha for its area', () => {
+      const [cell] = layout([cpuFrame], 400, 300, { colorMode: BigValueColorMode.None });
+      expect(cell.sparkline!.lineColor).toBe(cell.display.display.color);
+      expect(cell.sparkline!.fillColor).not.toBe(cell.sparkline!.lineColor);
+    });
+  });
+
+  describe('stacked layout with a sparkline', () => {
+    it('puts the name at the top left, the value below it, and the sparkline in the space below them', () => {
+      const [cell] = layout([cpuFrame], 300, 300, valueAndName);
+      const { title, value, sparkline } = cell;
+
+      expect(title).toMatchObject({ x: 12, y: 12, align: 'left' });
+      expect(value).toMatchObject({ x: 12, align: 'left' });
+      expect(value!.y).toBeCloseTo(12 + title!.fontSize * STAT_LINE_HEIGHT, 9);
+      expect(sparkline!.baseline).toBe(300);
+      // The top of the sparkline box is the bottom of the two lines of text, without the padding.
+      const top = Math.min(...sparkline!.segments.flat().map(([, y]) => y));
+      expect(top).toBeGreaterThanOrEqual((title!.fontSize + value!.fontSize) * STAT_LINE_HEIGHT - 1e-9);
+    });
+
+    it('makes the name not larger than 30px and not larger than 70% of the value', () => {
+      const [cell] = layout([cpuFrame], 1000, 1000, { ...valueAndName, wideLayout: false });
+      expect(cell.title!.fontSize).toBeLessThanOrEqual(30);
+      expect(cell.title!.fontSize).toBeLessThanOrEqual(cell.value!.fontSize * 0.7 + 1e-9);
+    });
+
+    it('puts a value with no name at the center of the cell', () => {
+      const [cell] = layout([cpuFrame], 300, 300);
+      expect(cell.value).toMatchObject({ x: 150, align: 'center' });
+      const valueHeight = cell.value!.fontSize * STAT_LINE_HEIGHT;
+      expect(cell.value!.y).toBeCloseTo(12 + (276 - valueHeight) / 2, 9);
+    });
+
+    it('makes the sparkline as wide as the cell, over the time range of the panel', () => {
+      const [cell] = layout([cpuFrame], 300, 300);
+      const xs = cell.sparkline!.segments.flat().map(([x]) => x);
+      // The first and the last row are at the two ends of `defaultTimeRange`.
+      expect(Math.min(...xs)).toBeCloseTo(0, 9);
+      expect(Math.max(...xs)).toBeCloseTo(300, 9);
+    });
+  });
+
+  describe('stacked layout with no sparkline', () => {
+    it('is used when the cell is not higher than 100px', () => {
+      const [cell] = layout([cpuFrame], 150, 100, valueAndName);
+      expect(cell.sparkline).toBeUndefined();
+    });
+
+    it('is used when the graph mode is None, and when the series has one row', () => {
+      expect(layout([cpuFrame], 300, 300, { graphMode: BigValueGraphMode.None })[0].sparkline).toBeUndefined();
+      expect(layout([singlePointFrame], 300, 300)[0].sparkline).toBeUndefined();
+    });
+
+    it('puts the name and the value at the vertical center of the cell', () => {
+      const [cell] = layout([cpuFrame], 150, 100, valueAndName);
+      const { title, value } = cell;
+      const block = (title!.fontSize + value!.fontSize) * STAT_LINE_HEIGHT;
+      expect(title!.y).toBeCloseTo(8 + (84 - block) / 2, 9);
+      expect(value!.y).toBeCloseTo(title!.y + title!.fontSize * STAT_LINE_HEIGHT, 9);
+    });
+  });
+
+  describe('wide layout', () => {
+    it('is used when the cell is more than 2.5 times as wide as it is high', () => {
+      const [wide] = layout([cpuFrame], 251, 100, valueAndName);
+      const [stacked] = layout([cpuFrame], 250, 100, valueAndName);
+      expect(wide.value!.align).toBe('right');
+      expect(stacked.value!.align).toBe('left');
+    });
+
+    it('is not used when the wide layout option is off', () => {
+      const [cell] = layout([cpuFrame], 600, 100, { ...valueAndName, wideLayout: false });
+      expect(cell.value!.align).toBe('left');
+    });
+
+    it('puts the name at the left and the value at the right, at the vertical center, with no sparkline', () => {
+      const [cell] = layout([cpuFrame], 600, 50, valueAndName);
+      const { title, value } = cell;
+      expect(cell.sparkline).toBeUndefined();
+      expect(title).toMatchObject({ x: 8, align: 'left' });
+      expect(value).toMatchObject({ x: 592, align: 'right' });
+      expect(title!.y + (title!.fontSize * STAT_LINE_HEIGHT) / 2).toBeCloseTo(25, 9);
+      expect(value!.y + (value!.fontSize * STAT_LINE_HEIGHT) / 2).toBeCloseTo(25, 9);
+    });
+
+    it('fits a value with no name to the height of the cell', () => {
+      const [cell] = layout([cpuFrame], 1000, 50);
+      expect(cell.value!.fontSize).toBeCloseTo(34 / STAT_LINE_HEIGHT, 9);
+      expect(cell.value).toMatchObject({ x: 500, align: 'center' });
+    });
+
+    it('puts the texts at the top and the sparkline in the lower half, for a cell higher than 50px', () => {
+      const [cell] = layout([cpuFrame], 600, 120, valueAndName);
+      expect(cell.title!.y).toBe(12);
+      expect(cell.value!.y).toBe(12);
+      const ys = cell.sparkline!.segments.flat().map(([, y]) => y);
+      expect(Math.min(...ys)).toBeGreaterThanOrEqual(60);
+      expect(cell.sparkline!.baseline).toBe(120);
+    });
+  });
+});

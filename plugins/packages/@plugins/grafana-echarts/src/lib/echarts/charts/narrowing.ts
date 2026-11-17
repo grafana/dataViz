@@ -8,6 +8,7 @@ import {
 } from 'editor/constants';
 import { geoSeriesTypes } from 'editor/geo';
 import { multivariateSeriesTypes } from 'editor/radar';
+import { statSeriesTypes } from 'editor/stat';
 import { streamSeriesTypes } from 'editor/stream';
 import { timelineSeriesTypes } from 'editor/timeline';
 import {
@@ -21,6 +22,7 @@ import {
   type MultivariateSeriesType,
   type SeriesType,
   type SeriesTypeOption,
+  type StatSeriesType,
   type StreamSeriesType,
   type TimelineSeriesType,
   type TimeAxisSupportsSeriesType,
@@ -90,4 +92,9 @@ export function isStreamSeriesType(type: SeriesType): type is StreamSeriesType {
 // series on a time x axis.
 export function isTimelineSeriesType(type: SeriesType): type is TimelineSeriesType {
   return timelineSeriesTypes.some((t) => t === type);
+}
+
+// The stat family draws one cell for each value: text, and a sparkline.
+export function isStatSeriesType(type: SeriesType): type is StatSeriesType {
+  return statSeriesTypes.some((t) => t === type);
 }

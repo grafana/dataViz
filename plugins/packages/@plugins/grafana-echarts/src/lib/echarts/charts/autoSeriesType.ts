@@ -16,7 +16,8 @@ export type ChartFamily =
   | 'stream'
   | 'geo'
   | 'timeline'
-  | 'status-history';
+  | 'status-history'
+  | 'stat';
 
 /**
  * Resolve `'Auto'` (or an unset series type) to a concrete `SeriesType`, scoped
@@ -57,6 +58,8 @@ export function resolveAutoSeriesType(family: ChartFamily, frames: DataFrame[]):
     case 'timeline':
     case 'status-history':
       return 'custom';
+    case 'stat':
+      return 'stat';
   }
 }
 

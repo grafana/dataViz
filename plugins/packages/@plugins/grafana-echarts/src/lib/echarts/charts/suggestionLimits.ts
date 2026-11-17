@@ -143,3 +143,12 @@ export const TIMELINE_NUMBER_FIELDS_LIMIT = 30;
  * past this the cells are too narrow to read. Core's value (`status-history/module.tsx`).
  */
 export const STATUS_HISTORY_MAX_ROWS = 100;
+
+/**
+ * Most values a stat panel is suggested for: each value is one cell, and past this the cells are too small to
+ * read. Core's value (`MAX_STATS` in `stat/suggestions.ts`).
+ */
+export const STAT_MAX_VALUES = 50;
+
+/** Most frames the stat preview card can see. Core's value (`MAX_STAT_PREVIEW_SERIES` in `stat/suggestions.ts`). */
+export const STAT_PREVIEW_MAX_SERIES = 6;

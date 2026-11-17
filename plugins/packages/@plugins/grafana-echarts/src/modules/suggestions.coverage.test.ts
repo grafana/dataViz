@@ -7,6 +7,7 @@ import { hierarchySuggestionsSupplier } from 'modules/hierarchy/suggestions';
 import { multivariateSuggestionsSupplier } from 'modules/multivariate/suggestions';
 import { partToWholeSuggestionsSupplier } from 'modules/part-to-whole/suggestions';
 import { relationsSuggestionsSupplier } from 'modules/relations/suggestions';
+import { statSuggestionsSupplier } from 'modules/stat/suggestions';
 import { stateTimelineSuggestionsSupplier } from 'modules/state-timeline/suggestions';
 import { statusHistorySuggestionsSupplier } from 'modules/status-history/suggestions';
 import { streamSuggestionsSupplier } from 'modules/stream/suggestions';
@@ -29,6 +30,7 @@ const SUPPLIERS = [
   multivariateSuggestionsSupplier,
   partToWholeSuggestionsSupplier,
   relationsSuggestionsSupplier,
+  statSuggestionsSupplier,
   streamSuggestionsSupplier,
   stateTimelineSuggestionsSupplier,
   statusHistorySuggestionsSupplier,

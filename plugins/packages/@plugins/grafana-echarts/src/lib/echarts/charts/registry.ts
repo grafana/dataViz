@@ -3,6 +3,7 @@ import { heatmapSeriesTypes, hierarchySeriesTypes } from 'editor/constants';
 import { partToWholeSeriesTypes } from 'editor/pie';
 import { multivariateSeriesTypes } from 'editor/radar';
 import { geoSeriesTypes } from 'editor/geo';
+import { statSeriesTypes } from 'editor/stat';
 import { streamSeriesTypes } from 'editor/stream';
 import { timelineSeriesTypes } from 'editor/timeline';
 import { type SeriesType } from 'editor/types';
@@ -12,6 +13,7 @@ import {
   isMultiValueSeriesType,
   isMultivariateSeriesType,
   isRelationsSeriesType,
+  isStatSeriesType,
   isStreamSeriesType,
   isTimelineSeriesType,
 } from './narrowing';
@@ -22,6 +24,7 @@ import { multivariateChartModule, radarChartModule } from './multivariate';
 import { partToWholeChartModule, pieChartModule } from './pie';
 import { relationsChartModule } from 'lib/echarts/relations/chartModule';
 import { geoChartModule } from './geo';
+import { statChartModule } from './stat';
 import { streamChartModule } from './stream';
 import { timelineChartModule } from './timeline';
 import { type ChartModule } from './types';
@@ -41,6 +44,7 @@ export const supportedChartSeriesTypes: SeriesType[] = [
   ...streamSeriesTypes,
   ...timelineSeriesTypes,
   ...geoSeriesTypes,
+  ...statSeriesTypes,
 ];
 
 /**
@@ -92,6 +96,10 @@ export function resolveChartModule(seriesType: SeriesType): ChartModule {
   if (geoSeriesTypes.some((type) => type === seriesType)) {
     return geoChartModule;
   }
+  // `stat` is the stat family's only routing token.
+  if (isStatSeriesType(seriesType)) {
+    return statChartModule;
+  }
   throw new Error(`Cannot resolve chart module, invalid ${seriesType}!`);
 }
 
@@ -105,6 +113,7 @@ export {
   pieChartModule,
   radarChartModule,
   relationsChartModule,
+  statChartModule,
   streamChartModule,
   timelineChartModule,
 };

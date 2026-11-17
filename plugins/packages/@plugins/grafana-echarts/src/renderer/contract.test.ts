@@ -15,6 +15,12 @@ const pluginIds = fs
   .map((name) => JSON.parse(fs.readFileSync(path.join(modulesDir, name, 'plugin.json'), 'utf8')).id)
   .sort();
 
+/**
+ * The panels of this package that are in the app but not in the installed viz contract yet. The Renderer does
+ * not draw them. A panel leaves this list when a contract release has its row in `panel-types.json`.
+ */
+const NOT_IN_CONTRACT_YET = ['grafana-echartsstat-panel'];
+
 describe('viz contract', () => {
   // contract-rule: fixtures.5
   it('has one smoke set for each chart type, and no other smoke set', () => {
@@ -49,6 +55,15 @@ describe('viz contract', () => {
   });
 
   it('has one panel of this package for each panel type', () => {
-    expect(panelTypes.panels.map((panel) => panel.id).sort()).toEqual(pluginIds);
+    const contractIds = panelTypes.panels.map((panel) => panel.id);
+    expect(contractIds.sort()).toEqual(pluginIds.filter((id) => !NOT_IN_CONTRACT_YET.includes(id)));
+  });
+
+  // When the contract gets the panel type, this test fails: remove the id from the list, and add the panel to
+  // `src/renderer/panels.ts`.
+  it('has no panel type of the contract in the list of panels that the contract does not have yet', () => {
+    const contractIds = panelTypes.panels.map((panel) => panel.id);
+    expect(NOT_IN_CONTRACT_YET.filter((id) => contractIds.includes(id))).toEqual([]);
+    expect(NOT_IN_CONTRACT_YET.filter((id) => !pluginIds.includes(id))).toEqual([]);
   });
 });

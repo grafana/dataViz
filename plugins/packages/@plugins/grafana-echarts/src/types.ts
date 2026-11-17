@@ -1,5 +1,8 @@
 import { type ReduceDataOptions, type StandardOptionConfig } from '@grafana/data';
 import {
+  type BigValueColorMode,
+  type BigValueGraphMode,
+  type BigValueTextMode,
   type HeatmapCalculationOptions,
   type OptionsWithLegend,
   type OptionsWithTooltip,
@@ -263,6 +266,16 @@ export interface PanelOptions
    * Defaults (Calculate, `PIE_CALC_DEFAULT` = sum) are applied when unset.
    */
   reduceOptions?: ReduceDataOptions;
+
+  /**
+   * The options of the stat panel. The names and the values are the ones of core Stat, so a panel keeps them
+   * when it changes type. See `editor/stat.ts` for the defaults.
+   * https://github.com/grafana/grafana/blob/main/public/app/plugins/panel/stat/panelcfg.cue
+   */
+  textMode?: BigValueTextMode;
+  colorMode?: BigValueColorMode;
+  graphMode?: BigValueGraphMode;
+  wideLayout?: boolean;
 
   /**
    * Pie (part-to-whole) chart type (Grafana Pie chart "Pie chart type" parity):

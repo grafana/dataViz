@@ -52,6 +52,7 @@ describe('webpack configuration', () => {
       'modules/multivariate/module',
       'modules/part-to-whole/module',
       'modules/relations/module',
+      'modules/stat/module',
       'modules/state-timeline/module',
       'modules/status-history/module',
       'modules/stream/module',

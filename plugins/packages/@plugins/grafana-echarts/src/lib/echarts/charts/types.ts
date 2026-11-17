@@ -91,6 +91,11 @@ export interface ChartContext<T = SeriesType, C = EChartsFieldConfig, V = EChart
    * The timeline chart module reads it to pick status history's Samples mode.
    */
   family?: ChartFamily;
+  /**
+   * The title of the panel (`PanelProps.title`). The stat family reads it for the automatic text mode, as core
+   * Stat does: a panel with no title shows the name of each value.
+   */
+  panelTitle?: string;
   formatValue: ValueFormatter;
   // The panel's field config (defaults + overrides). Row/series families
   // (pie slices, candlestick/boxplot) read legend color/visibility overrides
@@ -180,6 +185,8 @@ export type EChartMatrixHeatmapOption = ComposeOption<
  * x axis and a lane y axis, in a `grid`.
  */
 export type EChartTimelineOption = ComposeOption<CustomSeriesOption | GridComponentOption | TooltipComponentOption>;
+/** The option the stat family builds: one `custom` series with one data item for each cell, and no axis. */
+export type EChartStatOption = ComposeOption<CustomSeriesOption>;
 export type EChartBarSeriesOption = ComposeOption<BarSeriesOption>;
 export type EChartLineSeriesOption = ComposeOption<LineSeriesOption>;
 export type EChartScatterSeriesOption = ComposeOption<ScatterSeriesOption>;
@@ -290,6 +297,7 @@ export type EChartBuildOption =
   | EChartStreamSeriesOption
   | EChartGeoOption
   | EChartTimelineOption
+  | EChartStatOption
   | EChartCandlestickSeriesOption
   | EChartBoxPlotSeriesOption
   | EChartEffectScatterSeriesOption
