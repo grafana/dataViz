@@ -4,6 +4,7 @@ import {
   type BigValueGraphMode,
   type BigValueJustifyMode,
   type BigValueTextMode,
+  type PercentChangeColorMode,
   type HeatmapCalculationOptions,
   type OptionsWithLegend,
   type OptionsWithTooltip,
@@ -278,6 +279,8 @@ export interface PanelOptions
   graphMode?: BigValueGraphMode;
   wideLayout?: boolean;
   justifyMode?: BigValueJustifyMode;
+  showPercentChange?: boolean;
+  percentChangeColorMode?: PercentChangeColorMode;
 
   /**
    * Pie (part-to-whole) chart type (Grafana Pie chart "Pie chart type" parity):

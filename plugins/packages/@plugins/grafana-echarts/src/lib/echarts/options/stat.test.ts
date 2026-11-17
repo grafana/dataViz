@@ -2,6 +2,7 @@ import { type StatCell, type StatSparkline, type StatText, type StatValueText } 
 import {
   getStatBackgroundElement,
   getStatCellElements,
+  getStatPercentChangeElements,
   getStatSeries,
   getStatSparklineElements,
   getStatTitleElement,
@@ -160,7 +161,42 @@ describe('getStatBackgroundElement', () => {
   });
 });
 
+describe('getStatPercentChangeElements', () => {
+  const text: StatText = { ...title, text: '106%', x: 40, color: '#73bf69', fontWeight: 500 };
+
+  it('is the arrow in the square of the icon, then the text, in one color', () => {
+    const [arrow, label] = getStatPercentChangeElements(
+      { text, icon: { direction: 'up', x: 12, y: 14, size: 20 } },
+      FONT
+    );
+    expect(arrow).toMatchObject({
+      type: 'path',
+      shape: { x: 12, y: 14, width: 20, height: 20, layout: 'center' },
+      style: { fill: '#73bf69' },
+    });
+    expect(label).toMatchObject({ type: 'text', style: { text: '106%', x: 40, fill: '#73bf69', fontWeight: 500 } });
+  });
+
+  it('has a different arrow for a decrease', () => {
+    const path = (direction: 'up' | 'down') =>
+      getStatPercentChangeElements({ text, icon: { direction, x: 0, y: 0, size: 20 } }, FONT)[0];
+    expect(path('down')).not.toEqual(path('up'));
+  });
+
+  it('is only the text for a percent change with no arrow', () => {
+    expect(getStatPercentChangeElements({ text }, FONT).map((element) => element.type)).toEqual(['text']);
+  });
+});
+
 describe('getStatCellElements', () => {
+  it('puts the percent change above all other parts', () => {
+    const percentChange = { text: title, icon: { direction: 'up' as const, x: 0, y: 0, size: 10 } };
+    const types = getStatCellElements(cell({ title, value, sparkline, percentChange }), FONT).map(
+      (element) => element.type
+    );
+    expect(types).toEqual(['polygon', 'polyline', 'text', 'text', 'path', 'text']);
+  });
+
   it('puts the sparkline below the name and the value', () => {
     const types = getStatCellElements(cell({ title, value, sparkline }), FONT).map((element) => element.type);
     expect(types).toEqual(['polygon', 'polyline', 'text', 'text']);

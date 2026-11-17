@@ -1,4 +1,10 @@
-import { BigValueColorMode, BigValueGraphMode, BigValueJustifyMode, BigValueTextMode } from '@grafana/schema';
+import {
+  BigValueColorMode,
+  BigValueGraphMode,
+  BigValueJustifyMode,
+  BigValueTextMode,
+  PercentChangeColorMode,
+} from '@grafana/schema';
 import { type PanelOptions } from 'types';
 import { resolveStatOptions } from './stat';
 
@@ -12,6 +18,8 @@ describe('resolveStatOptions', () => {
       graphMode: BigValueGraphMode.Area,
       wideLayout: true,
       justifyMode: BigValueJustifyMode.Auto,
+      showPercentChange: false,
+      percentChangeColorMode: PercentChangeColorMode.Standard,
     });
   });
 
@@ -22,6 +30,8 @@ describe('resolveStatOptions', () => {
       graphMode: BigValueGraphMode.None,
       wideLayout: false,
       justifyMode: BigValueJustifyMode.Center,
+      showPercentChange: true,
+      percentChangeColorMode: PercentChangeColorMode.Inverted,
     };
     expect(resolveStatOptions(options(set))).toEqual(set);
   });
@@ -31,9 +41,10 @@ describe('resolveStatOptions', () => {
   });
 
   it('reads the text sizes from the `text` option', () => {
-    const resolved = resolveStatOptions(options({ text: { titleSize: 20, valueSize: 60 } }));
+    const resolved = resolveStatOptions(options({ text: { titleSize: 20, valueSize: 60, percentSize: 18 } }));
     expect(resolved.titleSize).toBe(20);
     expect(resolved.valueSize).toBe(60);
+    expect(resolved.percentSize).toBe(18);
   });
 
   it('gives no text size for a size that is not set, or that is 0', () => {

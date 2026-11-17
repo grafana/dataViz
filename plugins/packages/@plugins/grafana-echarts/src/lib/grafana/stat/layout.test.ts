@@ -1,5 +1,11 @@
 import { type DataFrame, ReducerID } from '@grafana/data';
-import { BigValueColorMode, BigValueGraphMode, BigValueJustifyMode, BigValueTextMode } from '@grafana/schema';
+import {
+  BigValueColorMode,
+  BigValueGraphMode,
+  BigValueJustifyMode,
+  BigValueTextMode,
+  PercentChangeColorMode,
+} from '@grafana/schema';
 import { resolveStatOptions, type StatRenderOptions } from 'editor/stat';
 import { resolveFieldDisplays } from 'lib/grafana/fieldDisplays';
 import { applyGrafanaFieldDefaults, defaultTimeRange, theme } from 'test/panel';
@@ -13,7 +19,7 @@ import {
 import { layoutStatCells, resolveStatTextMode, STAT_CELL_SPACING, STAT_LINE_HEIGHT } from './layout';
 import { applyGlobalFieldRange } from './range';
 
-const displays = (frames: DataFrame[], sparkline = true) =>
+const displays = (frames: DataFrame[], sparkline = true, percentChange = false) =>
   resolveFieldDisplays({
     frames: applyGlobalFieldRange(applyGrafanaFieldDefaults(frames), theme),
     fieldConfig: { defaults: {}, overrides: [] },
@@ -22,6 +28,7 @@ const displays = (frames: DataFrame[], sparkline = true) =>
     replaceVariables: (value) => value,
     theme,
     sparkline,
+    percentChange,
   });
 
 const layout = (
@@ -34,7 +41,7 @@ const layout = (
   layoutStatCells({
     width,
     height,
-    values: displays(frames, sparkline),
+    values: displays(frames, sparkline, Boolean(options.showPercentChange)),
     options: { ...resolveStatOptions({} as Parameters<typeof resolveStatOptions>[0]), ...options },
     theme,
     timeRange: defaultTimeRange,
@@ -314,6 +321,83 @@ describe('layoutStatCells', () => {
       const [cell] = layout([cpuFrame], 300, 300, { ...valueAndName, titleSize: 20, valueSize: 30 });
       const ys = cell.sparkline!.segments.flat().map(([, y]) => y);
       expect(Math.min(...ys)).toBeGreaterThanOrEqual((20 + 30) * STAT_LINE_HEIGHT);
+    });
+  });
+
+  describe('percent change', () => {
+    const withChange = { ...valueAndName, showPercentChange: true };
+    const lineHeight = (text: { fontSize: number }) => text.fontSize * STAT_LINE_HEIGHT;
+
+    it('gives a cell no percent change when the option is off', () => {
+      expect(layout([cpuFrame], 300, 300, valueAndName)[0].percentChange).toBeUndefined();
+    });
+
+    it('shows the change from the first value to the last value, in green with an arrow up for an increase', () => {
+      // The series goes from 35 to 72.
+      const { percentChange } = layout([cpuFrame], 300, 300, withChange)[0];
+      expect(percentChange!.text).toMatchObject({
+        text: '106%',
+        fontWeight: 500,
+        color: theme.visualization.getColorByName('green'),
+      });
+      expect(percentChange!.icon!.direction).toBe('up');
+    });
+
+    it('puts the percent change below the value in a stacked cell, at the left, with the arrow before the text', () => {
+      const { value, percentChange } = layout([cpuFrame], 300, 300, withChange)[0];
+      const { text, icon } = percentChange!;
+      expect(icon!.x).toBe(value!.x);
+      expect(text.x).toBeGreaterThan(icon!.x + icon!.size);
+      // The percent change moves up by a quarter of its font size, nearer to the value.
+      expect(text.y).toBeCloseTo(value!.y + lineHeight(value!) - text.fontSize / 4);
+      expect(text.fontSize).toBeCloseTo(value!.fontSize / 2.5);
+    });
+
+    it('fits the value to 75% of the height in a cell with no sparkline', () => {
+      const noChart = { ...valueAndName, graphMode: BigValueGraphMode.None };
+      const [plain] = layout([cpuFrame], 200, 2000, noChart);
+      const [cell] = layout([cpuFrame], 200, 2000, { ...noChart, showPercentChange: true });
+      // The cell is narrow and high, so the width limits the value, and the two sizes are equal.
+      expect(cell.value!.fontSize).toBe(plain.value!.fontSize);
+
+      const [plainWide] = layout([cpuFrame], 2000, 90, { ...noChart, wideLayout: false });
+      const [wide] = layout([cpuFrame], 2000, 90, { ...noChart, wideLayout: false, showPercentChange: true });
+      // The cell is low, so the height limits the value.
+      expect(wide.value!.fontSize).toBeLessThan(plainWide.value!.fontSize);
+    });
+
+    it('puts the percent change at the right of a wide cell, with the same vertical center as the value', () => {
+      const { title, value, percentChange } = layout([cpuFrame], 600, 100, withChange)[0];
+      const { text } = percentChange!;
+      expect(title!.align).toBe('left');
+      expect(value!.align).toBe('center');
+      expect(text.x).toBeGreaterThan(value!.x);
+      expect(text.y + lineHeight(text) / 2).toBeCloseTo(value!.y + lineHeight(value!) / 2);
+    });
+
+    it('uses the font size that is set', () => {
+      const { percentChange } = layout([cpuFrame], 300, 300, { ...withChange, percentSize: 30 })[0];
+      expect(percentChange!.text.fontSize).toBe(30);
+      expect(percentChange!.icon!.size).toBe(27);
+    });
+
+    it('shows only the percent change with the text mode None, at a size that fits the cell', () => {
+      const [cell] = layout([cpuFrame], 300, 300, { textMode: BigValueTextMode.None, showPercentChange: true });
+      expect(cell.value).toBeUndefined();
+      expect(cell.percentChange!.text.fontSize).toBeGreaterThan(40);
+    });
+
+    it.each([
+      [PercentChangeColorMode.Inverted, theme.visualization.getColorByName('red')],
+      [PercentChangeColorMode.SameAsValue, undefined],
+    ])('gives the percent change the color of the %s color mode', (percentChangeColorMode, color) => {
+      const [cell] = layout([cpuFrame], 300, 300, { ...withChange, percentChangeColorMode });
+      expect(cell.percentChange!.text.color).toBe(color ?? cell.value!.color);
+    });
+
+    it('gives the percent change the text color of a colored cell in a background color mode', () => {
+      const [cell] = layout([cpuFrame], 300, 300, { ...withChange, colorMode: BigValueColorMode.BackgroundSolid });
+      expect(cell.percentChange!.text.color).toBe(cell.title!.color);
     });
   });
 

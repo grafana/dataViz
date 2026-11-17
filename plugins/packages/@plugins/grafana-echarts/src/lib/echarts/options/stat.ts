@@ -6,6 +6,7 @@ import {
   STAT_LINE_HEIGHT,
   type StatBackground,
   type StatCell,
+  type StatPercentChange,
   type StatSparkline,
   type StatText,
   type StatValueText,
@@ -145,6 +146,49 @@ export function getStatBackgroundElement(cell: StatCell, background: StatBackgro
   };
 }
 
+/**
+ * The SVG paths of the arrows of a percent change: the `arrow-up` and `arrow-down` icons of Grafana. Each path
+ * fills the square from 6 to 18 of the 24 x 24 icon grid, which is the part of the icon that core shows.
+ * https://github.com/grafana/grafana/tree/main/public/img/icons/unicons
+ */
+const ARROW_PATHS = {
+  up: 'M17.71,11.29l-5-5a1,1,0,0,0-.33-.21,1,1,0,0,0-.76,0,1,1,0,0,0-.33.21l-5,5a1,1,0,0,0,1.42,1.42L11,9.41V17a1,1,0,0,0,2,0V9.41l3.29,3.3a1,1,0,0,0,1.42,0A1,1,0,0,0,17.71,11.29Z',
+  down: 'M17.71,11.29a1,1,0,0,0-1.42,0L13,14.59V7a1,1,0,0,0-2,0v7.59l-3.29-3.3a1,1,0,0,0-1.42,1.42l5,5a1,1,0,0,0,.33.21.94.94,0,0,0,.76,0,1,1,0,0,0,.33-.21l5-5A1,1,0,0,0,17.71,11.29Z',
+};
+
+/**
+ * The percent change: an arrow for its sign, then its text, in one color. ECharts scales the path of the arrow
+ * to the square of the icon, and keeps its proportions.
+ * https://echarts.apache.org/en/option.html#series-custom.renderItem.return_path
+ */
+export function getStatPercentChangeElements(percentChange: StatPercentChange, fontFamily: string): StatElement[] {
+  const { text, icon } = percentChange;
+  const textElement: StatElement = {
+    type: 'text',
+    silent: true,
+    style: { ...getTextStyle(text, fontFamily), text: text.text },
+  };
+  if (!icon) {
+    return [textElement];
+  }
+  return [
+    {
+      type: 'path',
+      silent: true,
+      shape: {
+        pathData: ARROW_PATHS[icon.direction],
+        x: icon.x,
+        y: icon.y,
+        width: icon.size,
+        height: icon.size,
+        layout: 'center',
+      },
+      style: { fill: text.color },
+    },
+    textElement,
+  ];
+}
+
 /** The elements of one cell, in paint order: the background, then the sparkline, then the text. */
 export function getStatCellElements(cell: StatCell, fontFamily: string): StatElement[] {
   return [
@@ -152,6 +196,7 @@ export function getStatCellElements(cell: StatCell, fontFamily: string): StatEle
     ...(cell.sparkline ? getStatSparklineElements(cell.sparkline) : []),
     ...(cell.title ? [getStatTitleElement(cell.title, fontFamily)] : []),
     ...(cell.value ? [getStatValueElement(cell.value, fontFamily)] : []),
+    ...(cell.percentChange ? getStatPercentChangeElements(cell.percentChange, fontFamily) : []),
   ];
 }
 

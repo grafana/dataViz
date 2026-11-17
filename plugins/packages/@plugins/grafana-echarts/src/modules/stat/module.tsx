@@ -28,9 +28,10 @@ export const plugin = new PanelPlugin<PanelOptions, EChartsFieldConfig>(makeLazy
     // "Value options": the reducer for each field, or one value for each row. Core Stat's default is the last
     // value that is not null.
     addStandardDataReduceOptions(builder, true, ReducerID.lastNotNull);
-    // "Text size": the font size of the name ("Title") and of the value. Unset fits the text to its cell.
+    // "Text size": the font size of the name ("Title"), of the value and of the percent change. Unset fits
+    // the name and the value to the cell, and gives the percent change a size from the size of the value.
     // https://grafana.com/docs/grafana/latest/panels-visualizations/visualizations/stat/#text-size
-    commonOptionsBuilder.addTextSizeOptions(builder, { withTitle: true, withValue: true });
+    commonOptionsBuilder.addTextSizeOptions(builder, { withTitle: true, withValue: true, withPercentChange: true });
     addStatStyleOptions(builder);
     return builder;
   })

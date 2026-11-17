@@ -30,6 +30,7 @@ function resolveStatDisplays(ctx: ChartContext): FieldDisplay[] {
     theme: ctx.theme,
     timeZone: ctx.timeZone,
     sparkline: resolveStatOptions(ctx.options).graphMode !== BigValueGraphMode.None,
+    percentChange: resolveStatOptions(ctx.options).showPercentChange,
   });
 }
 

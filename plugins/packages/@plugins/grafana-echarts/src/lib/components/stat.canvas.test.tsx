@@ -146,6 +146,44 @@ describe('stat canvas snapshots', () => {
     });
   });
 
+  describe('percent change', () => {
+    const withChange = { ...valueAndName, showPercentChange: true };
+
+    // The series goes from 35 to 72: a green arrow up and "106%" are below the value.
+    it('an increase, stacked with a sparkline', async () => {
+      const { defaultEvents, seriesEvents } = await renderStat([cpuFrame], withChange);
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
+    });
+
+    // A wide cell: the name at the left, the value in the middle, and the percent change at the right.
+    it('wide with no sparkline', async () => {
+      const { defaultEvents, seriesEvents } = await renderStat([cpuFrame], withChange, undefined, { height: 50 });
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height: 50 });
+    });
+
+    // Four cells. The series of two of them decrease: a red arrow down and a negative percent.
+    it('four values in a grid, with the text alignment Center', async () => {
+      const { defaultEvents, seriesEvents } = await renderStat([seriesFrame(4)], {
+        showPercentChange: true,
+        justifyMode: BigValueJustifyMode.Center,
+      });
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
+    });
+
+    // The text mode None: the cell shows only the percent change, as large as the cell permits.
+    it('the text mode None', async () => {
+      const { defaultEvents, seriesEvents } = await renderStat([cpuFrame], {
+        textMode: BigValueTextMode.None,
+        showPercentChange: true,
+      });
+
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
+    });
+  });
+
   describe('text size', () => {
     // The name is 40px and the value is 60px, and not the sizes that fit the cell. The sparkline has the
     // space below the two texts.

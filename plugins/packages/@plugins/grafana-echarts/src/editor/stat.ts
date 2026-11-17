@@ -1,5 +1,11 @@
 import { type SelectableValue } from '@grafana/data';
-import { BigValueColorMode, BigValueGraphMode, BigValueJustifyMode, BigValueTextMode } from '@grafana/schema';
+import {
+  BigValueColorMode,
+  BigValueGraphMode,
+  BigValueJustifyMode,
+  BigValueTextMode,
+  PercentChangeColorMode,
+} from '@grafana/schema';
 import { type StatSeriesType } from 'editor/types';
 import { type PanelOptions } from 'types';
 
@@ -20,12 +26,16 @@ export const statColorModePath = 'colorMode';
 export const statGraphModePath = 'graphMode';
 export const statWideLayoutPath = 'wideLayout';
 export const statJustifyModePath = 'justifyMode';
+export const statShowPercentChangePath = 'showPercentChange';
+export const statPercentChangeColorModePath = 'percentChangeColorMode';
 
 export const STAT_TEXT_MODE_DEFAULT = BigValueTextMode.Auto;
 export const STAT_COLOR_MODE_DEFAULT = BigValueColorMode.Value;
 export const STAT_GRAPH_MODE_DEFAULT = BigValueGraphMode.Area;
 export const STAT_WIDE_LAYOUT_DEFAULT = true;
 export const STAT_JUSTIFY_MODE_DEFAULT = BigValueJustifyMode.Auto;
+export const STAT_SHOW_PERCENT_CHANGE_DEFAULT = false;
+export const STAT_PERCENT_CHANGE_COLOR_MODE_DEFAULT = PercentChangeColorMode.Standard;
 
 export const statTextModeOptions: Array<SelectableValue<BigValueTextMode>> = [
   { value: BigValueTextMode.Auto, label: 'Auto' },
@@ -54,6 +64,16 @@ export const statJustifyModeOptions: Array<SelectableValue<BigValueJustifyMode>>
   { value: BigValueJustifyMode.Center, label: 'Center' },
 ];
 
+/**
+ * The color of the percent change. Standard: green for an increase and red for a decrease. Inverted: the
+ * opposite. Same as Value: the color of the value text.
+ */
+export const statPercentChangeColorModeOptions: Array<SelectableValue<PercentChangeColorMode>> = [
+  { value: PercentChangeColorMode.Standard, label: 'Standard' },
+  { value: PercentChangeColorMode.Inverted, label: 'Inverted' },
+  { value: PercentChangeColorMode.SameAsValue, label: 'Same as Value' },
+];
+
 /** The stat options with their defaults applied. */
 export interface StatRenderOptions {
   textMode: BigValueTextMode;
@@ -64,6 +84,11 @@ export interface StatRenderOptions {
   /** The font size in pixels of the name and of the value. Unset fits the text to its cell. */
   titleSize?: number;
   valueSize?: number;
+  /** The change from the first value to the last value of a series, in percent, is shown with the value. */
+  showPercentChange: boolean;
+  percentChangeColorMode: PercentChangeColorMode;
+  /** The font size in pixels of the percent change. Unset gives a size from the size of the value. */
+  percentSize?: number;
 }
 
 /**
@@ -83,5 +108,8 @@ export function resolveStatOptions(options: PanelOptions): StatRenderOptions {
     // A size of 0 is not set, as in core.
     titleSize: options.text?.titleSize || undefined,
     valueSize: options.text?.valueSize || undefined,
+    showPercentChange: options.showPercentChange ?? STAT_SHOW_PERCENT_CHANGE_DEFAULT,
+    percentChangeColorMode: options.percentChangeColorMode ?? STAT_PERCENT_CHANGE_COLOR_MODE_DEFAULT,
+    percentSize: options.text?.percentSize || undefined,
   };
 }

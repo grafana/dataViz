@@ -4,6 +4,8 @@ import {
   STAT_COLOR_MODE_DEFAULT,
   STAT_GRAPH_MODE_DEFAULT,
   STAT_JUSTIFY_MODE_DEFAULT,
+  STAT_PERCENT_CHANGE_COLOR_MODE_DEFAULT,
+  STAT_SHOW_PERCENT_CHANGE_DEFAULT,
   STAT_TEXT_MODE_DEFAULT,
   STAT_WIDE_LAYOUT_DEFAULT,
   statCategoryName,
@@ -13,6 +15,9 @@ import {
   statGraphModePath,
   statJustifyModeOptions,
   statJustifyModePath,
+  statPercentChangeColorModeOptions,
+  statPercentChangeColorModePath,
+  statShowPercentChangePath,
   statTextModeOptions,
   statTextModePath,
   statWideLayoutPath,
@@ -75,5 +80,23 @@ export function addStatStyleOptions(builder: PanelOptionsEditorBuilder<PanelOpti
     category,
     defaultValue: STAT_JUSTIFY_MODE_DEFAULT,
     settings: { options: statJustifyModeOptions },
+  });
+
+  // Core shows this option only when the panel shows a calculation, and not one value for each row.
+  builder.addBooleanSwitch({
+    path: statShowPercentChangePath,
+    name: 'Show percent change',
+    category,
+    defaultValue: STAT_SHOW_PERCENT_CHANGE_DEFAULT,
+    showIf: (options) => !options.reduceOptions?.values,
+  });
+
+  builder.addSelect({
+    path: statPercentChangeColorModePath,
+    name: 'Percent change color mode',
+    category,
+    defaultValue: STAT_PERCENT_CHANGE_COLOR_MODE_DEFAULT,
+    settings: { options: statPercentChangeColorModeOptions },
+    showIf: (options) => Boolean(options.showPercentChange),
   });
 }

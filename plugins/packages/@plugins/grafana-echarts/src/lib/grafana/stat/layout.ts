@@ -27,6 +27,15 @@ import {
   getBackgroundSparklineLineColor,
   getBackgroundTextColor,
 } from 'lib/grafana/stat/colors';
+import { type FlowAlign, type FlowItem, layoutFlow } from 'lib/grafana/stat/flow';
+import {
+  formatPercentChange,
+  getPercentChangeColor,
+  hasPercentChange,
+  measurePercentChange,
+  type PercentChangeIcon,
+  placePercentChange,
+} from 'lib/grafana/stat/percentChange';
 import {
   getSparklineXRange,
   getSparklineYRange,
@@ -46,10 +55,12 @@ const WIDE_ASPECT_RATIO = 2.5;
 const WIDE_CHART_MIN_HEIGHT = 50;
 const STACKED_CHART_MIN_HEIGHT = 100;
 const SPARKLINE_FILL_ALPHA = 0.2;
+/** The part of the height that the value fits when the cell has a percent change and no sparkline. */
+const PERCENT_CHANGE_VALUE_HEIGHT = 0.75;
 /** The gap between the name and the value of a centered cell, in widths of the character "0". */
 const CENTER_GAP_CH = 0.75;
 
-export type StatTextAlign = 'left' | 'center' | 'right';
+export type StatTextAlign = FlowAlign;
 
 /** One line of text. `y` is the top of its line box, which is `fontSize * STAT_LINE_HEIGHT` high. */
 export interface StatText {
@@ -90,9 +101,17 @@ export interface StatBackground {
   end: SparklinePoint;
 }
 
+/** The change from the first value to the last value of the series, in percent, with an arrow for its sign. */
+export interface StatPercentChange {
+  text: StatText;
+  /** The arrow has the color of the text. A change of 0 has no arrow. */
+  icon?: PercentChangeIcon;
+}
+
 /** One value of the panel, with all positions in pixels from the top left corner of the panel. */
 export interface StatCell extends RepeaterCell {
   background?: StatBackground;
+  percentChange?: StatPercentChange;
   title?: StatText;
   value?: StatValueText;
   sparkline?: StatSparkline;
@@ -188,6 +207,11 @@ interface FitInput {
    */
   titleSize?: number;
   valueSize?: number;
+  /**
+   * The factor for the height that the value fits, in a cell with no sparkline: 0.75 when the value has a
+   * percent change, which needs a part of the height, else 1.
+   */
+  valueHeightFactor: number;
 }
 
 /** The fit of the name: the regular weight, and not larger than `MAX_TITLE_SIZE`. */
@@ -221,7 +245,9 @@ const limitTitle = (title: number, value: number) => (title > 0 ? Math.min(value
 /** Wide cell, no sparkline: the name at the left, the value at the right. */
 function fitWideNoChart(input: FitInput): StatFontSizes {
   const { maxTextWidth, maxTextHeight, texts } = input;
-  const value = input.valueSize ?? fitValue(input, maxTextWidth * (texts.titleToAlignTo ? 0.3 : 1), maxTextHeight);
+  const value =
+    input.valueSize ??
+    fitValue(input, maxTextWidth * (texts.titleToAlignTo ? 0.3 : 1), maxTextHeight * input.valueHeightFactor);
   const title = input.titleSize ?? limitTitle(fitTitle(input, maxTextWidth * 0.6, maxTextHeight), value);
   return { title, value, chartHeight: 0 };
 }
@@ -251,7 +277,8 @@ function fitStackedWithChart(input: FitInput): StatFontSizes {
 function fitStackedNoChart(input: FitInput): StatFontSizes {
   const { maxTextWidth, maxTextHeight, cell } = input;
   const fittedTitle = fitTitle(input, maxTextWidth, cell.height * 0.15);
-  const value = input.valueSize ?? fitValue(input, maxTextWidth, maxTextHeight - fittedTitle * STAT_LINE_HEIGHT);
+  const valueHeight = (maxTextHeight - fittedTitle * STAT_LINE_HEIGHT) * input.valueHeightFactor;
+  const value = input.valueSize ?? fitValue(input, maxTextWidth, valueHeight);
   return { title: input.titleSize ?? limitTitle(fittedTitle, value), value, chartHeight: 0 };
 }
 
@@ -264,39 +291,16 @@ function getCenterGap(theme: GrafanaTheme2): number {
   return CENTER_GAP_CH * (measureTextWidth({ text: '0', fontSize, fontFamily }) ?? fontSize / 2);
 }
 
-/**
- * The width in pixels of the name, and of the name and the value in one row with the gap between them.
- * `undefined` when the host cannot measure text.
- */
-function measureRow(
-  texts: StatTexts,
-  titleSize: number,
-  valueSize: number,
-  gap: number,
-  theme: GrafanaTheme2
-): { title: number; total: number } | undefined {
-  const { fontFamily, fontWeightRegular } = theme.typography;
-  const width = (text: string | undefined, fontSize: number, fontWeight: number) =>
-    text ? measureTextWidth({ text, fontSize, fontFamily, fontWeight }) : 0;
-  const title = width(texts.title, titleSize, fontWeightRegular);
-  const value = width(texts.text, valueSize, VALUE_FONT_WEIGHT);
-  const suffix = width(texts.suffix, suffixFontSize(valueSize), VALUE_FONT_WEIGHT);
-  if (title === undefined || value === undefined || suffix === undefined) {
-    return undefined;
+/** The sum of widths in pixels. `undefined` when a width is `undefined`: the host cannot measure text. */
+function addWidths(...widths: Array<number | undefined>): number | undefined {
+  let total = 0;
+  for (const width of widths) {
+    if (width === undefined) {
+      return undefined;
+    }
+    total += width;
   }
-  return { title, total: title + gap + value + suffix };
-}
-
-/** `true` when the name and the value do not fit side by side in the width. A cell with no name has no row. */
-function isRowTooWide(
-  texts: StatTexts,
-  titleSize: number,
-  valueSize: number,
-  maxWidth: number,
-  theme: GrafanaTheme2
-): boolean {
-  const row = texts.title ? measureRow(texts, titleSize, valueSize, 0, theme) : undefined;
-  return row !== undefined && row.total > maxWidth;
+  return total;
 }
 
 interface StatCellColors {
@@ -365,6 +369,8 @@ function layoutCell(
     fontFamily: theme.typography.fontFamily,
     titleSize: setTitleSize,
     valueSize: setValueSize,
+    // Core does not test for `NaN` here.
+    valueHeightFactor: display.display.percentChange != null ? PERCENT_CHANGE_VALUE_HEIGHT : 1,
   };
 
   const sparkline = display.sparkline;
@@ -383,55 +389,60 @@ function layoutCell(
   const titleSize = Math.max(sizes.title, 0);
   const valueSize = Math.max(sizes.value, 0);
 
-  // The content box of the cell.
-  const left = cell.x + padding;
-  const top = cell.y + padding;
-  const titleHeight = texts.title ? titleSize * STAT_LINE_HEIGHT : 0;
-  const valueHeight = valueSize * STAT_LINE_HEIGHT;
-  const centerX = left + maxTextWidth / 2;
-  const centerY = (height: number) => top + (maxTextHeight - height) / 2;
   // A cell with no name puts its value at the center in each text alignment, as `shouldJustifyCenter` of core.
   const isCentered = options.justifyMode === BigValueJustifyMode.Center || !texts.title;
+  const { fontFamily, fontWeightRegular } = theme.typography;
+  const measure = (text: string | undefined, fontSize: number, fontWeight: number) =>
+    text ? measureTextWidth({ text, fontSize, fontFamily, fontWeight }) : 0;
 
-  let titleX = left;
-  let titleAlign: StatTextAlign = 'left';
-  let titleY: number;
-  let valueY: number;
-  let valueX = left;
-  let valueAlign: StatTextAlign = 'left';
-  if (isCentered) {
-    // The texts are at the center of the cell, also with a sparkline. A wide cell puts the name and the value
-    // in one row when the row has space, else the name above the value, as a flexbox that wraps.
-    const gap = texts.title ? getCenterGap(theme) : 0;
-    const rowWidth = isWide && texts.title ? measureRow(texts, titleSize, valueSize, gap, theme) : undefined;
-    if (rowWidth && rowWidth.total <= maxTextWidth) {
-      titleX = left + (maxTextWidth - rowWidth.total) / 2;
-      valueX = titleX + rowWidth.title + gap;
-      titleY = centerY(titleHeight);
-      valueY = centerY(valueHeight);
-    } else {
-      titleX = valueX = centerX;
-      titleAlign = valueAlign = 'center';
-      titleY = centerY(titleHeight + gap + valueHeight);
-      valueY = titleY + titleHeight + gap;
-    }
-  } else if (isWide && isRowTooWide(texts, titleSize, valueSize, maxTextWidth, theme)) {
-    // Text sizes that are set can make the row wider than the cell. The value then goes below the name, at the
-    // left, as a flexbox that wraps. With a sparkline the two lines share the free height of the cell.
-    const freeHeight = Math.max(0, maxTextHeight - titleHeight - valueHeight);
-    titleY = hasChart ? top : centerY(titleHeight + valueHeight);
-    valueY = titleY + titleHeight + (hasChart ? freeHeight / 2 : 0);
-  } else if (isWide) {
-    // Side by side. With a sparkline the texts are at the top of the cell, else at its vertical center.
-    titleY = hasChart ? top : centerY(titleHeight);
-    valueY = hasChart ? top : centerY(valueHeight);
-    valueX = left + maxTextWidth;
-    valueAlign = 'right';
-  } else {
-    // The name above the value. With a sparkline the texts are at the top of the cell, else at its vertical center.
-    titleY = hasChart ? top : centerY(titleHeight + valueHeight);
-    valueY = titleY + titleHeight;
-  }
+  // The texts are the items of a flexbox in the content box of the cell: a column in a stacked cell, and a row
+  // that wraps in a wide cell. With a sparkline, texts that are not at the center start at the top of the cell.
+  const titleItem: FlowItem | undefined = texts.title
+    ? { width: measure(texts.title, titleSize, fontWeightRegular), height: titleSize * STAT_LINE_HEIGHT }
+    : undefined;
+  const valueItem: FlowItem = {
+    width: addWidths(
+      measure(texts.text, valueSize, VALUE_FONT_WEIGHT),
+      measure(texts.suffix, suffixFontSize(valueSize), VALUE_FONT_WEIGHT)
+    ),
+    // A value with no text has no height, as an HTML element with no text.
+    height: texts.text ? valueSize * STAT_LINE_HEIGHT : 0,
+  };
+  const { percentChange } = display.display;
+  const percentMetrics = hasPercentChange(percentChange)
+    ? measurePercentChange({
+        percentChange,
+        valueSize,
+        percentSize: options.percentSize,
+        // With the text mode None, the cell shows only the percent change, at a size that fits 80% of the cell.
+        fittedSize:
+          options.textMode === BigValueTextMode.None
+            ? fitFontSize({
+                text: formatPercentChange(percentChange),
+                width: maxTextWidth * 0.8,
+                height: maxTextHeight * 0.8,
+                lineHeight: STAT_LINE_HEIGHT,
+                fontFamily,
+                fontWeight: VALUE_FONT_WEIGHT,
+              })
+            : undefined,
+        isRow: isWide,
+        measure,
+      })
+    : undefined;
+
+  const items = [titleItem, valueItem, percentMetrics?.item].filter((item) => item !== undefined);
+  const positions = layoutFlow({
+    items,
+    box: { x: cell.x + padding, y: cell.y + padding, width: maxTextWidth, height: maxTextHeight },
+    direction: isWide ? 'row' : 'column',
+    centered: isCentered,
+    gap: isCentered ? getCenterGap(theme) : 0,
+    atTop: hasChart && !isCentered,
+  });
+  const titlePosition = titleItem ? positions[0] : undefined;
+  const valuePosition = positions[titleItem ? 1 : 0];
+  const percentPosition = positions[titleItem ? 2 : 1];
 
   const valueColor = display.display.color ?? 'gray';
   const colors = getCellColors(cell, valueColor, options.colorMode, theme);
@@ -440,12 +451,10 @@ function layoutCell(
     result.background = colors.background;
   }
 
-  if (texts.title && titleSize > 0) {
+  if (texts.title && titlePosition && titleSize > 0) {
     result.title = {
       text: texts.title,
-      x: titleX,
-      y: titleY,
-      align: titleAlign,
+      ...titlePosition,
       fontSize: titleSize,
       fontWeight: theme.typography.fontWeightRegular,
       color: colors.title,
@@ -457,13 +466,30 @@ function layoutCell(
       text: texts.text,
       suffix: texts.suffix || undefined,
       suffixFontSize: suffixFontSize(valueSize),
-      x: valueX,
-      y: valueY,
-      align: valueAlign,
+      ...valuePosition,
       fontSize: valueSize,
       fontWeight: VALUE_FONT_WEIGHT,
       color: colors.value,
       maxWidth: maxTextWidth,
+    };
+  }
+  if (hasPercentChange(percentChange) && percentMetrics) {
+    const { textX, textY, icon } = placePercentChange(percentMetrics, percentPosition, isWide);
+    result.percentChange = {
+      text: {
+        text: percentMetrics.text,
+        x: textX,
+        y: textY,
+        align: 'left',
+        fontSize: percentMetrics.fontSize,
+        fontWeight: percentMetrics.fontWeight,
+        // On a colored cell, the percent change has the color of the other texts.
+        color: colors.background
+          ? colors.title
+          : getPercentChangeColor(percentChange, options.percentChangeColorMode, colors.value, theme),
+        maxWidth: maxTextWidth,
+      },
+      icon,
     };
   }
 
