@@ -1,9 +1,11 @@
 import {
   type DataFrame,
   type FieldConfigSource,
+  FieldColorModeId,
   FieldType,
   MappingType,
   type PanelProps,
+  ThresholdsMode,
   toDataFrame,
 } from '@grafana/data';
 import { render } from '@testing-library/react';
@@ -58,6 +60,32 @@ export const mappedFrame = toDataFrame({
       values: [35, 52, 48, 72],
       config: {
         mappings: [{ type: MappingType.ValueToText, options: { '72': { text: 'Critical', color: 'red', index: 0 } } }],
+      },
+    },
+  ],
+});
+
+/**
+ * The base case in the threshold color mode, with a threshold of 60. The last value, 72, is above it. The
+ * thresholds are in the field config of the fixture, for the same reason as the mapping of `mappedFrame`.
+ */
+export const thresholdsFrame = toDataFrame({
+  fields: [
+    { name: 'time', type: FieldType.time, values: TIMES },
+    {
+      name: 'cpu',
+      type: FieldType.number,
+      values: [35, 52, 48, 72],
+      config: {
+        unit: 'percent',
+        color: { mode: FieldColorModeId.Thresholds },
+        thresholds: {
+          mode: ThresholdsMode.Absolute,
+          steps: [
+            { value: -Infinity, color: 'green' },
+            { value: 60, color: 'red' },
+          ],
+        },
       },
     },
   ],

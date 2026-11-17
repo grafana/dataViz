@@ -1,8 +1,15 @@
-import { type FieldConfigSource, ThresholdsMode } from '@grafana/data';
 import { BigValueColorMode, BigValueGraphMode, BigValueTextMode } from '@grafana/schema';
 import { normalizeCanvasEvents } from 'test/canvas';
 import { height, width } from 'test/panel';
-import { cpuFrame, gapFrame, mappedFrame, renderStat, seriesFrame, singlePointFrame } from 'test/statCanvas';
+import {
+  cpuFrame,
+  gapFrame,
+  mappedFrame,
+  renderStat,
+  seriesFrame,
+  singlePointFrame,
+  thresholdsFrame,
+} from 'test/statCanvas';
 
 // Stat canvas snapshots: a case for each layout and for each editor option. Every test here is a snapshot
 // test: the baseline is the assertion, and a reviewer reads it as an image.
@@ -94,19 +101,7 @@ describe('stat canvas snapshots', () => {
 
     // The value 72 is above the threshold of 60, so the value and the sparkline are red.
     it('Value, with the color of a threshold', async () => {
-      const fieldConfig: FieldConfigSource = {
-        defaults: {
-          thresholds: {
-            mode: ThresholdsMode.Absolute,
-            steps: [
-              { value: -Infinity, color: 'green' },
-              { value: 60, color: 'red' },
-            ],
-          },
-        },
-        overrides: [],
-      };
-      const { defaultEvents, seriesEvents } = await renderStat([cpuFrame], {}, fieldConfig);
+      const { defaultEvents, seriesEvents } = await renderStat([thresholdsFrame]);
 
       expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, { width, height });
     });
