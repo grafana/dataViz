@@ -120,5 +120,11 @@ describe('gauge canvas renders', () => {
       const { defaultEvents, seriesEvents } = await renderGauge([gaugeFrame({ load: [45, 55] }, config)]);
       expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, size);
     });
+
+    it('a currency prefix draws smaller than the value', async () => {
+      const config = gaugeFieldConfig({ unit: 'currencyUSD' });
+      const { defaultEvents, seriesEvents } = await renderGauge([gaugeFrame({ cost: [72] }, config)]);
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, size);
+    });
   });
 });

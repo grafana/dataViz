@@ -2,8 +2,8 @@
 // This file has no Grafana code. https://echarts.apache.org/en/option.html#series-gauge
 import { type GaugeSeriesOption } from 'echarts';
 import { type GaugeShape } from 'editor/types';
-import { type GaugeValue } from 'lib/echarts/converters/gauge';
-import { type GaugeGeometry, type GaugeTextLayout } from 'lib/grafana/gauge/layout';
+import { type GaugeValue, type GaugeValueAffixes } from 'lib/echarts/converters/gauge';
+import { type GaugeGeometry, type GaugeTextLayout, type GaugeValueTextLine } from 'lib/grafana/gauge/layout';
 
 /** The start and end of the arc, in the degrees of ECharts: 0 is to the right, and the angle grows to the left. */
 export interface GaugeAngles {
@@ -78,6 +78,47 @@ export function getGaugeBandSeries(item: GaugeItem, { angles, zlevel }: GaugeSer
   };
 }
 
+type GaugeDetail = NonNullable<GaugeSeriesOption['detail']>;
+
+/** The name of the rich text style of the prefix and the suffix. */
+const UNIT_STYLE = 'unit';
+/** A rich text part, `{style|text}`. A `}` ends the text of a part. */
+const RICH_TEXT_PART = /\{[a-zA-Z0-9_]+\|[^}]*\}/;
+
+/** The parts can go into rich text when they have no part syntax of their own. */
+const isRichTextSafe = ({ prefix, body, suffix }: GaugeValueAffixes) =>
+  !prefix.includes('}') && !suffix.includes('}') && !RICH_TEXT_PART.test(body);
+
+/**
+ * The value text. A prefix and a suffix draw in a smaller font, as rich text. A value with no prefix and no
+ * suffix has no rich text.
+ * https://echarts.apache.org/en/option.html#series-gauge.detail.rich
+ */
+export function getGaugeValueText(
+  value: GaugeValue,
+  line: GaugeValueTextLine,
+  style: GaugeStyle
+): Pick<GaugeDetail, 'formatter' | 'rich'> {
+  const { affixes } = value;
+  if (!affixes || !isRichTextSafe(affixes)) {
+    // A function, because ECharts reads `{...}` in a string as a template.
+    return { formatter: () => value.text };
+  }
+  const unit = (text: string) => (text ? `{${UNIT_STYLE}|${text}}` : '');
+  return {
+    formatter: () => `${unit(affixes.prefix)}${affixes.body}${unit(affixes.suffix)}`,
+    // A rich text style does not read the font of `detail`, so it has the full font.
+    rich: {
+      [UNIT_STYLE]: {
+        fontSize: line.unitFontSize,
+        fontWeight: 'normal',
+        fontFamily: style.fontFamily,
+        color: style.valueTextColor,
+      },
+    },
+  };
+}
+
 /**
  * The value bar: a track for the full range, and a progress arc from the minimum to the value. A value outside
  * the range draws at the nearest limit. A value that is not a number draws the track only.
@@ -101,8 +142,7 @@ export function getGaugeBarSeries(item: GaugeItem, { angles, style, zlevel }: Ga
     detail: text.value
       ? {
           show: true,
-          // A function, because ECharts reads `{...}` in a string as a template.
-          formatter: () => value.text,
+          ...getGaugeValueText(value, text.value, style),
           offsetCenter: [0, text.value.offsetY],
           fontSize: text.value.fontSize,
           fontWeight: 'normal',

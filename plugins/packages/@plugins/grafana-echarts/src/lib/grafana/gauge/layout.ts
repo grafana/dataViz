@@ -97,8 +97,13 @@ export interface GaugeTextLine {
   offsetY: number;
 }
 
+/** The value text. Its prefix and its suffix have a smaller font. */
+export interface GaugeValueTextLine extends GaugeTextLine {
+  unitFontSize: number;
+}
+
 export interface GaugeTextLayout {
-  value?: GaugeTextLine;
+  value?: GaugeValueTextLine;
   name?: GaugeTextLine;
 }
 
@@ -111,6 +116,9 @@ const LARGE_RADIUS_DECAY = 0.86;
 const VALUE_SPACE = 0.7;
 const MIN_VALUE_FONT_SIZE = 1;
 const MIN_NAME_FONT_SIZE = 10;
+/** The font size of the prefix and the suffix, as a part of the value font size. */
+const UNIT_TO_VALUE_FONT_SIZE = 0.7;
+const MIN_UNIT_FONT_SIZE = 6;
 
 export interface GaugeTextInput {
   geometry: Pick<GaugeGeometry, 'radius' | 'barWidth'>;
@@ -150,7 +158,11 @@ export function layoutGaugeText({ geometry, shape, parts, valueText, nameText, f
   const valueY = parts.showName ? -nameHeight * (1 - VALUE_SPACE) : 0;
 
   if (parts.showValue) {
-    layout.value = { fontSize: valueFontSize, offsetY: valueY - lift };
+    layout.value = {
+      fontSize: valueFontSize,
+      unitFontSize: Math.max(valueFontSize * UNIT_TO_VALUE_FONT_SIZE, MIN_UNIT_FONT_SIZE),
+      offsetY: valueY - lift,
+    };
   }
   if (parts.showName) {
     layout.name = {

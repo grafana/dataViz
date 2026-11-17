@@ -85,6 +85,15 @@ describe('layoutGaugeText', () => {
     expect(name!.fontSize).toBeLessThan(value!.fontSize);
   });
 
+  it('gives the prefix and the suffix 70% of the value font size, and not less than 6px', () => {
+    const { value } = layoutGaugeText({ geometry, shape: 'circle', parts: both, ...texts });
+    expect(value!.unitFontSize).toBeCloseTo(value!.fontSize * 0.7);
+
+    const small = layoutGaugeText({ geometry: { radius: 6, barWidth: 1 }, shape: 'circle', parts: both, ...texts });
+    expect(small.value!.fontSize).toBeLessThan(6 / 0.7);
+    expect(small.value!.unitFontSize).toBe(6);
+  });
+
   it('moves the text of an arc gauge up from the center', () => {
     const circle = layoutGaugeText({ geometry, shape: 'circle', parts: both, ...texts });
     const arc = layoutGaugeText({ geometry, shape: 'gauge', parts: both, ...texts });
