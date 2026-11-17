@@ -34,10 +34,31 @@ command to re-render it is at the top of that file.
 [immutable releases](https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/immutable-releases)
 on: a published release takes no more files, and its tag name can never be used again, even after the
 release is deleted. A draft published before the `attach` job uploads its files stays empty for good
-(`grafana-echarts-renderer/v0.2.1` and `grafana-relations-panel/v0.2.0` are such releases). A draft that is
-still there after its run ended means the build or the upload failed: re-run the failed jobs of that run,
-and the `attach` job publishes it. `release-guard.yml` fails when someone publishes a release with no files.
+(`grafana-echarts-renderer/v0.2.1` and `grafana-relations-panel/v0.2.0` are such releases). `release-guard.yml` fails when someone publishes a release with no files.
 It cannot undo the publish; the fix is to release the next version (a `Release-As: x.y.z` footer, below).
+
+**A draft that stays after its run ended** means the build or the upload failed. What to do depends on the
+age of the run:
+
+- **Up to 30 days after the run started:** re-run the failed jobs of that run. The `attach` job uploads the
+  files and publishes the release.
+- **After 30 days:** GitHub no longer re-runs the run, and a manual run of `release-please.yml` does not
+  attach to a release that exists. Delete the draft release, keep its tag (release-please finds the previous
+  version by it), and release the next version with a `Release-As: x.y.z` footer. That version then has a
+  tag and a CHANGELOG entry but no GitHub release. For `grafana-relations-panel`, the catalogs can already
+  have it: the `publish` job waits for the build, not for the upload.
+
+**Latest and pre-release.** The workflow sets both, because nobody publishes by hand:
+
+- **Latest:** only `grafana-relations-panel` releases. GitHub makes each newly published release the
+  repository's "Latest" unless told otherwise, so `releases/latest` would move between unrelated products.
+  The `attach` job publishes every other release with `--latest=false` (the `LATEST` value of its
+  "Publish the release" step). To find the newest Renderer release, list the `grafana-echarts-renderer/v*`
+  tags; do not use `releases/latest`.
+- **Pre-release:** no release. The publish step does not change it, so a release keeps what release-please
+  gave it. To mark the 0.x versions of a package as pre-releases, set `"prerelease": true` on that package
+  in `release-please-config.json`. GitHub does not let a pre-release be "Latest", so do not set it on the
+  package whose releases are "Latest".
 
 **One plugin or all of them:** every plugin gets its own release PR. Merge one to release that plugin;
 merge several, or all of the open ones, to release them together. A plugin with no releasable changes can

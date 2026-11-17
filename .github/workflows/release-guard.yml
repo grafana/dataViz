@@ -25,6 +25,8 @@ jobs:
     permissions:
       contents: read # read the release
     steps:
+      # Fails unless the count is a number above 0, so no output from gh also
+      # fails.
       - name: Count the release files
         env:
           GH_TOKEN: ${{ github.token }}
@@ -32,7 +34,7 @@ jobs:
           TAG: ${{ github.event.release.tag_name }}
         run: |
           count="$(gh release view "$TAG" --json assets --jq '.assets | length')"
-          if [ "$count" -eq 0 ]; then
+          if ! [ "$count" -gt 0 ]; then
             echo "::error::Release $TAG was published with no files. It is immutable, so files cannot be added and the tag cannot be reused: release the next version, and let release-please.yml publish it. See .github/actions/RELEASES.md."
             exit 1
           fi

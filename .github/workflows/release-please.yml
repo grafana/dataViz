@@ -282,18 +282,29 @@ jobs:
       # be reused). Only reached when the upload passed; the count is a second
       # check. A release published with GITHUB_TOKEN starts no workflow, so
       # release-guard.yml does not run for it.
+      #
+      # LATEST: GitHub makes a newly published release the repository's
+      # "Latest" unless told otherwise, so the badge and releases/latest would
+      # move between unrelated products. Only grafana-relations-panel releases
+      # are "Latest". Pre-release is not set here: the release keeps what
+      # release-please gave it (`prerelease` in release-please-config.json).
+      # See "Latest and pre-release" in RELEASES.md.
+      #
+      # The count check refuses unless the count is a number above 0, so no
+      # output from gh also stops it.
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           TAG: ${{ matrix.release.tag }}
+          LATEST: ${{ matrix.release.id == 'grafana-relations-panel' }}
         run: |
           count="$(gh release view "$TAG" --json assets --jq '.assets | length')"
-          if [ "$count" -eq 0 ]; then
-            echo "::error::Release $TAG has no files, so it is not published"
+          if ! [ "$count" -gt 0 ]; then
+            echo "::error::Release $TAG has no files (count: '$count'), so it is not published"
             exit 1
           fi
-          gh release edit "$TAG" --draft=false
+          gh release edit "$TAG" --draft=false --latest="$LATEST"
 
   # Same cd.yml call as plugin-publish.yml, from the release tag instead of
   # main: release-reference-regex makes the tag a release reference, so cd.yml

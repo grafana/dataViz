@@ -6,10 +6,10 @@
 // no dependencies). It relies on the repo's two-space indentation.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { describe, test } from 'node:test';
-import { REPO } from './helpers.ts';
+import { describe, test, type TestContext } from 'node:test';
+import { bash, REPO, tempDir, writeText } from './helpers.ts';
 
 function tracked(...patterns: string[]): string[] {
 	return execFileSync('git', ['ls-files', ...patterns], { cwd: REPO, encoding: 'utf8' }).split('\n').filter(Boolean);
@@ -205,11 +205,81 @@ describe('release-please.yml publishes a release only after its files', () => {
 		assert.doesNotMatch(attachSteps[publish], /^\s+if:/m);
 	});
 
+	// Every way to publish: `--draft=false`, `draft: false`, `-f draft=false`,
+	// a softprops step with no `draft:` (its default publishes), and
+	// `gh release create` with no `--draft`.
 	test('nothing else publishes a release', () => {
 		for (const file of workflows) {
-			const publishers = lines(file).filter((line) => /--draft=false|^\s+draft: false/.test(line));
+			const code = lines(file).filter((line) => !/^\s*#/.test(line));
+			const publishers = code.filter((line) => /draft\s*[=:]\s*false/.test(line));
 			assert.equal(publishers.length, file.endsWith('/release-please.yml') ? 1 : 0, file);
+			for (const line of code.filter((text) => /gh release create/.test(text))) {
+				assert.match(line, /--draft(?!=false)/, `${file}: gh release create without --draft:\n${line}`);
+			}
+			for (const job of jobs(file)) {
+				for (const step of steps(job.lines).map((stepLines) => stepLines.join('\n'))) {
+					if (/uses: softprops\/action-gh-release@/.test(step)) {
+						assert.match(step, /^\s+draft: true$/m, `${file}: softprops step without draft: true:\n${step}`);
+					}
+				}
+			}
 		}
+	});
+
+	test('only grafana-relations-panel releases are "Latest"', () => {
+		assert.match(attachSteps[publish], /^\s+LATEST: \$\{\{ matrix\.release\.id == 'grafana-relations-panel' \}\}$/m);
+		assert.match(attachSteps[publish], /gh release edit "\$TAG" --draft=false --latest="\$LATEST"$/m);
+	});
+
+	// Runs a step's script as GitHub does (bash -e), with a fake `gh` that
+	// prints `count` for `release view` and logs every call.
+	function runWithFakeGh(t: TestContext, script: string, count: string, env: Record<string, string> = {}) {
+		const dir = tempDir(t);
+		const log = join(dir, 'gh.log');
+		writeText(
+			join(dir, 'bin/gh'),
+			`#!/usr/bin/env bash\necho "$*" >> "${log}"\nif [ "$2" = view ]; then printf '%s' "$FAKE_COUNT"; fi\n`,
+			{ executable: true },
+		);
+		writeText(join(dir, 'step.sh'), `set -e\n${script}\n`);
+		const result = bash(join(dir, 'step.sh'), [], {
+			env: { PATH: `${join(dir, 'bin')}:${process.env.PATH}`, TAG: 'some-plugin/v1.2.3', FAKE_COUNT: count, ...env },
+		});
+		return { ...result, calls: existsSync(log) ? readFileSync(log, 'utf8') : '' };
+	}
+
+	const scriptWith = (file: string, text: string): string => {
+		const found = runScripts(file).filter((script) => script.text.includes(text));
+		assert.equal(found.length, 1, `${file}: one run script with ${text}`);
+		return found[0].text;
+	};
+
+	for (const count of ['', '0', 'not a number']) {
+		test(`a file count of '${count}' is not published`, (t) => {
+			const script = scriptWith('.github/workflows/release-please.yml', 'gh release edit');
+			const result = runWithFakeGh(t, script, count, { LATEST: 'false' });
+			assert.notEqual(result.status, 0);
+			assert.doesNotMatch(result.calls, /release edit/);
+			assert.match(result.stdout, /::error::Release some-plugin\/v1\.2\.3 has no files/);
+		});
+
+		test(`release-guard.yml fails on a file count of '${count}'`, (t) => {
+			const result = runWithFakeGh(t, scriptWith('.github/workflows/release-guard.yml', 'gh release view'), count);
+			assert.notEqual(result.status, 0);
+			assert.match(result.stdout, /::error::Release some-plugin\/v1\.2\.3 was published with no files/);
+		});
+	}
+
+	test('a release with files is published, with the Latest choice', (t) => {
+		const script = scriptWith('.github/workflows/release-please.yml', 'gh release edit');
+		const result = runWithFakeGh(t, script, '3', { LATEST: 'false' });
+		assert.equal(result.status, 0, result.stderr);
+		assert.match(result.calls, /^release edit some-plugin\/v1\.2\.3 --draft=false --latest=false$/m);
+	});
+
+	test('release-guard.yml passes a release with files', (t) => {
+		const result = runWithFakeGh(t, scriptWith('.github/workflows/release-guard.yml', 'gh release view'), '2');
+		assert.equal(result.status, 0, result.stderr);
 	});
 
 	test('release-guard.yml runs when a release is published', () => {
