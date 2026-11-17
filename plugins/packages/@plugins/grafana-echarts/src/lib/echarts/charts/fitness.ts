@@ -11,6 +11,7 @@ import { type MultiValueSeriesType } from 'editor/types';
 import {
   ALL_VALUES_MAX_ROWS,
   CATEGORY_MAX_ROWS,
+  GAUGE_MAX_VALUES,
   HEATMAP_MATRIX_MAX_COLUMNS,
   HEATMAP_MATRIX_MAX_ROWS,
   MULTIVARIATE_MAX_AXES,
@@ -517,6 +518,23 @@ export const scoreTimeline = (
     summary.fieldCountByType(FieldType.number) >= TIMELINE_NUMBER_FIELDS_LIMIT ||
     (maxRows !== undefined && summary.rowCountMax > maxRows) ||
     summary.hasPreferredVisualisationType('logs')
+  ) {
+    return undefined;
+  }
+  return VisualizationSuggestionScore.OK;
+};
+
+/**
+ * Gauge fitness: the gate of the core Gauge panel. The data needs a number field, and not more than
+ * `GAUGE_MAX_VALUES` of them, because each number field is one gauge. Core returns no explicit score, which
+ * Grafana reads as `OK`.
+ * https://github.com/grafana/grafana/blob/main/public/app/plugins/panel/gauge/suggestions.ts
+ */
+export const scoreGauge = (summary: PanelDataSummary): VisualizationSuggestionScore | undefined => {
+  if (
+    !summary.hasData ||
+    !summary.hasFieldType(FieldType.number) ||
+    summary.fieldCountByType(FieldType.number) > GAUGE_MAX_VALUES
   ) {
     return undefined;
   }

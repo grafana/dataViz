@@ -5,6 +5,8 @@ import {
   type HideableFieldConfig,
   type LineInterpolation,
 } from '@grafana/schema';
+// The core Gauge panel options. https://grafana.com/docs/grafana/latest/panels-visualizations/visualizations/gauge/
+import { type Options as CoreGaugeOptions } from '@grafana/schema/dist/esm/raw/composable/gauge/panelcfg/x/GaugePanelCfg_types.gen';
 
 export type SeriesType =
   | 'line'
@@ -70,11 +72,17 @@ export type TimelineSeriesType = Extract<SeriesType, 'custom'>;
 /**
  * Render variants of the part-to-whole family, selected per panel via the
  * panel-level `seriesType`: `pie` (radial) and `funnel` (stacked trapezoids).
- * Both are built from the same categorical slice model (see resolvePieSlices);
- * gauge is a planned third variant tracked separately. Mirrors
- * `HierarchySeriesType` (treemap/sunburst) for the hierarchy family.
+ * Both are built from the same categorical slice model (see resolvePieSlices).
+ * Mirrors `HierarchySeriesType` (treemap/sunburst) for the hierarchy family.
  */
 export type PartToWholeSeriesType = Extract<SeriesType, 'pie' | 'funnel'>;
+
+/** The one render type of the gauge family. https://echarts.apache.org/en/option.html#series-gauge */
+export type GaugeSeriesType = Extract<SeriesType, 'gauge'>;
+/** The gauge shape, as core Gauge: `gauge` is an arc of 220 degrees, `circle` is a full ring. */
+export type GaugeShape = CoreGaugeOptions['shape'];
+/** The text in the center of a gauge, as core Gauge. `auto` shows the name when the panel has many values. */
+export type GaugeTextMode = NonNullable<CoreGaugeOptions['textMode']>;
 
 /**
  * Series-type *selection* value: the concrete `SeriesType` plus the `'Auto'`
