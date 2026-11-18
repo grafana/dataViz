@@ -35,6 +35,17 @@ describe('fitFontSize', () => {
     expect(long).toBeLessThan(short);
   });
 
+  it.each([
+    ['a negative width', -14, 60],
+    ['a negative height', 50, -8],
+    ['no width', 0, 60],
+    ['no height', 50, 0],
+    ['a width that is not a number', NaN, 60],
+    ['a height that is not a number', 50, NaN],
+  ])('gives 0 for a box with %s', (_, width, height) => {
+    expect(fitFontSize({ ...base, width, height })).toBe(0);
+  });
+
   describe('maxSize', () => {
     it('limits a size that the box permits', () => {
       expect(fitFontSize({ ...base, width: 10000, height: 60, maxSize: 30 })).toBe(30);

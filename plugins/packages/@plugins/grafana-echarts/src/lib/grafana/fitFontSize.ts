@@ -4,6 +4,12 @@
 // `calculateFontSize` measures with the fixed family 'Inter'. In a host with no Inter font, the browser measures
 // with its default font, but ECharts draws with the next family of the theme, so the text can overflow its box.
 // https://github.com/grafana/grafana/blob/main/packages/grafana-ui/src/utils/measureText.ts
+//
+// The result follows the font that the host draws with. Thus Grafana and the Renderer, which has no Inter font,
+// can give different sizes for the same panel, and the text fits its box in each. `axisLabelWidth.ts` has a
+// different rule, a table of Inter widths, because its result selects the step of the time grid, and the step
+// must be the same in the two hosts. A table is not possible here: the text is a name or a value, with any
+// character.
 
 /** The font size at which the text is measured. The result scales from it. */
 const MEASURE_FONT_SIZE = 14;
@@ -26,6 +32,10 @@ function getContext(): CanvasRenderingContext2D | null {
 /**
  * A width that was measured before its font loaded is the width of a fallback font. When the document loads a
  * font, the cache is cleared, so the next fit measures again.
+ *
+ * This function does not draw the panel again. A panel that fitted a text before its font loaded keeps that size
+ * until its next render. Grafana 13.4 loads the Inter weights 400 and 500 when it starts. A different weight loads
+ * when a text is measured or drawn with it for the first time, so its first fit uses the fallback font.
  * https://developer.mozilla.org/en-US/docs/Web/API/FontFaceSet/loadingdone_event
  */
 function watchFontLoads() {
@@ -76,9 +86,14 @@ export interface FitFontSizeInput {
 /**
  * The font size in pixels at which `text` fits the box in width and in height, and not more than `maxSize`.
  * In a host that cannot measure text, the width is not a limit: the result is the size for the height.
+ * The result is 0 for a box with no width or no height, for example a cell that is smaller than its padding.
  */
 export function fitFontSize(input: FitFontSizeInput): number {
   const { text, width, height, lineHeight, fontFamily, fontWeight = 400, maxSize = Infinity } = input;
+  // `!(a > 0)` is also true for NaN.
+  if (!(width > 0) || !(height > 0)) {
+    return 0;
+  }
   const textWidth = measureWidth(text, fontFamily, fontWeight);
   const sizeForWidth = textWidth === undefined ? Infinity : (width / (textWidth + WIDTH_PADDING)) * MEASURE_FONT_SIZE;
   const sizeForHeight = height / lineHeight;

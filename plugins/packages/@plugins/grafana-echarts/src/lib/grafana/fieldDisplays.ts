@@ -18,7 +18,10 @@ export interface FieldDisplayInput {
   fieldConfig: FieldConfigSource;
   /** The `reduceOptions` of the panel. Unset gives one value for each number field, reduced with `defaultCalc`. */
   reduceOptions: ReduceDataOptions | undefined;
-  /** The reducer when `reduceOptions.calcs` is unset or empty. */
+  /**
+   * The reducer when `reduceOptions.calcs` is unset or empty. For an empty list, core uses `last`, which gives no
+   * value for a field that ends with a null. The pie chart of this package uses its default too.
+   */
   defaultCalc: string;
   replaceVariables: InterpolateFunction;
   theme: GrafanaTheme2;
@@ -37,6 +40,9 @@ export interface FieldDisplayInput {
  * and this function removes it. The text of the placeholder is the `noValue` field option, or "No data". The
  * caller owns that case: its data issue view shows the message, and reads `fieldConfig.defaults.noValue` if it
  * shows the text of the option.
+ *
+ * A number field with no row is a different case, for example a query that returns no row. It gives one result
+ * with a `NaN` number, and its text is the `noValue` field option, or ''. The result is not empty.
  */
 export function resolveFieldDisplays(input: FieldDisplayInput): FieldDisplay[] {
   const { frames, reduceOptions, defaultCalc, ...rest } = input;
@@ -50,11 +56,19 @@ export function resolveFieldDisplays(input: FieldDisplayInput): FieldDisplay[] {
 /**
  * A copy of the field with a new range. The copy has a new display processor, because the processor reads the
  * range for the color and the percent of a value. The input field does not change.
+ *
+ * `timeZone` is the time zone of the dashboard. The new processor does not get the time zone of the old one, and
+ * without it, a value with a date unit shows in the time zone of the browser.
  */
-export function withFieldRange(field: Field, range: { min: number; max: number }, theme: GrafanaTheme2): Field {
+export function withFieldRange(
+  field: Field,
+  range: { min: number; max: number },
+  theme: GrafanaTheme2,
+  timeZone: string | undefined
+): Field {
   const { min, max } = range;
   const ranged: Field = { ...field, state: { ...field.state, range: { min, max, delta: max - min } } };
-  ranged.display = getDisplayProcessor({ field: ranged, theme });
+  ranged.display = getDisplayProcessor({ field: ranged, theme, timeZone });
   return ranged;
 }
 
@@ -66,7 +80,8 @@ function withPercentUnitRange(field: Field, theme: GrafanaTheme2): Field {
   if (unitMax === undefined) {
     return field;
   }
-  return withFieldRange(field, { min: field.config.min ?? 0, max: field.config.max ?? unitMax }, theme);
+  // A percent value has no time, so its processor needs no time zone. Core Gauge gives it none too.
+  return withFieldRange(field, { min: field.config.min ?? 0, max: field.config.max ?? unitMax }, theme, undefined);
 }
 
 /**
