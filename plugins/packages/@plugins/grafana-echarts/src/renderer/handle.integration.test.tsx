@@ -2,10 +2,13 @@ import { type RenderHandle, type RenderOptions, type RenderState } from '@grafan
 import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getInstanceByDom } from 'lib/echarts/echarts';
+import { doubleClickPlot } from 'test/doubleClick';
 import { withLayout } from 'test/layout';
 import { fixtureSets, fixtureSpec } from 'test/rendererFixtures';
+import { dragXAxis } from 'test/xAxisDrag';
 import { render } from './index';
 import { TITLE_HEIGHT_PX, TOOLBAR_HEIGHT_PX } from './layout';
+import { REFRESH_TIMEOUT_MS } from './registry';
 
 /** An element with an inline size: the jsdom shim of `jest-setup.js` reads `clientWidth` from the style. */
 function sizedElement(width = 600, height = 300): HTMLElement {
@@ -218,21 +221,145 @@ describe('the handle', () => {
     expect(el.style.height).toBe('250px');
   });
 
-  it('does nothing outside data.range for a brush zoom: no onRefresh, the same state', async () => {
+  // contract-rule: renderer.43
+  it('asks the App for the brushed time range', async () => {
+    const spec = fixtureSpec('prometheus-line');
+    const { from, to } = (spec.data as { range: { from: number; to: number } }).range;
     const onRefresh = jest.fn();
-    const { el, states, handle } = draw(fixtureSpec('smoke-timeseries'), { onRefresh });
+    const { el } = draw(spec, { onRefresh });
+    await waitForState(el, 'ready');
+    act(() => {
+      chartOf(el).trigger('brushend', { areas: [{ coordRange: [from + 60_000, to - 60_000] }] });
+    });
+    expect(onRefresh.mock.calls).toEqual([
+      [{ id: expect.any(String), cause: 'timeRange', from: String(from + 60_000), to: String(to - 60_000) }],
+    ]);
+    expect(within(el).getByRole('button', { name: 'Refresh' })).toBeDisabled();
+  });
+
+  // contract-rule: spec.17
+  // contract-rule: renderer.45
+  it('asks for the relative range of the original spec on Reset', async () => {
+    const spec = fixtureSpec('prometheus-line');
+    const onRefresh = jest.fn();
+    const { el, handle } = draw(spec, { onRefresh });
+    await waitForState(el, 'ready');
+    const { from, to } = (spec.data as { range: { from: number; to: number } }).range;
+    act(() => chartOf(el).trigger('brushend', { areas: [{ coordRange: [from + 60_000, to - 60_000] }] }));
+    act(() => handle.setRefreshed(onRefresh.mock.calls[0][0].id, true));
+
+    await userEvent.click(within(el).getByRole('button', { name: 'Reset time range' }));
+    expect(onRefresh).toHaveBeenLastCalledWith({
+      id: expect.any(String),
+      cause: 'timeRange',
+      from: 'now-15m',
+      to: 'now',
+    });
+  });
+
+  // contract-rule: renderer.42
+  it('zooms within the supplied data without an App refresh callback', async () => {
+    const spec = fixtureSpec('prometheus-line');
+    const { from, to } = (spec.data as { range: { from: number; to: number } }).range;
+    const { el } = draw(spec);
     await waitForState(el, 'ready');
     const chart = chartOf(el);
-    const clear = jest.spyOn(chart, 'dispatchAction');
-    const { from, to } = (fixtureSpec('smoke-timeseries').data as { range: { from: number; to: number } }).range;
-    act(() => {
-      chart.trigger('brushend', { areas: [{ coordRange: [from + 60_000, to - 60_000] }] });
+    act(() => chart.trigger('brushend', { areas: [{ coordRange: [from + 120_000, to - 120_000] }] }));
+    expect(chart.getOption().xAxis).toEqual([expect.objectContaining({ min: from + 120_000, max: to - 120_000 })]);
+
+    await userEvent.click(within(el).getByRole('button', { name: 'Reset time range' }));
+    expect(chart.getOption().xAxis).toEqual([expect.objectContaining({ min: from, max: to })]);
+  });
+
+  it('keeps local zoom out centered and stops a pan at the end of the data', async () => {
+    const spec = fixtureSpec('prometheus-line');
+    const { from, to } = (spec.data as { range: { from: number; to: number } }).range;
+    const { el } = draw(spec);
+    await waitForState(el, 'ready');
+    const chart = chartOf(el);
+    act(() => chart.trigger('brushend', { areas: [{ coordRange: [from + 180_000, to - 360_000] }] }));
+    expect(doubleClickPlot(chart)).toBe(true);
+    expect(chart.getOption().xAxis).toEqual([expect.objectContaining({ min: from, max: to - 180_000 })]);
+
+    dragXAxis(chart, -600, chart.getHeight());
+    expect(chart.getOption().xAxis).toEqual([expect.objectContaining({ min: from + 180_000, max: to })]);
+  });
+
+  it.each([
+    ['contains epoch milliseconds', { from: 1790352580000, to: 1790353480000 }, '1790352580000', '1790353480000'],
+    ['is missing', undefined, '1790352577294', '1790353477294'],
+  ])('uses decimal strings on Reset when timeRange %s', async (_case, timeRange, from, to) => {
+    const spec = { ...fixtureSpec('prometheus-line'), timeRange };
+    const onRefresh = jest.fn();
+    const { el, handle } = draw(spec, { onRefresh });
+    await waitForState(el, 'ready');
+    expect(doubleClickPlot(chartOf(el))).toBe(true);
+    act(() => handle.setRefreshed(onRefresh.mock.calls[0][0].id, false));
+
+    await userEvent.click(within(el).getByRole('button', { name: 'Reset time range' }));
+    expect(onRefresh).toHaveBeenLastCalledWith({ id: expect.any(String), cause: 'timeRange', from, to });
+  });
+
+  it.each(['error-all-queries-failed', 'error-unsupported-panel-type'])(
+    'keeps the initial Reset range after %s',
+    async (fixture) => {
+      const first = { ...fixtureSpec(fixture), timeRange: { from: 'now-1h', to: 'now' } };
+      const onRefresh = jest.fn();
+      const { el, handle } = draw(first, { onRefresh });
+      await waitForState(el, 'error');
+      act(() => handle.update(fixtureSpec('prometheus-line')));
+      await waitForState(el, 'ready');
+
+      expect(doubleClickPlot(chartOf(el))).toBe(true);
+      act(() => handle.setRefreshed(onRefresh.mock.calls[0][0].id, true));
+      await userEvent.click(within(el).getByRole('button', { name: 'Reset time range' }));
+      expect(onRefresh).toHaveBeenLastCalledWith({
+        id: expect.any(String),
+        cause: 'timeRange',
+        from: 'now-1h',
+        to: 'now',
+      });
+    }
+  );
+
+  it('can reset a zoom after all queries fail in the new range', async () => {
+    const onRefresh = jest.fn();
+    const { el, handle } = draw(fixtureSpec('prometheus-line'), { onRefresh });
+    await waitForState(el, 'ready');
+    expect(doubleClickPlot(chartOf(el))).toBe(true);
+    act(() => handle.update(fixtureSpec('error-all-queries-failed')));
+    await waitForState(el, 'error');
+
+    await userEvent.click(within(el).getByRole('button', { name: 'Reset time range' }));
+    expect(onRefresh).toHaveBeenCalledTimes(2);
+    expect(onRefresh).toHaveBeenLastCalledWith({
+      id: expect.any(String),
+      cause: 'timeRange',
+      from: 'now-15m',
+      to: 'now',
     });
-    // The brush handler ran: it clears its selection.
-    expect(clear).toHaveBeenCalled();
-    expect(onRefresh).not.toHaveBeenCalled();
-    expect(states).toHaveLength(1);
-    handle.destroy();
+  });
+
+  it('allows Reset after a timeout until the App returns the data', async () => {
+    const spec = fixtureSpec('prometheus-line');
+    const onRefresh = jest.fn();
+    const { el, handle } = draw(spec, { onRefresh });
+    await waitForState(el, 'ready');
+    const reset = within(el).getByRole('button', { name: 'Reset time range' });
+    expect(doubleClickPlot(chartOf(el))).toBe(true);
+    act(() => handle.setRefreshed(onRefresh.mock.calls[0][0].id, true));
+
+    jest.useFakeTimers();
+    try {
+      await userEvent.setup({ advanceTimers: jest.advanceTimersByTime }).click(reset);
+      act(() => jest.advanceTimersByTime(REFRESH_TIMEOUT_MS));
+      expect(reset).toBeEnabled();
+    } finally {
+      jest.useRealTimers();
+    }
+
+    act(() => handle.update(spec));
+    expect(reset).toBeDisabled();
   });
 
   // contract-rule: renderer.13
