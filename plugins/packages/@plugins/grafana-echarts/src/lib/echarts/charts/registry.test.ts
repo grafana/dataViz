@@ -7,6 +7,7 @@ import {
   pieChartModule,
   relationsChartModule,
   resolveChartModule,
+  statChartModule,
   streamChartModule,
   supportedChartSeriesTypes,
   timelineChartModule,
@@ -60,6 +61,10 @@ describe('resolveChartModule', () => {
     expect(resolveChartModule('gauge')).toBe(gaugeChartModule);
   });
 
+  it('routes stat to the stat module', () => {
+    expect(resolveChartModule('stat')).toBe(statChartModule);
+  });
+
   it('throws for unsupported concrete types', () => {
     // `lines` is a deliberate deferral, not an oversight: it needs coordinate-pair
     // polylines, which no Grafana frame carries. See #29.
@@ -81,6 +86,7 @@ describe('resolveChartModule', () => {
         'graph',
         'themeRiver',
         'custom',
+        'stat',
       ])
     );
   });

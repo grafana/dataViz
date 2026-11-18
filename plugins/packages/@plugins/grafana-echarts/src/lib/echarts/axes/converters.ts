@@ -8,6 +8,7 @@ import {
   isMultiValueSeriesType,
   isMultivariateSeriesType,
   isRelationsSeriesType,
+  isStatSeriesType,
   isStreamSeriesType,
   isTimelineSeriesType,
   isTimeAxisSupportedForSeriesType,
@@ -83,8 +84,8 @@ export const panelTypeToAxis = (
     return 'category';
   }
 
-  // The gauge family has no axis. It resolves to `category`, so the panel draws no axis pointer or time brush.
-  if (isGaugeSeriesType(seriesType)) {
+  // Gauge and stat have no axis. The category type disables the axis pointer and time brush.
+  if (isGaugeSeriesType(seriesType) || isStatSeriesType(seriesType)) {
     return 'category';
   }
 

@@ -19,6 +19,7 @@ import {
   MULTIVARIATE_MIN_AXES,
   SLICE_MAX,
   SLICE_MIN,
+  STAT_MAX_VALUES,
   STREAM_MAX_LAYERS,
   STREAM_MIN_LAYERS,
   TIMELINE_NUMBER_FIELDS_LIMIT,
@@ -535,6 +536,24 @@ export const scoreGauge = (summary: PanelDataSummary): VisualizationSuggestionSc
     !summary.hasData ||
     !summary.hasFieldType(FieldType.number) ||
     summary.fieldCountByType(FieldType.number) > GAUGE_MAX_VALUES
+  ) {
+    return undefined;
+  }
+  return VisualizationSuggestionScore.OK;
+};
+
+/**
+ * Stat fitness: the data has a number field, and not more than `STAT_MAX_VALUES` frames and number fields,
+ * because the panel reduces each number field to one cell. Core Stat also has cards for text fields and for one
+ * value for each row. This panel does not suggest them yet.
+ * https://github.com/grafana/grafana/blob/main/public/app/plugins/panel/stat/suggestions.ts
+ */
+export const scoreStat = (summary: PanelDataSummary): VisualizationSuggestionScore | undefined => {
+  if (
+    !summary.hasData ||
+    !summary.hasFieldType(FieldType.number) ||
+    summary.frameCount > STAT_MAX_VALUES ||
+    summary.fieldCountByType(FieldType.number) > STAT_MAX_VALUES
   ) {
     return undefined;
   }

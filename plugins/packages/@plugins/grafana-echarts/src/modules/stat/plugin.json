@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "panel",
+  "suggestions": true,
+  "name": "ECharts Stat",
+  "id": "grafana-echartsstat-panel",
+  "info": {
+    "keywords": ["panel", "echarts", "stat", "single value", "big value", "sparkline"],
+    "description": "Stat ECharts panel: one large value for each series, with its name and a sparkline.",
+    "author": {
+      "name": "Grafana"
+    },
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=13.1.0-0",
+    "plugins": []
+  }
+}

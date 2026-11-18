@@ -58,6 +58,7 @@ import {
   type TooltipValueFormatterResolver,
 } from 'lib/echarts/tooltip/types';
 import { type ChartFamily } from 'lib/echarts/charts/autoSeriesType';
+import { type DataLinkSupplier } from 'lib/grafana/dataLinks';
 import { type MarkerLegend } from 'lib/grafana/geo/legend';
 import { type EChartsValueType, type FieldTypedDataFrame } from 'lib/grafana/types';
 import { type PanelOptions } from 'types';
@@ -92,6 +93,11 @@ export interface ChartContext<T = SeriesType, C = EChartsFieldConfig, V = EChart
    * The timeline chart module reads it to pick status history's Samples mode.
    */
   family?: ChartFamily;
+  /**
+   * The title of the panel (`PanelProps.title`). The stat family reads it for the automatic text mode, as core
+   * Stat does: a panel with no title shows the name of each value.
+   */
+  panelTitle?: string;
   formatValue: ValueFormatter;
   // The panel's field config (defaults + overrides). Row/series families
   // (pie slices, candlestick/boxplot) read legend color/visibility overrides
@@ -181,6 +187,8 @@ export type EChartMatrixHeatmapOption = ComposeOption<
  * x axis and a lane y axis, in a `grid`.
  */
 export type EChartTimelineOption = ComposeOption<CustomSeriesOption | GridComponentOption | TooltipComponentOption>;
+/** The option the stat family builds: one `custom` series with one data item for each cell, and no axis. */
+export type EChartStatOption = ComposeOption<CustomSeriesOption>;
 export type EChartBarSeriesOption = ComposeOption<BarSeriesOption>;
 export type EChartLineSeriesOption = ComposeOption<LineSeriesOption>;
 export type EChartScatterSeriesOption = ComposeOption<ScatterSeriesOption>;
@@ -294,6 +302,7 @@ export type EChartBuildOption =
   | EChartStreamSeriesOption
   | EChartGeoOption
   | EChartTimelineOption
+  | EChartStatOption
   | EChartCandlestickSeriesOption
   | EChartBoxPlotSeriesOption
   | EChartEffectScatterSeriesOption
@@ -388,6 +397,13 @@ export interface ChartModule {
 
   /** Return a known data problem before the chart mounts, or nothing when the chart can render. */
   getDataIssue?(ctx: ChartContext): ChartDataIssue | undefined;
+
+  /**
+   * The data links of each data item of the first series, by `dataIndex`. A click on an item opens its link, or
+   * a menu when it has more than one (`useDataLinkClicks`). The stat family sets it: its panel has no tooltip,
+   * which shows the links of the other families.
+   */
+  getDataLinks?(ctx: ChartContext): DataLinkSupplier[];
 
   /** Return the resize behavior for the current chart context. */
   getResizeStrategy?(ctx: ChartContext): ChartResizeStrategy;

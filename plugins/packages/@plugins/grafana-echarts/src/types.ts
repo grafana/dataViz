@@ -1,5 +1,10 @@
 import { type ReduceDataOptions, type StandardOptionConfig } from '@grafana/data';
 import {
+  type BigValueColorMode,
+  type BigValueGraphMode,
+  type BigValueJustifyMode,
+  type BigValueTextMode,
+  type PercentChangeColorMode,
   type HeatmapCalculationOptions,
   type OptionsWithLegend,
   type OptionsWithTooltip,
@@ -231,6 +236,9 @@ export interface PanelOptions
   /**
    * Cartesian bar orientation (core Bar chart `orientation`). `auto` draws
    * horizontal bars when the panel is taller than it is wide. Category x-axis only.
+   *
+   * The stat panel reads the same option (core Stat `orientation`): `auto` puts the cells in a grid,
+   * `horizontal` gives one cell for each row of the panel, and `vertical` one cell for each column.
    */
   orientation?: VizOrientation;
 
@@ -271,6 +279,19 @@ export interface PanelOptions
    * Defaults (Calculate, `PIE_CALC_DEFAULT` = sum) are applied when unset.
    */
   reduceOptions?: ReduceDataOptions;
+
+  /**
+   * The options of the stat panel. The names and the values are the ones of core Stat, so a panel keeps them
+   * when it changes type. See `editor/stat.ts` for the defaults.
+   * https://github.com/grafana/grafana/blob/main/public/app/plugins/panel/stat/panelcfg.cue
+   */
+  textMode?: BigValueTextMode;
+  colorMode?: BigValueColorMode;
+  graphMode?: BigValueGraphMode;
+  wideLayout?: boolean;
+  justifyMode?: BigValueJustifyMode;
+  showPercentChange?: boolean;
+  percentChangeColorMode?: PercentChangeColorMode;
 
   /**
    * Pie (part-to-whole) chart type (Grafana Pie chart "Pie chart type" parity):

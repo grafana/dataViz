@@ -13,6 +13,7 @@ const CHART_NAMES: Record<ChartFamily, string> = {
   gauge: 'gauge',
   timeline: 'state timeline',
   'status-history': 'status history',
+  stat: 'stat',
 };
 
 /**

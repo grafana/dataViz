@@ -32,6 +32,7 @@ export const PanelContent: React.FC<Props> = ({
   onOptionsChange,
   replaceVariables,
   id,
+  title,
   relationsViewRef,
 }) => {
   const theme = useTheme2();
@@ -73,6 +74,7 @@ export const PanelContent: React.FC<Props> = ({
       options,
       seriesType,
       family,
+      panelTitle: title,
       formatValue,
       fieldConfig,
       replaceVariables,
@@ -87,6 +89,7 @@ export const PanelContent: React.FC<Props> = ({
       options,
       seriesType,
       family,
+      title,
       formatValue,
       fieldConfig,
       replaceVariables,

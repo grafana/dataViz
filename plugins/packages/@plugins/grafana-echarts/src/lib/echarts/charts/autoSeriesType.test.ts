@@ -90,6 +90,11 @@ describe('resolveAutoSeriesType', () => {
       expect(resolveAutoSeriesType('relations', [])).toBe('graph');
     });
 
+    it('stat stays stat', () => {
+      expect(resolveAutoSeriesType('stat', [timeNumberFrame()])).toBe('stat');
+      expect(resolveAutoSeriesType('stat', [])).toBe('stat');
+    });
+
     it('stream stays themeRiver', () => {
       expect(resolveAutoSeriesType('stream', [timeNumberFrame()])).toBe('themeRiver');
       expect(resolveAutoSeriesType('stream', [])).toBe('themeRiver');

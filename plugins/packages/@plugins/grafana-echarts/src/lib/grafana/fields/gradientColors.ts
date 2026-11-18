@@ -38,7 +38,7 @@ export function getHueGradientStops(color: string, opacity: number, isDark: bool
  * The channels are not rounded between steps, as `tinycolor2`.
  * https://github.com/bgrins/TinyColor/blob/master/tinycolor.js
  */
-class Hsl {
+export class Hsl {
   private constructor(
     private h: number,
     private s: number,

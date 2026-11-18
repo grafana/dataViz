@@ -9,6 +9,7 @@ import {
 import { gaugeSeriesTypes } from 'editor/gauge';
 import { geoSeriesTypes } from 'editor/geo';
 import { multivariateSeriesTypes } from 'editor/radar';
+import { statSeriesTypes } from 'editor/stat';
 import { streamSeriesTypes } from 'editor/stream';
 import { timelineSeriesTypes } from 'editor/timeline';
 import {
@@ -23,6 +24,7 @@ import {
   type MultivariateSeriesType,
   type SeriesType,
   type SeriesTypeOption,
+  type StatSeriesType,
   type StreamSeriesType,
   type TimelineSeriesType,
   type TimeAxisSupportsSeriesType,
@@ -97,4 +99,9 @@ export function isTimelineSeriesType(type: SeriesType): type is TimelineSeriesTy
 // Gauge charts draw one arc for each value. They have no axis.
 export function isGaugeSeriesType(type: SeriesType): type is GaugeSeriesType {
   return gaugeSeriesTypes.some((t) => t === type);
+}
+
+// The stat family draws one cell for each value: text, and a sparkline.
+export function isStatSeriesType(type: SeriesType): type is StatSeriesType {
+  return statSeriesTypes.some((t) => t === type);
 }
