@@ -526,9 +526,11 @@ export const scoreTimeline = (
 
 /**
  * Gauge fitness: the gate of the core Gauge panel. The data needs a number field, and not more than
- * `GAUGE_MAX_VALUES` of them, because each number field is one gauge. Core returns no explicit score, which
- * Grafana reads as `OK`.
+ * `GAUGE_MAX_VALUES` of them, because each number field is one gauge. The score is that of core: `Good` for a
+ * numeric data plane frame type, else `OK` (`defaultNumericVizOptions`).
  * https://github.com/grafana/grafana/blob/main/public/app/plugins/panel/gauge/suggestions.ts
+ * https://github.com/grafana/grafana/blob/main/public/app/features/panel/suggestions/utils.ts
+ * https://grafana.com/developers/dataplane/numeric
  */
 export const scoreGauge = (summary: PanelDataSummary): VisualizationSuggestionScore | undefined => {
   if (
@@ -538,5 +540,5 @@ export const scoreGauge = (summary: PanelDataSummary): VisualizationSuggestionSc
   ) {
     return undefined;
   }
-  return VisualizationSuggestionScore.OK;
+  return isNumericFrame(summary) ? VisualizationSuggestionScore.Good : VisualizationSuggestionScore.OK;
 };

@@ -86,6 +86,9 @@ their meaning.
   font size.
 - When no field gives a value and the "No value" option is set, core draws one empty gauge with the text of the
   option. The ECharts gauge shows its message view, because the message tells the user how to correct the data.
+- A suggestion has the options, the field config and the score of the core suggestion, without `sparkline`: this
+  panel does not have that option yet. A preview card uses the shared card options of this package
+  (`previewCardOptions`), not the card options of core (unit `short`, a limit of 4 values).
 
 [canvas]: ../../lib/components/gauge.canvas.test.tsx
 [integration]: ../../lib/components/gauge.integration.test.tsx

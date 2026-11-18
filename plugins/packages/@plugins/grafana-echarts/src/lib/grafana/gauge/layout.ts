@@ -133,7 +133,8 @@ export interface GaugeTextInput {
 
 /**
  * The font sizes and positions of the center text. All gauges of a panel get the texts of the longest value and
- * the longest name, so they have the same font sizes.
+ * the longest name, so gauges with the same radius have the same font sizes. The cell of a last row that is not
+ * full is wider, so its gauge can have a larger radius and larger text, as core.
  */
 export function layoutGaugeText({ geometry, shape, parts, valueText, nameText, fontFamily }: GaugeTextInput) {
   const { radius, barWidth } = geometry;
@@ -144,7 +145,8 @@ export function layoutGaugeText({ geometry, shape, parts, valueText, nameText, f
 
   const width = radius * 2 - barWidth - radius / 7;
   const scaled = Math.pow(radius, LARGE_RADIUS_DECAY);
-  const maxNameHeight = parts.showValue ? NAME_HEIGHT_TO_RADIUS * scaled : radius / 4;
+  // The name gets the smaller height only when the value shows with it, as core.
+  const maxNameHeight = parts.showValue && parts.showName ? NAME_HEIGHT_TO_RADIUS * scaled : radius / 4;
   const fit = (text: string, height: number) =>
     fitFontSize({ text, width, height, lineHeight: LINE_HEIGHT, fontFamily });
 
