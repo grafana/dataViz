@@ -1,9 +1,9 @@
 import { FieldType, type PanelData, toDataFrame } from '@grafana/data';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { registerGeoChart } from 'lib/echarts/geo/chart';
 import { GEO_ISSUE_MESSAGES } from 'lib/grafana/geo/dataIssue';
 import React from 'react';
-import { getComponent } from 'test/panel';
+import { getComponent, renderWithGrafana } from 'test/panel';
 
 // The geo panel shows the Grafana error view, and no map, for a frame that it cannot put on the map (#864, #925).
 
@@ -36,7 +36,7 @@ describe('geo data issue view', () => {
   beforeEach(() => mockPanelDataErrorView.mockClear());
 
   it.each(Object.entries(frames))('%s shows the error view and no map', (_, frame) => {
-    const { container } = render(getComponent([frame], 'map', {}, {}, {}, 'geo'));
+    const { container } = renderWithGrafana(getComponent([frame], 'map', {}, {}, {}, 'geo'));
 
     expect(screen.getByTestId('panel-data-error-view')).toHaveTextContent(GEO_ISSUE_MESSAGES['location-field-missing']);
     expect(container.querySelector('[data-viz-state="error"]')).not.toBeNull();
@@ -50,7 +50,7 @@ describe('geo data issue view', () => {
         { name: 'lon', type: FieldType.number, values: [3, 4] },
       ],
     });
-    render(getComponent([frame], 'map', {}, {}, {}, 'geo'));
+    renderWithGrafana(getComponent([frame], 'map', {}, {}, {}, 'geo'));
 
     expect(screen.queryByTestId('panel-data-error-view')).toBeNull();
   });
@@ -68,7 +68,7 @@ describe('geo data issue view', () => {
         { name: 'lon', type: FieldType.number, values: [40, 50] },
       ],
     });
-    const { container } = render(getComponent([frame], 'map', {}, {}, {}, 'geo'));
+    const { container } = renderWithGrafana(getComponent([frame], 'map', {}, {}, {}, 'geo'));
     expectIssue(container, GEO_ISSUE_MESSAGES['location-out-of-range']);
   });
 
@@ -82,7 +82,7 @@ describe('geo data issue view', () => {
     });
     const layers = [{ type: 'markers', name: 'Layer 1', filterData: { id: 'byRefId', options: 'B' } }];
     const request = { targets: [{ refId: 'A' }, { refId: 'B' }] } as PanelData['request'];
-    const { container } = render(getComponent([frame], 'map', { layers } as never, { request }, {}, 'geo'));
+    const { container } = renderWithGrafana(getComponent([frame], 'map', { layers } as never, { request }, {}, 'geo'));
     expectIssue(container, GEO_ISSUE_MESSAGES['layer-filter-no-frame']);
   });
 });

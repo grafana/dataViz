@@ -5,8 +5,8 @@
 # releasable changes. Merging a release PR makes the next run tag it
 # (<plugin-id>/v<version>) and create a draft GitHub release; this workflow
 # then builds, signs, packages and validates that plugin from the tagged
-# commit and attaches the zip. A maintainer publishes the draft. A
-# grafana-relations-panel release is also published to the dev and ops
+# commit, attaches the zip and then publishes the release. Nobody publishes a
+# draft by hand: see release-guard.yml. A grafana-relations-panel release is also published to the dev and ops
 # catalogs and deployed to every dev and ops stack (publish job).
 #
 # The Renderer of grafana-echarts (grafana-echarts-renderer) is released the
@@ -247,7 +247,7 @@ jobs:
     if: ${{ !cancelled() && needs.release-please.result == 'success' && needs.release-please.outputs.releases != '[]' }}
     runs-on: ubuntu-latest
     permissions:
-      contents: write # upload assets to the draft release
+      contents: write # upload assets to the draft release, then publish it
     strategy:
       fail-fast: false
       matrix:
@@ -265,7 +265,7 @@ jobs:
       # for a plugin, and files/* for the Renderer. `notes` is empty for a
       # plugin. For the Renderer it is the peer dependency note, appended to
       # release-please's notes; an empty note appends nothing. A re-run
-      # appends the note again: remove the copy from the draft.
+      # appends the note again: remove the copy from the release notes.
       - name: Attach to the draft release
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
@@ -275,6 +275,36 @@ jobs:
           fail_on_unmatched_files: true
           body_path: ${{ matrix.release.notes }}
           append_body: true
+
+      # The workflow publishes, not a person: immutable releases are on, so a
+      # published release takes no more files, and a draft published by hand
+      # before the upload above stays empty for good (and its tag can never
+      # be reused). Only reached when the upload passed; the count is a second
+      # check. A release published with GITHUB_TOKEN starts no workflow, so
+      # release-guard.yml does not run for it.
+      #
+      # LATEST: GitHub makes a newly published release the repository's
+      # "Latest" unless told otherwise, so the badge and releases/latest would
+      # move between unrelated products. Only grafana-relations-panel releases
+      # are "Latest". Pre-release is not set here: the release keeps what
+      # release-please gave it (`prerelease` in release-please-config.json).
+      # See "Latest and pre-release" in RELEASES.md.
+      #
+      # The count check refuses unless the count is a number above 0, so no
+      # output from gh also stops it.
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ matrix.release.tag }}
+          LATEST: ${{ matrix.release.id == 'grafana-relations-panel' }}
+        run: |
+          count="$(gh release view "$TAG" --json assets --jq '.assets | length')"
+          if ! [ "$count" -gt 0 ]; then
+            echo "::error::Release $TAG has no files (count: '$count'), so it is not published"
+            exit 1
+          fi
+          gh release edit "$TAG" --draft=false --latest="$LATEST"
 
   # Same cd.yml call as plugin-publish.yml, from the release tag instead of
   # main: release-reference-regex makes the tag a release reference, so cd.yml

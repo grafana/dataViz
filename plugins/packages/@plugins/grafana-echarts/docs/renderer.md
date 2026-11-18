@@ -19,6 +19,8 @@ The module has three exports. Their types are in `renderer-api.d.ts` of the cont
 - `onState` receives each new final state: `ready`, `no-data` or `error`, with the notices. The same state is in the `data-viz-state` and `data-viz-error` attributes of `el`.
 - `onRefresh` receives a request when the user clicks Refresh or selects a time range. Each request has a new `id`. Two handles of the same Renderer module never give the same `id`. `setRefreshed` gives the result of the request with that `id`, and does nothing for the `id` of an older request. The Renderer shows Refresh and the time picker only when the App gives `onRefresh`.
 
+The user can hide, show and color the items of the legend. The Renderer keeps these legend overrides in memory until `destroy`, and draws each new viz spec with them (`renderer.34` to `renderer.37`). A legend override finds an item by its name, so it stays for a name that is not in the new data. The Renderer keeps what the user chose, not the difference to the viz spec, and it draws the legend overrides after the overrides of the viz spec, so they win whatever the order of those. It does not change the viz spec, and the App does not get it. A new `render` starts with none.
+
 ## Peers
 
 The Renderer does not bundle React or the Grafana UI packages. The App gives them, and the bundle imports them with bare specifiers:
@@ -28,7 +30,7 @@ The Renderer does not bundle React or the Grafana UI packages. The App gives the
 - `@grafana/data`
 - `@emotion/css`
 
-The build writes a `package.json` next to the bundle. Its `peerDependencies` list these packages, with caret ranges of the versions in the package `package.json`. All other code is in the bundle, for example ECharts, rxjs and `@grafana/i18n`. Four small modules of `@grafana/runtime` are in the bundle too, and no Renderer code calls them.
+The build writes a `package.json` next to the bundle. Its `peerDependencies` list these packages, with caret ranges of the versions in the package `package.json`. All other code is in the bundle, for example ECharts, rxjs and `@grafana/i18n`. The bundle has no `@grafana/runtime` module: the build replaces `src/lib/grafana/GrafanaPanelServices.tsx`, the only entry point of the panel code to it, with `src/renderer/GrafanaPanelServices.tsx`.
 
 ## Build
 
@@ -57,7 +59,7 @@ The manifest has `version`, `sha256` (the hash of `renderer.js`), `contractVersi
 - The fields of the manifest have the values of their sources.
 - Each bare import is a peer, and the bundle has no copy of a peer.
 - The bundle has no `eval` and no dynamic `import()`.
-- The bundle has only the four known `@grafana/runtime` modules.
+- The bundle has no `@grafana/runtime` module.
 - `dist-renderer/` has each release file and no other file. `renderer.d.ts` and `LICENSE` are equal to their sources.
 - If the environment variable `EXPECT_VERSION` is set, the manifest `version` is equal to it. The release workflow sets it to the version of the tag.
 
@@ -159,9 +161,7 @@ The contract package has no contract chapters, so it does not give the rule ids.
 
 The Renderer does not obey all of the contract yet.
 
-These rules are in the `pending` list of `contractRules.json`:
-
-- The legend overrides (`renderer.34` to `renderer.37`, [#209](https://github.com/grafana/dataViz/issues/209)): the Renderer does not keep the legend changes of the user after `update`. A refresh, a new theme or a new time zone removes them.
+No rule is in the `pending` list of `contractRules.json`.
 
 This difference has a test that fails when the difference is fixed:
 
