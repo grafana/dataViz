@@ -3732,6 +3732,379 @@
         "wideLayout": true,
         "showPercentChange": false
       }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "raw_frame",
+          "rawFrameContent": "[{\"schema\":{\"fields\":[{\"name\":\"time\",\"type\":\"time\"},{\"name\":\"server-01\",\"type\":\"number\"},{\"name\":\"server-02\",\"type\":\"number\"},{\"name\":\"server-03\",\"type\":\"number\"},{\"name\":\"server-04\",\"type\":\"number\"},{\"name\":\"server-05\",\"type\":\"number\"},{\"name\":\"server-06\",\"type\":\"number\"},{\"name\":\"server-07\",\"type\":\"number\"},{\"name\":\"server-08\",\"type\":\"number\"},{\"name\":\"server-09\",\"type\":\"number\"},{\"name\":\"server-10\",\"type\":\"number\"},{\"name\":\"server-11\",\"type\":\"number\"},{\"name\":\"server-12\",\"type\":\"number\"},{\"name\":\"server-13\",\"type\":\"number\"},{\"name\":\"server-14\",\"type\":\"number\"},{\"name\":\"server-15\",\"type\":\"number\"},{\"name\":\"server-16\",\"type\":\"number\"},{\"name\":\"server-17\",\"type\":\"number\"},{\"name\":\"server-18\",\"type\":\"number\"},{\"name\":\"server-19\",\"type\":\"number\"},{\"name\":\"server-20\",\"type\":\"number\"},{\"name\":\"server-21\",\"type\":\"number\"},{\"name\":\"server-22\",\"type\":\"number\"},{\"name\":\"server-23\",\"type\":\"number\"},{\"name\":\"server-24\",\"type\":\"number\"},{\"name\":\"server-25\",\"type\":\"number\"},{\"name\":\"server-26\",\"type\":\"number\"},{\"name\":\"server-27\",\"type\":\"number\"},{\"name\":\"server-28\",\"type\":\"number\"},{\"name\":\"server-29\",\"type\":\"number\"},{\"name\":\"server-30\",\"type\":\"number\"},{\"name\":\"server-31\",\"type\":\"number\"},{\"name\":\"server-32\",\"type\":\"number\"},{\"name\":\"server-33\",\"type\":\"number\"},{\"name\":\"server-34\",\"type\":\"number\"},{\"name\":\"server-35\",\"type\":\"number\"},{\"name\":\"server-36\",\"type\":\"number\"},{\"name\":\"server-37\",\"type\":\"number\"},{\"name\":\"server-38\",\"type\":\"number\"},{\"name\":\"server-39\",\"type\":\"number\"},{\"name\":\"server-40\",\"type\":\"number\"},{\"name\":\"server-41\",\"type\":\"number\"},{\"name\":\"server-42\",\"type\":\"number\"},{\"name\":\"server-43\",\"type\":\"number\"},{\"name\":\"server-44\",\"type\":\"number\"},{\"name\":\"server-45\",\"type\":\"number\"},{\"name\":\"server-46\",\"type\":\"number\"},{\"name\":\"server-47\",\"type\":\"number\"},{\"name\":\"server-48\",\"type\":\"number\"},{\"name\":\"server-49\",\"type\":\"number\"},{\"name\":\"server-50\",\"type\":\"number\"}]},\"data\":{\"values\":[[1785283200000,1785286800000,1785290400000,1785294000000,1785297600000,1785301200000],[17,21,31,47,69,14],[24,29,40,57,80,26],[31,37,49,67,91,38],[38,45,58,77,19,50],[45,53,67,87,30,62],[52,61,76,14,41,74],[59,69,85,24,52,86],[66,77,11,34,63,15],[73,85,20,44,74,27],[80,10,29,54,85,39],[87,18,38,64,13,51],[11,26,47,74,24,63],[18,34,56,84,35,75],[25,42,65,11,46,87],[32,50,74,21,57,16],[39,58,83,31,68,28],[46,66,92,41,79,40],[53,74,18,51,90,52],[60,82,27,61,18,64],[67,90,36,71,29,76],[74,15,45,81,40,88],[81,23,54,91,51,17],[88,31,63,18,62,29],[12,39,72,28,73,41],[19,47,81,38,84,53],[26,55,90,48,12,65],[33,63,16,58,23,77],[40,71,25,68,34,89],[47,79,34,78,45,18],[54,87,43,88,56,30],[61,12,52,15,67,42],[68,20,61,25,78,54],[75,28,70,35,89,66],[82,36,79,45,17,78],[89,44,88,55,28,90],[13,52,14,65,39,19],[20,60,23,75,50,31],[27,68,32,85,61,43],[34,76,41,12,72,55],[41,84,50,22,83,67],[48,92,59,32,11,79],[55,17,68,42,22,91],[62,25,77,52,33,20],[69,33,86,62,44,32],[76,41,12,72,55,44],[83,49,21,82,66,56],[90,57,30,92,77,68],[14,65,39,19,88,80],[21,73,48,29,16,92],[28,81,57,39,27,21]]}}]",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 51,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: 50 values",
+      "description": "One wide frame with 50 number fields. Each cell has the name, the last value and a sparkline when the cell is high enough.",
+      "gridPos": {
+        "h": 14,
+        "w": 12,
+        "x": 0,
+        "y": 153
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "panelId": 51,
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          }
+        }
+      ],
+      "id": 52,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: 50 values",
+      "description": "The core Stat panel with the data of the ECharts panel and the same options, for comparison.",
+      "gridPos": {
+        "h": 14,
+        "w": 12,
+        "x": 12,
+        "y": 153
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "1,38,75,112,149,186,223,260,297,334,371,408,445,482,519,556,593,630,667,704,741,778,815,852,889,926,963,9,46,83,120,157,194,231,268,305,342,379,416,453,490,527,564,601,638,675,712,749,786,823,860,897,934,971,17,54,91,128,165,202,239,276,313,350,387,424,461,498,535,572,609,646,683,720,757,794,831,868,905,942,979,25,62,99,136,173,210,247,284,321,358,395,432,469,506,543,580,617,654,691,728,765,802,839,876,913,950,987,33,70,107,144,181,218,255,292,329,366,403,440,477,514,551,588,625,662,699,736,773,810,847,884,921,958,4,41,78,115,152,189,226,263,300,337,374,411,448,485,522,559,596,633,670,707,744,781,818,855,892,929,966,12,49,86,123,160,197,234,271,308,345,382,419,456,493,530,567,604,641,678,715,752,789,826,863,900,937,974,20,57,94,131,168,205,242,279,316,353,390,427",
+          "alias": "requests",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 53,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: 200 values",
+      "description": "One series with 200 rows, and one cell for each row (\"All values\", with the limit 200). A cell this small draws only its value.",
+      "gridPos": {
+        "h": 14,
+        "w": 12,
+        "x": 0,
+        "y": 167
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 500
+              },
+              {
+                "color": "red",
+                "value": 800
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": true,
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "limit": 200
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "panelId": 53,
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          }
+        }
+      ],
+      "id": 54,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: 200 values",
+      "description": "The core Stat panel with the data of the ECharts panel and the same options, for comparison.",
+      "gridPos": {
+        "h": 14,
+        "w": 12,
+        "x": 12,
+        "y": 167
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 500
+              },
+              {
+                "color": "red",
+                "value": 800
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": true,
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "limit": 200
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "streaming_client",
+          "stream": {
+            "type": "signal",
+            "speed": 500,
+            "spread": 3.5,
+            "noise": 2.2,
+            "bands": 1
+          },
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 55,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Streaming data",
+      "description": "A query that streams with no end: a new row each 500 ms. The panel draws the last value and the sparkline of each update.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 181
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "panelId": 55,
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          }
+        }
+      ],
+      "id": 56,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Streaming data",
+      "description": "The core Stat panel with the data of the ECharts panel and the same options, for comparison.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 181
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
     }
   ],
   "refresh": "",

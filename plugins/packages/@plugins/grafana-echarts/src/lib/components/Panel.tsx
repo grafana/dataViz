@@ -1,16 +1,18 @@
 import { LoadingState } from '@grafana/data';
 import { PanelDataErrorView } from '@grafana/runtime';
 import { debug, LOG_LEVELS } from 'development';
+import { drawsWhileStreaming } from 'lib/echarts/charts/streaming';
 import { type InteractedRelationsView } from 'lib/echarts/relations/options/view';
 import React, { useRef } from 'react';
 import { PanelContent } from './PanelContent';
 import { type PanelComponentProps } from './types';
 
 const PanelComponent: React.FC<PanelComponentProps> = (props) => {
-  const { data, fieldConfig, id } = props;
+  const { data, fieldConfig, id, family } = props;
   const relationsViewRef = useRef<InteractedRelationsView>(undefined);
 
-  if (data.state === LoadingState.Streaming) {
+  // Most families draw nothing while a query streams (`drawsWhileStreaming`).
+  if (data.state === LoadingState.Streaming && !drawsWhileStreaming(family)) {
     return null;
   }
 

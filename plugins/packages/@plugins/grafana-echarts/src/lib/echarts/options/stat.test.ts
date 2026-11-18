@@ -49,7 +49,13 @@ const cell = (parts: Partial<StatCell> = {}) =>
   ({ x: 0, y: 0, width: 100, height: 100, display: {}, ...parts }) as StatCell;
 
 describe('getStatTitleElement', () => {
-  it('is a text at the position of the name, cut at its largest width', () => {
+  it('cuts a name that the layout marks as wider than its box', () => {
+    expect(getStatTitleElement({ ...title, truncate: true }, FONT)).toMatchObject({
+      style: { width: 200, overflow: 'truncate' },
+    });
+  });
+
+  it('is a text at the position of the name, and is not cut', () => {
     expect(getStatTitleElement(title, FONT)).toMatchObject({
       type: 'text',
       style: {
@@ -64,7 +70,7 @@ describe('getStatTitleElement', () => {
         fontWeight: 400,
         lineHeight: 24,
         width: 200,
-        overflow: 'truncate',
+        overflow: 'none',
       },
     });
   });

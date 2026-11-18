@@ -74,6 +74,21 @@ value to its menu, and does not handle actions.
 [standard-options]: ../../lib/grafana/editor/stat/standardOptions.test.ts
 [db-basics]: ../../../provisioning/dashboards/stat/stat-basics.json
 
+## Many values
+
+The panel draws one cell for each value, with no limit of its own, as core Stat. The limit of "All values" is
+the Limit option. All values are data items of one series, so a panel with 200 values has one ECharts series.
+Regression tests: [integration: draws the name of each of %s values, and no name is cut][integration],
+[layout.test.ts][layout]. Demo panels: [50 values, 200 values][db-basics].
+
+## Streaming data
+
+The panel draws each update of a query that streams, as core Stat
+([streaming.ts](../../lib/echarts/charts/streaming.ts)). The other ECharts panels draw nothing until the query
+is done. A live data source streams with no end, and the panel shows its last value. Regression tests:
+[integration: draws the last value of each update while the data streams][integration],
+[streaming.test.ts](../../lib/echarts/charts/streaming.test.ts). Demo panel: [Streaming data][db-basics].
+
 ## Change from core Stat
 
 A change of the panel type from core Stat to this panel keeps the Stat options, the standard field options and
@@ -156,6 +171,9 @@ Singlestat and Graph panels, which Grafana does not have now. This panel does no
   which sets `min` 0 and `max` 100 for the `percent` unit. The sparkline then has that range. This panel has no
   migration of its own JSON. The core panels of the demo dashboard have a `pluginVersion`, so the two columns
   compare. The import from core Stat applies the rule (see "Change from core Stat").
+- **A name that is wider than its cell.** Core does not cut a name: a name with a set size that is wider than
+  its cell goes out of the cell, or wraps at a space. This panel cuts that name at the width of its box, with
+  an ellipsis. A name with no set size is fitted to its cell, and the two panels draw it in full.
 - **Data links: keyboard.** In core, a cell with links takes the keyboard focus, shows a focus ring, and opens
   its link or its menu with Enter or Space. A canvas cell takes no focus, so this panel opens links only with
   the pointer.

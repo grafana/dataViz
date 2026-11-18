@@ -473,6 +473,42 @@ describe('layoutStatCells', () => {
     });
   });
 
+  describe('many values', () => {
+    const inPanel = (width: number, height: number, cells: ReturnType<typeof layout>) =>
+      cells.every(
+        (cell) =>
+          cell.x >= 0 && cell.y >= 0 && cell.x + cell.width <= width + 1e-6 && cell.y + cell.height <= height + 1e-6
+      );
+
+    it.each([50, 200])('gives %s values one cell each, in the panel, with a value text', (count) => {
+      const cells = layout([seriesFrame(count)], 900, 500);
+      expect(cells).toHaveLength(count);
+      expect(inPanel(900, 500, cells)).toBe(true);
+      expect(cells.every((cell) => cell.value !== undefined && cell.value.fontSize > 0)).toBe(true);
+    });
+
+    it.each([50, 200])('gives %s values no cell that covers a different cell', (count) => {
+      const cells = layout([seriesFrame(count)], 900, 500);
+      const overlaps = cells.some((a, index) =>
+        cells
+          .slice(index + 1)
+          .some((b) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height)
+      );
+      expect(overlaps).toBe(false);
+    });
+
+    it('does not cut a name that is fitted to a small cell', () => {
+      // The width limits the size of the name, so the name is as wide as its box.
+      const cells = layout([seriesFrame(200)], 900, 500, valueAndName);
+      expect(cells.every((cell) => cell.title !== undefined && cell.title.truncate === undefined)).toBe(true);
+    });
+
+    it('cuts a name with a set size that is wider than its cell', () => {
+      const [cell] = layout([seriesFrame(200)], 900, 500, { ...valueAndName, titleSize: 30 });
+      expect(cell.title!.truncate).toBe(true);
+    });
+  });
+
   describe('data links', () => {
     it('marks a cell whose value has a data link', () => {
       expect(layout([linkedFrame(1)], 300, 300)[0].hasLinks).toBe(true);

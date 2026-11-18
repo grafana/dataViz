@@ -41,12 +41,21 @@ const getTextStyle = (text: StatText, fontFamily: string) => ({
   lineHeight: text.fontSize * STAT_LINE_HEIGHT,
 });
 
-/** The name of the value. A name that is wider than its box is cut, with an ellipsis. */
+/**
+ * The name of the value. A name that the layout marks as wider than its box is cut, with an ellipsis. For each
+ * other name, ECharts does not compare the width with the box.
+ * https://echarts.apache.org/en/option.html#series-custom.renderItem.return_text.style.overflow
+ */
 export function getStatTitleElement(title: StatText, fontFamily: string): StatElement {
   return {
     type: 'text',
     silent: true,
-    style: { ...getTextStyle(title, fontFamily), text: title.text, width: title.maxWidth, overflow: 'truncate' },
+    style: {
+      ...getTextStyle(title, fontFamily),
+      text: title.text,
+      width: title.maxWidth,
+      overflow: title.truncate ? 'truncate' : 'none',
+    },
   };
 }
 

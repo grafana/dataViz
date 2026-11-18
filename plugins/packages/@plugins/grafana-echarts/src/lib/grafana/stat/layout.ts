@@ -75,6 +75,8 @@ export interface StatText {
   color: string;
   /** The text does not draw wider than this. */
   maxWidth: number;
+  /** The layout measures the text as wider than `maxWidth`, so the text is cut there, with an ellipsis. */
+  truncate?: boolean;
 }
 
 /** The value text. The suffix (for example a unit) comes after `text`, with a smaller font. */
@@ -457,15 +459,22 @@ function layoutCell(
     result.hasLinks = true;
   }
 
-  if (texts.title && titlePosition && titleSize > 0) {
+  if (texts.title && titleItem && titlePosition && titleSize > 0) {
+    // A name that the layout measures as wider than its box is cut there. A name that fits is not cut, as in
+    // core, which cuts no name. The measure scales from one font size, and ECharts measures at the draw size:
+    // at a small size its result can be a little more, and it would then cut a name that fits.
+    const maxWidth = isWide ? maxTextWidth * 0.6 : maxTextWidth;
     result.title = {
       text: texts.title,
       ...titlePosition,
       fontSize: titleSize,
       fontWeight: theme.typography.fontWeightRegular,
       color: colors.title,
-      maxWidth: isWide ? maxTextWidth * 0.6 : maxTextWidth,
+      maxWidth,
     };
+    if ((titleItem.width ?? 0) > maxWidth) {
+      result.title.truncate = true;
+    }
   }
   if (texts.text && valueSize > 0) {
     result.value = {
