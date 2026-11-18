@@ -47,18 +47,22 @@ export interface RepeaterLayoutInput {
 
 /**
  * The cells of `count` values in a panel of `width` x `height`, in row order. The cells of the last row are wider
- * when the row is not full, so the row fills the panel width. The result is empty when there is no value or no
- * space.
+ * when the row is not full, so the row fills the panel width.
+ *
+ * The result is empty when there is no value or no space: the panel has no size, or the spacing is larger than
+ * the share of one cell. Thus each cell of a result has a width and a height above zero. Core has no such rule,
+ * because a browser ignores a negative CSS size. A canvas draws with it.
  */
 export function layoutRepeaterCells({ width, height, count, spacing }: RepeaterLayoutInput): RepeaterCell[] {
-  if (count <= 0 || width <= 0 || height <= 0) {
+  // `!(a > 0)` is also true for NaN.
+  if (!(count > 0) || !(width > 0) || !(height > 0)) {
     return [];
   }
   const { columns, rows } = gridCounts(width, height, count);
   const cellHeight = partSize(height, rows, spacing);
   const lastRowCount = count - columns * (rows - 1);
 
-  return Array.from({ length: count }, (_, index) => {
+  const cells = Array.from({ length: count }, (_, index) => {
     const row = Math.floor(index / columns);
     const column = index % columns;
     const cellWidth = partSize(width, row === rows - 1 ? lastRowCount : columns, spacing);
@@ -69,4 +73,5 @@ export function layoutRepeaterCells({ width, height, count, spacing }: RepeaterL
       height: cellHeight,
     };
   });
+  return cells.every((cell) => cell.width > 0 && cell.height > 0) ? cells : [];
 }
