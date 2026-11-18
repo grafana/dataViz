@@ -337,8 +337,9 @@ export const EChartsTooltip: React.FC<Props> = ({ state, dismiss, annotate, mode
     const sources = resolveActiveSources(state);
     const dataLinks = collectDataLinks(sources);
     const [source] = sources;
-    const pointAction = action && source && (
-      <Button role="link" icon="link" fill="text" size="sm" onClick={() => action.onClick(model, source)}>
+    const onPointAction = action && source ? action.resolve(model, source) : undefined;
+    const pointAction = action && onPointAction && (
+      <Button role="link" icon="link" fill="text" size="sm" onClick={onPointAction}>
         {action.title}
       </Button>
     );

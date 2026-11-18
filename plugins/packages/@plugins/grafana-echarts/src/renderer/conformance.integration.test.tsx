@@ -12,7 +12,7 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { getInstanceByDom } from 'lib/echarts/echarts';
 import { getChart } from 'test/canvas';
 import { allFixtureSets, FIXTURES_DIR, fixtureSets, fixtureSpec, fixtureState } from 'test/rendererFixtures';
-import { clickAt, dispatch, tooltipText } from 'test/tooltipPointer';
+import { clickAt, dispatch, markPoint, tooltipText } from 'test/tooltipPointer';
 import { render } from './index';
 
 /** An element with an inline size: the jsdom shim of `jest-setup.js` reads `clientWidth` from the style. */
@@ -123,6 +123,92 @@ describe('Ask in chat', () => {
       onMessage.mockClear();
     }
   });
+
+  /**
+   * Pins the first point whose tooltip has the link, and gives the text of that tooltip. The points that are on a
+   * chart element come first, one for each element. The other points of the grid follow, for a tooltip of the axis.
+   */
+  async function pinPointWithLink(chart: NonNullable<ReturnType<typeof getChart>['chart']>): Promise<string> {
+    // The `findHover` of the ZRender Handler is not part of the public typings.
+    const { handler } = chart.getZr() as unknown as {
+      handler: { findHover: (x: number, y: number) => { target?: object } };
+    };
+    const grid: Array<[number, number]> = [];
+    for (let y = 10; y < 300; y += 12) {
+      for (let x = 10; x < 600; x += 12) {
+        grid.push([x, y]);
+      }
+    }
+    const targets = new Set<object>();
+    const onElement = grid.filter(([x, y]) => {
+      const { target } = handler.findHover(x, y);
+      return target !== undefined && !targets.has(target) && targets.add(target);
+    });
+    for (const [x, y] of [...onElement, ...grid]) {
+      await dispatch(chart, 'mousemove', x, y);
+      if (tooltipText() === '') {
+        continue;
+      }
+      await clickAt(chart, x, y);
+      if (screen.queryByRole('link', link)) {
+        return tooltipText();
+      }
+    }
+    throw new Error('No point has the Ask in chat link');
+  }
+
+  const chartSets = sets.filter((set) => fixtureState(set).state === 'ready');
+
+  // The contract has a `message.json` only for a time series. This test makes sure that the message of each other
+  // panel has the shape of `renderer.31` and `renderer.32`.
+  it.each(chartSets)('%s sends a message that agrees with its tooltip', async (set) => {
+    const spec = fixtureSpec(set);
+    const onMessage = jest.fn();
+    const { el } = await draw(spec, { onMessage });
+    const text = await pinPointWithLink(getChart(el).chart!);
+    fireEvent.click(screen.getByRole('link', link));
+    expect(onMessage).toHaveBeenCalledTimes(1);
+    const { series, point }: MessageRequest = onMessage.mock.calls[0][0];
+
+    expect(Object.keys((spec.data as { results: object }).results)).toContain(series.refId);
+    expect(point.y).not.toBe('');
+    expect(text).toContain(point.y);
+    expect(text.replace(/\s*\n\s*/g, ' ')).toContain(point.x);
+    expect(typeof point.xRaw).toBe(point.xType === 'string' ? 'undefined' : 'number');
+    expect(point.xIso).toBe(point.xType === 'time' ? new Date(point.xRaw ?? 0).toISOString() : undefined);
+  });
+
+  it('sends the lower bound of a histogram bucket as a number, with the refId of the raw field', async () => {
+    const onMessage = jest.fn();
+    const { el } = await draw(fixtureSpec('smoke-histogram'), { onMessage });
+    await pinPointWithLink(getChart(el).chart!);
+    fireEvent.click(screen.getByRole('link', link));
+    const { series, point }: MessageRequest = onMessage.mock.calls[0][0];
+    expect(series).toEqual({ name: 'latency', labels: {}, refId: 'A' });
+    expect(point.xType).toBe('number');
+    expect(point.x.startsWith(`${point.xRaw} - `)).toBe(true);
+    expect(typeof point.yRaw).toBe('number');
+  });
+
+  it.each(['smoke-sankey', 'smoke-nodeGraph'])(
+    '%s has no link for a node that shows only its edges, and has one for an edge',
+    async (set) => {
+      const onMessage = jest.fn();
+      const { el } = await draw(fixtureSpec(set), { onMessage });
+      const chart = getChart(el).chart!;
+
+      const node = markPoint(chart, 'node', 0);
+      await dispatch(chart, 'mousemove', ...node);
+      await clickAt(chart, ...node);
+      expect(tooltipText()).not.toBe('');
+      expect(screen.queryByRole('link', link)).toBeNull();
+
+      // The header of an edge is `source → target`.
+      expect(await pinPointWithLink(chart)).toContain(' → ');
+      fireEvent.click(screen.getByRole('link', link));
+      expect(onMessage.mock.calls[0][0].point.y).not.toBe('');
+    }
+  );
 
   it('sends only the pinned series from a multi-series tooltip', async () => {
     const spec = fixtureSpec('message-no-title');
