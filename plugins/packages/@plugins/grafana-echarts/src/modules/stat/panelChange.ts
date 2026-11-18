@@ -1,7 +1,9 @@
-// The panel change handler of the stat panel: a switch from core Stat keeps its options and overrides.
+// The panel change handler of the stat panel: a switch from core Stat keeps its options and overrides, and a
+// switch from each other panel type keeps the reduction of the data and the orientation.
 // https://grafana.com/developers/plugin-tools/how-to-guides/panel-plugins/migration-handler-for-panels
 // The mapping is the Stat adapter in lib/grafana/panelChange.
 import { type FieldConfigSource, type PanelModel } from '@grafana/data';
+import { keepSingleStatOptions } from 'lib/grafana/panelChange/singleStat';
 import { statAdapter } from 'lib/grafana/panelChange/stat';
 
 /** A plugin version after each migration of core Stat. The last migration is for panels before Grafana 8.0. */
@@ -10,7 +12,8 @@ const MIGRATED_PLUGIN_VERSION = '8.0.0';
 /**
  * The options after a change from `prevPluginId`. For core Stat, it gives the Stat options, which Grafana does
  * not keep in a type change, and it changes `panel.fieldConfig` in place, as the handler of the cartesian panel
- * (`modules/cartesian/panelChange.ts`). For each other type, it changes nothing.
+ * (`modules/cartesian/panelChange.ts`). For each other type, it gives the reduction of the data and the
+ * orientation of the previous panel, as core Stat, and does not change the field config that Grafana kept.
  *
  * Grafana runs the migration of core Stat when it loads the panel, so the range of an old panel with a percent
  * unit is in `prevFieldConfig`. The handler thus gives the adapter a plugin version that needs no migration.
@@ -23,7 +26,7 @@ export function statPanelChangeHandler(
 ): Record<string, unknown> {
   if (prevPluginId !== 'stat') {
     // Scenes keeps the options for an empty result.
-    return {};
+    return keepSingleStatOptions(prevOptions);
   }
   const imported = statAdapter.translate({
     type: prevPluginId,

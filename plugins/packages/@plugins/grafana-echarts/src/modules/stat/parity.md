@@ -44,7 +44,8 @@ editor, and the panel ignores them in saved panel JSON.
 | `showPercentChange`, `percentChangeColorMode`, `text.percentSize` | Supported | [canvas: an increase, stacked with a sparkline][canvas], [canvas: wide with no sparkline][canvas], [canvas: four values in a grid, with the text alignment Center][canvas], [canvas: the text mode None][canvas], [percentChange.test.ts][percent-change], [flow.test.ts][flow]                                                                                                                                                                                                      | [Percent change, Percent change centered inverted colors, Percent change no sparkline same color as the value][db-basics] |
 | Data links and actions                                            | Partial   | [integration: opens the link of a value with one link on a click][data-links], [integration: opens a menu with each link of a value with two links on a click][data-links], [integration: shows the menu cursor on a value with two links][data-links], [dataLinks.test.ts][data-links-unit]                                                                                                                                                                                         | [Data links, one link, Data links, two links][db-basics]                                                                  |
 | Change of the panel type from core Stat                           | Supported | [panelChange.test.ts][panel-change], [panelChange/stat.test.ts][import]                                                                                                                                                                                                                                                                                                                                                                                                              | each core panel of the [dashboard][db-basics]                                                                             |
-| Presets, change from other panel types, Stat JSON before 7.0      | Planned   |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |                                                                                                                           |
+| Change of the panel type from other panel types                   | Supported | [panelChange.test.ts][panel-change], [panelChange/singleStat.test.ts][single-stat]                                                                                                                                                                                                                                                                                                                                                                                                   |                                                                                                                           |
+| Presets, Stat JSON before 7.0                                     | Planned   |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |                                                                                                                           |
 
 The default color scheme is `thresholds`, as in core Stat, and not `palette-classic` as in the other ECharts
 panels ([standardOptions.ts](../../lib/grafana/editor/stat/standardOptions.ts)). A new panel thus draws each
@@ -67,6 +68,7 @@ value to its menu, and does not handle actions.
 [flow]: ../../lib/grafana/stat/flow.test.ts
 [field-displays]: ../../lib/grafana/fieldDisplays.test.ts
 [panel-change]: ./panelChange.test.ts
+[single-stat]: ../../lib/grafana/panelChange/singleStat.test.ts
 [import]: ../../lib/grafana/panelChange/stat.test.ts
 [issue]: ../../lib/echarts/charts/statIssue.test.ts
 [standard-options]: ../../lib/grafana/editor/stat/standardOptions.test.ts
@@ -85,8 +87,10 @@ The adapter also reads core Stat JSON that Grafana did not load. For a panel wit
 `percentunit` gets the range of its unit. It does not apply the older rules, for JSON with `fieldOptions` from
 before Grafana 7.0.
 
-A change from another panel type keeps only what Grafana keeps: the standard field options. Core Stat also
-keeps `reduceOptions` and `orientation` from each panel type.
+A change from another panel type keeps `reduceOptions` and `orientation` when the previous panel has them, as
+core Stat ([panelChange/singleStat.ts](../../lib/grafana/panelChange/singleStat.ts)). Core Gauge and core Bar
+gauge have the two options. Grafana keeps the standard field options. Core Stat also has rules for the Angular
+Singlestat and Graph panels, which Grafana does not have now. This panel does not have those rules.
 
 ## Design decisions
 

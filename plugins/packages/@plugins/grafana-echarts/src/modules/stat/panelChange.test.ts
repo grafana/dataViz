@@ -37,11 +37,24 @@ describe('statPanelChangeHandler', () => {
     expect(target.fieldConfig.defaults).toEqual({ unit: 'percent' });
   });
 
-  it('changes nothing for another panel type', () => {
+  it('keeps the reduction of the data and the orientation of another panel type, and no other option', () => {
     const target = panel();
-    expect(
-      statPanelChangeHandler(target, 'gauge', { orientation: 'vertical' }, { defaults: {}, overrides: [] })
-    ).toEqual({});
+    const reduceOptions = { values: false, calcs: ['mean'], fields: '' };
+    const options = statPanelChangeHandler(
+      target,
+      'gauge',
+      { reduceOptions, orientation: 'vertical', showThresholdLabels: true },
+      { defaults: { unit: 'percent', min: 0 }, overrides: [] }
+    );
+    expect(options).toEqual({ reduceOptions, orientation: 'vertical' });
+    // Grafana keeps the standard field options in a type change. The handler does not write them.
+    expect(target.fieldConfig).toEqual({ defaults: {}, overrides: [] });
+  });
+
+  it('changes nothing for another panel type with no such option', () => {
+    const target = panel();
+    const options = statPanelChangeHandler(target, 'timeseries', { legend: {} }, { defaults: {}, overrides: [] });
+    expect(options).toEqual({});
     expect(target.fieldConfig).toEqual({ defaults: {}, overrides: [] });
   });
 });
