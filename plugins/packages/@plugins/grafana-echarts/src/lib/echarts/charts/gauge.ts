@@ -83,7 +83,7 @@ function resolveGaugeStyle(theme: GrafanaTheme2, showValue: boolean): GaugeStyle
 
 const longest = (texts: string[]) => texts.reduce((a, b) => (b.length > a.length ? b : a), '');
 
-/** The layout of each gauge in its cell. All gauges get the same font sizes. */
+/** The layout of each gauge in its cell. Gauges in cells of the same size get the same font sizes. */
 function layoutGaugeItems(
   values: GaugeValue[],
   cells: RepeaterCell[],
