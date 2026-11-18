@@ -28,6 +28,9 @@ const requests = async (page: Page): Promise<Request[]> =>
 /** Ctrl on Linux and Windows, Cmd on macOS: `renderer.50` takes both. https://playwright.dev/docs/api/class-keyboard */
 const MODIFIER = 'ControlOrMeta';
 
+/** The height of the band at the bottom of the chart element that has the labels of the x axis and the markers. */
+const MARKER_BAND_PX = 60;
+
 /** The page of the test: the chart, the form, and the pointer positions in the plot area. */
 async function open(page: Page, set?: string, options: { onAnnotate?: boolean; onRefresh?: boolean } = {}) {
   // A clock of the test, so `annotateTimeoutMs` passes with `fastForward`. https://playwright.dev/docs/clock
@@ -95,8 +98,15 @@ async function open(page: Page, set?: string, options: { onAnnotate?: boolean; o
    */
   const expectAnnotation = async (dx: number, label: string) => {
     const shown = app.locator('[data-echarts-tooltip]', { hasText: label });
-    for (let y = box.y + box.height / 3; y < box.y + box.height && (await shown.count()) === 0; y += 2) {
+    // The marker is 5 px high, between the plot area and the labels of the x axis. Thus it is in the band at the
+    // bottom of the chart element. The hover goes up through that band only: a hover in the plot area is slow,
+    // and the test has a time limit.
+    const chart = (await app.locator('[_echarts_instance_]').boundingBox())!;
+    const bottom = chart.y + chart.height;
+    for (let y = bottom - 2; y > bottom - MARKER_BAND_PX && (await shown.count()) === 0; y -= 2) {
       await page.mouse.move(at(dx).x, y);
+      // The tooltip shows on the next animation frame.
+      await settle(page);
     }
     await expect(shown).toHaveCount(1);
     await page.mouse.move(box.x + 2, box.y + 2);
