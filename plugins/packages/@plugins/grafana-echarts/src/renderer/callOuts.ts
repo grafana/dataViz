@@ -1,4 +1,4 @@
-// The Renderer draws no data links and no actions (`renderer.12`). They come from two places: the field config of
+// The Renderer removes links and actions supplied by the spec (`renderer.12`). They come from the field config of
 // the panel, and the field config of the frames. A backend can put links in a frame (Azure Monitor adds "View query
 // in Azure Portal"), and the schema accepts any frame field config from the App. Both are removed before
 // `applyFieldOverrides`, which makes `getLinks` from `field.config.links`.

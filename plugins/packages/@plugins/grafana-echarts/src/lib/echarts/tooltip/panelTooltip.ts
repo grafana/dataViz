@@ -1,4 +1,3 @@
-import { dateTimeFormat } from '@grafana/data';
 import { type TimeZone, TooltipDisplayMode } from '@grafana/schema';
 import { type TooltipOption } from 'echarts/types/dist/shared';
 import { type EChartsAxisType } from 'lib/echarts/axes/converters';
@@ -9,6 +8,7 @@ import {
   getSilentTooltipOption,
   grafanaTooltipModeToEChartsTrigger,
 } from 'lib/echarts/tooltip/option';
+import { timeHeader } from './timeHeader';
 
 /**
  * Format the hovered x value for the header with Grafana's time formatting:
@@ -24,7 +24,7 @@ function makeHeaderValueFormatter(timeZone: TimeZone | undefined, multiValueDime
     const xValue: unknown = Array.isArray(item.value) ? item.value[0] : undefined;
     const raw: unknown = multiValueDimensions != null ? item.name : xValue;
     const time = typeof raw === 'string' ? Date.parse(raw) : raw;
-    return typeof time === 'number' && !Number.isNaN(time) ? dateTimeFormat(time, { timeZone }) : undefined;
+    return typeof time === 'number' && Number.isFinite(time) ? timeHeader(time, timeZone) : undefined;
   };
 }
 
@@ -68,8 +68,7 @@ export function buildPanelTooltip(
   // Multi-value families (candlestick/boxplot, radar/parallel) pack several values
   // per item, so the tooltip lists each dimension instead of just the last.
   const multiValueDimensions = chartModule.getTooltipDimensions?.(ctx);
-  const formatHeaderValue =
-    axisType === 'time' ? makeHeaderValueFormatter(ctx.timeZone, multiValueDimensions) : undefined;
+  const formatHeader = axisType === 'time' ? makeHeaderValueFormatter(ctx.timeZone, multiValueDimensions) : undefined;
 
   const sharedCategoryAxis = axisType === 'category' && chartModule.sharedCategoryAxis === true;
   const option = getSilentTooltipOption(
@@ -79,7 +78,7 @@ export function buildPanelTooltip(
       buildTooltipModel(params, resolveValueFormatter, {
         rowOptions,
         resolveField,
-        formatHeaderValue,
+        formatHeader,
         multiValueDimensions,
         multiValueOffset: chartModule.tooltipDimensionOffset,
       }),

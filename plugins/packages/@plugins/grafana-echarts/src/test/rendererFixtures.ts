@@ -2,6 +2,7 @@
 import { type RenderState } from '@grafana/viz-contract/renderer-api';
 import fs from 'node:fs';
 import path from 'node:path';
+import { PENDING_PANEL_IDS } from '../renderer/registry';
 
 /** The `fixtures/` directory of the contract package. */
 export const FIXTURES_DIR = path.join(path.dirname(require.resolve('@grafana/viz-contract/package.json')), 'fixtures');
@@ -13,9 +14,16 @@ export const allFixtureSets = (): string[] =>
     .filter((name) => fs.statSync(path.join(FIXTURES_DIR, name)).isDirectory())
     .sort();
 
-/** The Renderer sets, sorted: a set is a Renderer set when it has a `state.json` (`fixtures.10`). */
-export const fixtureSets = (): string[] =>
+/** All Renderer sets in the contract, including those for panels this package does not ship yet. */
+export const contractFixtureSets = (): string[] =>
   allFixtureSets().filter((name) => fs.existsSync(path.join(FIXTURES_DIR, name, 'state.json')));
+
+/** The Renderer sets for the panels this package ships. */
+export const fixtureSets = (): string[] =>
+  contractFixtureSets().filter((name) => {
+    const panel = fixtureSpec(name).panel as { type?: string } | undefined;
+    return !PENDING_PANEL_IDS.has(panel?.type ?? '');
+  });
 
 /** The `spec.json` of a set, as JSON. Each call gives a new object. */
 export const fixtureSpec = (set: string): Record<string, unknown> =>

@@ -53,17 +53,21 @@ export interface HarnessOptions {
   size?: { width: number; height: number };
   /** `false`: the App gives no `onRefresh` to `render`. */
   onRefresh?: boolean;
+  onMessage?: boolean;
 }
 
 /** The outer page: it records the messages of the iframe in `window.messages`. */
-export function harnessPage(spec: unknown, { size = { width: 640, height: 400 }, onRefresh }: HarnessOptions = {}) {
+export function harnessPage(
+  spec: unknown,
+  { size = { width: 640, height: 400 }, onRefresh, onMessage }: HarnessOptions = {}
+) {
   const inner = `<!doctype html><html><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="${MCP_APPS_DEFAULT_CSP}">
 <style>html,body{margin:0}#root{width:${size.width}px;height:${size.height}px}</style></head>
 <body><div id="root"></div>
 <script>${scriptText(PROBES)}</script>
 <script type="application/json" id="viz-spec">${scriptJson(spec)}</script>
-<script type="application/json" id="harness-options">${scriptJson({ onRefresh })}</script>
+<script type="application/json" id="harness-options">${scriptJson({ onRefresh, onMessage })}</script>
 <script>${scriptText(app())}</script></body></html>`;
   const srcdoc = inner.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
   return `<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0">

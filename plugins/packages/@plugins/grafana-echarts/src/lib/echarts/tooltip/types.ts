@@ -147,6 +147,8 @@ export interface TooltipFilters {
 export interface TooltipHeaderItem {
   label: string;
   value: string;
+  /** Numeric coordinate behind the displayed x value. Category headers have none. */
+  coordinate?: { type: 'time' | 'number'; value: number };
 }
 
 /** The hovered item's source field and its row index within that field's values. */
@@ -161,6 +163,8 @@ export interface TooltipSource {
  * is local.
  */
 export interface TooltipRow {
+  /** The plotted value when a chart transforms or aggregates the source field. */
+  rawValue?: number | null;
   /** CSS color for the leading swatch; omitted rows render no swatch. */
   color?: string;
   label: string;
@@ -236,7 +240,7 @@ export interface TooltipModelOptions {
    * Formats the hovered x value for the header (e.g. Grafana time formatting on
    * time axes, where item-trigger params carry the raw `[time, value]` tuple).
    */
-  formatHeaderValue?: (item: { value?: unknown; name?: string }) => string | undefined;
+  formatHeader?: (item: { value?: unknown; name?: string }) => TooltipHeaderItem | undefined;
   /**
    * Labels for the dimensions a multi-value series packs into a single item, in
    * the series' own data order — `[Open, Close, Low, High]` for candlestick,

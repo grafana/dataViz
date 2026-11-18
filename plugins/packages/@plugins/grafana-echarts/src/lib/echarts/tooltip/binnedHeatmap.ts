@@ -54,7 +54,11 @@ export function buildBinnedHeatmapTooltipModel(
     // Time-style header: the x (time/value) goes in `value`, matching core's
     // heatmap tooltip composition.
     return {
-      header: { label: '', value: formatX(xStart) },
+      header: {
+        label: '',
+        value: formatX(xStart),
+        coordinate: { type: data.xIsTime ? 'time' : 'number', value: xStart },
+      },
       rows: [
         // The swatch carries the cell's own colour-scale colour, so the tooltip
         // shows which bucket of the scale was hit — the heatmap equivalent of a
@@ -63,6 +67,7 @@ export function buildBinnedHeatmapTooltipModel(
           color: typeof param?.color === 'string' ? param.color : undefined,
           label: 'Value',
           value: formatEChartsValue(value, ctx.formatValue),
+          rawValue: typeof value === 'number' ? value : null,
           source,
         },
         { label: 'Name', value: bucket },

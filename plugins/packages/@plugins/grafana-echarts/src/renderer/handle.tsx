@@ -54,7 +54,7 @@ class Renderer {
 
   constructor(
     private readonly el: HTMLElement,
-    options: RenderOptions | undefined
+    private readonly options: RenderOptions | undefined
   ) {
     this.reporter = new StateReporter(el, options?.onState);
     this.setDefaultHeight();
@@ -228,6 +228,7 @@ class Renderer {
     this.root.render(
       <RendererView
         prepared={this.prepared}
+        onMessage={this.options?.onMessage}
         width={this.size.width}
         height={this.size.height}
         onViewShown={this.onViewShown}
@@ -253,6 +254,8 @@ export function createRenderer(el: HTMLElement, spec: unknown, options?: RenderO
   return {
     update: (next) => renderer.update(next),
     setRefreshed: (id, ok, error) => renderer.setRefreshed(id, ok, error),
+    // No annotation request exists until the Renderer supports onAnnotate.
+    setAnnotated: () => {},
     destroy: () => renderer.destroy(),
   };
 }

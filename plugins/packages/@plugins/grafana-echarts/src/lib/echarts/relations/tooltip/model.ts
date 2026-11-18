@@ -57,6 +57,7 @@ export function buildRelationsTooltipModel(
           color,
           label: statLabel,
           value: formatEChartsValue(data.value ?? null, mark?.formatValue ?? formatDerivedMarkValue),
+          rawValue: data.value ?? null,
           source: mark?.source,
         },
       ];
@@ -91,6 +92,7 @@ export function buildRelationsTooltipModel(
         color,
         label: statLabel,
         value: formatEChartsValue(stat, mark?.formatValue ?? formatDerivedMarkValue),
+        rawValue: stat,
         source: mark?.source,
       });
     }

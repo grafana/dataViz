@@ -72,6 +72,7 @@ export function buildPieTooltipModel(
           color: slice.color,
           label: slice.name,
           value: rowValue(index),
+          rawValue: slice.value ?? null,
           emphasis: index === hoveredIndex,
           source: sliceSource(index),
         });
@@ -84,7 +85,15 @@ export function buildPieTooltipModel(
     if (hoveredIndex >= 0) {
       return {
         header,
-        rows: [{ color: slices[hoveredIndex].color, label: '', value: rowValue(hoveredIndex), source }],
+        rows: [
+          {
+            color: slices[hoveredIndex].color,
+            label: '',
+            value: rowValue(hoveredIndex),
+            rawValue: slices[hoveredIndex].value ?? null,
+            source,
+          },
+        ],
         source,
       };
     }

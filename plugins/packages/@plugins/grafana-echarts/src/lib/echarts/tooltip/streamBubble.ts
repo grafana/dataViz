@@ -1,4 +1,4 @@
-import { dateTimeFormat } from '@grafana/data';
+import { timeHeader } from './timeHeader';
 import { type TopLevelFormatterParams } from 'echarts/types/dist/shared';
 import { type StreamLayer } from 'lib/echarts/converters/stream';
 import { formatEChartsValue, getValueFormatter } from 'lib/echarts/style';
@@ -48,13 +48,14 @@ export function buildStreamBubbleTooltipModel(
     return {
       // Time axis: the formatted time is the header value with no label, matching
       // core Grafana's `TimeSeriesTooltip` (see `makeHeaderValueFormatter`).
-      header: { label: '', value: time != null ? dateTimeFormat(time, { timeZone: ctx.timeZone }) : '' },
+      header: time != null ? timeHeader(time, ctx.timeZone) : { label: '', value: '' },
       rows: [
         {
           color: typeof param?.color === 'string' ? param.color : undefined,
           label: layer?.name ?? String(param?.seriesName ?? ''),
           value: formatEChartsValue(value, formatValue),
           seriesIndex: param?.seriesIndex,
+          rawValue: value,
           source,
         },
       ],

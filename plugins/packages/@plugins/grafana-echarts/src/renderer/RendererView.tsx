@@ -1,5 +1,6 @@
 import { type PanelDataErrorViewProps } from '@grafana/runtime';
 import { ThemeContext } from '@grafana/ui';
+import { type RenderOptions } from '@grafana/viz-contract/renderer-api';
 import { ChartErrorBoundary } from 'lib/components/ChartErrorBoundary';
 import { ChartInitContext, type ChartInitListener } from 'lib/components/chartInitContext';
 import { ChartNotices } from 'lib/components/ChartNotices';
@@ -7,6 +8,7 @@ import { Panel } from 'lib/components/Panel';
 import { PanelDataErrorViewContext } from 'lib/components/panelDataErrorViewContext';
 import { PanelErrorContext, type PanelErrorSignal } from 'lib/components/panelErrorContext';
 import { TimeZoomOutContext } from 'lib/components/TimeZoomOutContext';
+import { TooltipActionContext } from 'lib/components/tooltip/tooltipActionContext';
 import React, { useEffect, useMemo } from 'react';
 import { CommitSignal } from './CommitSignal';
 import { dataIssueText } from './dataIssueText';
@@ -14,6 +16,7 @@ import { TITLE_HEIGHT_PX, TOOLBAR_HEIGHT_PX } from './layout';
 import { errorMessage } from './messages';
 import { NoDataView } from './NoDataView';
 import { toChartNotices } from './notices';
+import { askInChat } from './pointMessage';
 import { type Prepared } from './prepare';
 import { type RefreshCause, type RefreshStatus } from './refresh';
 import { RendererErrorView } from './RendererErrorView';
@@ -23,6 +26,7 @@ import { rootClassName } from './rootStyles';
 
 interface Props {
   prepared: Prepared;
+  onMessage?: RenderOptions['onMessage'];
   width: number;
   height: number;
   /** Called after a view with no chart (an error, no data) is on screen. */
@@ -51,6 +55,7 @@ const renderDataIssue = (props: PanelDataErrorViewProps) => <RendererErrorView m
  */
 export const RendererView = ({
   prepared,
+  onMessage,
   width,
   height,
   onViewShown,
@@ -66,6 +71,10 @@ export const RendererView = ({
     height - (refresh ? TOOLBAR_HEIGHT_PX : 0) - (prepared.title !== undefined ? TITLE_HEIGHT_PX : 0)
   );
   const rootClass = useMemo(() => rootClassName(prepared.theme), [prepared.theme]);
+  const pointAction = useMemo(
+    () => (prepared.kind === 'chart' && onMessage ? askInChat(prepared.props.data.series, onMessage) : undefined),
+    [prepared, onMessage]
+  );
   useEffect(() => {
     if (prepared.kind !== 'chart') {
       onViewShown();
@@ -75,7 +84,7 @@ export const RendererView = ({
   return (
     <ThemeContext.Provider value={prepared.theme}>
       <ChartInitContext.Provider value={onChartInit}>
-        {/* `renderer.14`: a double click zoom out does nothing. The brush zoom and the pan call the
+        {/* A double click zoom out does nothing. The brush zoom and the pan call the
             `onChangeTimeRange` of `toPanelProps`, which does nothing. */}
         <TimeZoomOutContext.Provider value={null}>
           <PanelErrorContext.Provider value={onPanelError}>
@@ -108,7 +117,9 @@ export const RendererView = ({
                         <RendererErrorView message={errorMessage('render-error', { panelName: prepared.panelName })} />
                       )}
                     >
-                      <Panel {...prepared.props} width={width} height={chartHeight} />
+                      <TooltipActionContext.Provider value={pointAction}>
+                        <Panel {...prepared.props} width={width} height={chartHeight} />
+                      </TooltipActionContext.Provider>
                       <ChartNotices notices={toChartNotices(prepared.notices)} corner="top-left" />
                     </ChartErrorBoundary>
                   )}
