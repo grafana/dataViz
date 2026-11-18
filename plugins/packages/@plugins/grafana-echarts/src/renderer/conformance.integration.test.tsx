@@ -2,9 +2,11 @@
 // equals its `state.json`. It never looks at pixels.
 import { type RenderHandle, type RenderState } from '@grafana/viz-contract/renderer-api';
 import { act, waitFor } from '@testing-library/react';
+import { type CustomSeriesOption } from 'echarts';
 import { getInstanceByDom } from 'lib/echarts/echarts';
 import { getChart } from 'test/canvas';
-import { fixtureSets, fixtureSpec, fixtureState } from 'test/rendererFixtures';
+import { fixturePickedSpec, fixtureSets, fixtureSpec, fixtureState } from 'test/rendererFixtures';
+import { drawnTexts } from 'test/statCanvas';
 import { dispatch, tooltipText } from 'test/tooltipPointer';
 import { render } from './index';
 
@@ -29,6 +31,10 @@ async function draw(spec: unknown) {
   return { el, states };
 }
 
+function canvasTexts(el: HTMLElement): string[] {
+  return [...el.querySelectorAll('canvas')].flatMap((canvas) => drawnTexts(canvas.getContext('2d')!.__getEvents()));
+}
+
 let consoleError: jest.SpyInstance;
 beforeEach(() => {
   consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -51,6 +57,12 @@ describe('the fixture sets of the contract', () => {
     expect(el.getAttribute('data-viz-error')).toBe(expected.error?.code ?? null);
   });
 
+  it('smoke-stat draws the last value of each number field', async () => {
+    const { el, states } = await draw(fixtureSpec('smoke-stat'));
+    expect(states.at(-1)).toEqual(fixtureState('smoke-stat'));
+    expect(canvasTexts(el)).toEqual(expect.arrayContaining(['1242', '7']));
+  });
+
   // The contract reads each number field as one axis (`registry/chart-types.json`). The state is `ready` either way,
   // so only the axis names show the orientation.
   it('smoke-parallel draws one axis for each number field and one line for each row', async () => {
@@ -61,6 +73,30 @@ describe('the fixture sets of the contract', () => {
     const [series] = option.series as Array<{ data: Array<{ name: string }> }>;
     expect(axes.map((axis) => axis.name)).toEqual(['cpu', 'memory', 'load']);
     expect(series.data.map((line) => line.name)).toEqual(['h0', 'h1', 'h2']);
+  });
+});
+
+describe('the chart picked by the Source', () => {
+  it.each([
+    ['pick-single-stat', ['42']],
+    ['pick-single-value-instant', ['42']],
+    ['pick-single-value-many', ['52', '78', '94']],
+    ['pick-single-value-frames', ['10', '17', '24']],
+  ])('%s draws one stat value for each number field', async (set, values) => {
+    const { el, states } = await draw(fixturePickedSpec(set));
+    expect(states.at(-1)).toEqual({ state: 'ready', notices: [] });
+    const series = getChart(el).chart!.getOption().series as CustomSeriesOption[];
+    expect(series.map(({ type }) => type)).toEqual(['custom']);
+    expect(series[0].data).toHaveLength(values.length);
+    expect(canvasTexts(el)).toEqual(expect.arrayContaining(values));
+  });
+
+  it('draws a bar chart when the Source picks it for eleven number fields', async () => {
+    const { el, states } = await draw(fixturePickedSpec('pick-single-value-over-limit'));
+    expect(states.at(-1)).toEqual({ state: 'ready', notices: [] });
+    expect(getChart(el).chart!.getOption().series).toEqual(
+      Array.from({ length: 11 }, () => expect.objectContaining({ type: 'bar' }))
+    );
   });
 });
 

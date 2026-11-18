@@ -22,12 +22,7 @@ import { type Options as CoreHistogramOptions } from '@grafana/schema/dist/esm/r
 // The core Geomap panel options. https://grafana.com/docs/grafana/latest/panels-visualizations/visualizations/geomap/
 import { type Options as GeomapOptions } from '@grafana/schema/dist/esm/raw/composable/geomap/panelcfg/x/GeomapPanelCfg_types.gen';
 import { type editorModePath, type seriesTypePath } from 'editor/constants';
-import {
-  type gaugeBarWidthFactorPath,
-  type gaugeShapePath,
-  type gaugeShowThresholdMarkersPath,
-  type gaugeTextModePath,
-} from 'editor/gauge';
+import { type gaugeBarWidthFactorPath, type gaugeShapePath, type gaugeShowThresholdMarkersPath } from 'editor/gauge';
 import { type RelationsPanelOptions } from 'editor/relations/options';
 import {
   type streamBorderColorPath,
@@ -52,7 +47,6 @@ import {
   type ParallelLayout,
   type PerformanceMode,
   type GaugeShape,
-  type GaugeTextMode,
   type PieChartType,
   type PieEmphasisFocus,
   type PieLabel,
@@ -280,12 +274,14 @@ export interface PanelOptions
    */
   reduceOptions?: ReduceDataOptions;
 
+  /** Controls which text the gauge or stat panel shows. */
+  textMode?: `${BigValueTextMode}`;
+
   /**
    * The options of the stat panel. The names and the values are the ones of core Stat, so a panel keeps them
    * when it changes type. See `editor/stat.ts` for the defaults.
    * https://github.com/grafana/grafana/blob/main/public/app/plugins/panel/stat/panelcfg.cue
    */
-  textMode?: BigValueTextMode;
   colorMode?: BigValueColorMode;
   graphMode?: BigValueGraphMode;
   wideLayout?: boolean;
@@ -308,9 +304,6 @@ export interface PanelOptions
    * Defaults to `GAUGE_BAR_WIDTH_FACTOR_DEFAULT`. See `layoutGaugeCell`.
    */
   [gaugeBarWidthFactorPath]?: number;
-
-  /** Gauge center text, as core Gauge `textMode`. Defaults to `GAUGE_TEXT_MODE_DEFAULT`. See `resolveGaugeTextMode`. */
-  [gaugeTextModePath]?: GaugeTextMode;
 
   /** Show the thin threshold band outside the gauge bar, as core Gauge `showThresholdMarkers`. */
   [gaugeShowThresholdMarkersPath]?: boolean;

@@ -4,6 +4,8 @@ The Renderer is one ES module that draws a viz spec with the panels of this pack
 
 The rules come from the viz contract 1.10.0, the `@grafana/viz-contract` npm package from [grafana/viz-contract](https://github.com/grafana/viz-contract). The package is a dependency in `package.json`, so `pnpm install` gets it. This repository has no copy of the contract. The source code is in `src/renderer/`.
 
+The Source uses the single-value rule to pick stat. The rule matches when the largest frame has one row and the result has one to ten number fields and no string fields. The Renderer draws the panel type in the viz spec. [Viz contract chart selection](https://github.com/grafana/viz-contract/blob/v1.10.0/1-tool.md#the-chart)
+
 ## The module
 
 The module has three exports. Their types are in `renderer-api.d.ts` of the contract package (`@grafana/viz-contract/renderer-api`).
@@ -168,7 +170,6 @@ These rules are in the `pending` list of `contractRules.json`:
 
 These differences are not rules of the `pending` list:
 
-- The stat panel: the contract has the panel type `grafana-echartsstat-panel`, and this package does not have the panel yet. `PANEL_TYPES_NOT_IN_PACKAGE` in `src/renderer/registry.ts` has its id. A viz spec for it gives `unsupported-panel-type`, and the tests leave out its fixture sets (`smoke-stat`, `stat-no-data`, `stat-thresholds`). When the stat module is added, remove the id and add the panel to `PANELS`.
 - The `error-unsupported-panel-type` set of contract 1.10.0 lists the panel types of contract 1.7.0 in its message, with no gauge and no stat ([grafana/viz-contract#94](https://github.com/grafana/viz-contract/issues/94)). `fixtureState` in `src/test/rendererFixtures.ts` puts the panel types that the Renderer draws in that message.
 
 This difference has a test that fails when the difference is fixed:

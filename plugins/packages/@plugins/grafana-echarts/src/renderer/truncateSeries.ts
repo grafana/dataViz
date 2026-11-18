@@ -3,10 +3,9 @@
 import { type DataFrame, FieldType } from '@grafana/data';
 
 /**
- * The families that raise `series-truncated`. Their charts draw one series for each number field. For the gauge
- * family, a series is one gauge.
+ * The families that raise `series-truncated`. Each number field draws one series, one gauge, or one stat cell.
  */
-export const TRUNCATED_FAMILIES = new Set(['cartesian', 'gauge', 'stream']);
+export const TRUNCATED_FAMILIES = new Set(['cartesian', 'gauge', 'stat', 'stream']);
 
 /**
  * Keeps the first `max` number fields (series) of the frames, and every field that is not a number field. A frame

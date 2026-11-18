@@ -18,6 +18,7 @@ import { plugin as multivariate } from 'modules/multivariate/module';
 import { plugin as partToWhole } from 'modules/part-to-whole/module';
 import { relationsDataTransformations } from 'modules/relations/dataTransformations';
 import { plugin as relations } from 'modules/relations/module';
+import { plugin as stat } from 'modules/stat/module';
 import { plugin as stateTimeline } from 'modules/state-timeline/module';
 import { plugin as statusHistory } from 'modules/status-history/module';
 import { plugin as stream } from 'modules/stream/module';
@@ -58,6 +59,7 @@ export const PANELS: Record<string, PanelEntry> = {
     family: 'relations',
     systemTransformations: relationsDataTransformations,
   },
+  'grafana-echartsstat-panel': { plugin: stat, family: 'stat' },
   'grafana-echartsstatetimeline-panel': { plugin: stateTimeline, family: 'timeline' },
   'grafana-echartsstatushistory-panel': { plugin: statusHistory, family: 'status-history' },
   'grafana-echartsstream-panel': { plugin: stream, family: 'stream' },

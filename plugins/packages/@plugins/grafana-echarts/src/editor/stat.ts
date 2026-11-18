@@ -114,7 +114,7 @@ export function resolveStatOptions(options: PanelOptions): StatRenderOptions {
     : STAT_COLOR_MODE_DEFAULT;
   return {
     orientation: options.orientation ?? STAT_ORIENTATION_DEFAULT,
-    textMode: options.textMode ?? STAT_TEXT_MODE_DEFAULT,
+    textMode: statTextModeOptions.find(({ value }) => value === options.textMode)?.value ?? STAT_TEXT_MODE_DEFAULT,
     colorMode,
     graphMode: options.graphMode ?? STAT_GRAPH_MODE_DEFAULT,
     wideLayout: options.wideLayout ?? STAT_WIDE_LAYOUT_DEFAULT,
