@@ -57,6 +57,7 @@ import {
   type TooltipValueFormatterResolver,
 } from 'lib/echarts/tooltip/types';
 import { type ChartFamily } from 'lib/echarts/charts/autoSeriesType';
+import { type DataLinkSupplier } from 'lib/grafana/dataLinks';
 import { type MarkerLegend } from 'lib/grafana/geo/legend';
 import { type EChartsValueType, type FieldTypedDataFrame } from 'lib/grafana/types';
 import { type PanelOptions } from 'types';
@@ -392,6 +393,13 @@ export interface ChartModule {
 
   /** Return a known data problem before the chart mounts, or nothing when the chart can render. */
   getDataIssue?(ctx: ChartContext): ChartDataIssue | undefined;
+
+  /**
+   * The data links of each data item of the first series, by `dataIndex`. A click on an item opens its link, or
+   * a menu when it has more than one (`useDataLinkClicks`). The stat family sets it: its panel has no tooltip,
+   * which shows the links of the other families.
+   */
+  getDataLinks?(ctx: ChartContext): DataLinkSupplier[];
 
   /** Return the resize behavior for the current chart context. */
   getResizeStrategy?(ctx: ChartContext): ChartResizeStrategy;

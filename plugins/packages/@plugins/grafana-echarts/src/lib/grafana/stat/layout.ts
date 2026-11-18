@@ -18,6 +18,7 @@ import {
 } from '@grafana/data';
 import { BigValueColorMode, BigValueJustifyMode, BigValueTextMode } from '@grafana/schema';
 import { type StatRenderOptions } from 'editor/stat';
+import { getDisplayLinks } from 'lib/grafana/dataLinks';
 import { fitFontSize, measureTextWidth } from 'lib/grafana/fitFontSize';
 import { layoutRepeaterCells, type RepeaterCell } from 'lib/grafana/repeater/layout';
 import {
@@ -117,6 +118,8 @@ export interface StatCell extends RepeaterCell {
   sparkline?: StatSparkline;
   /** The value that the cell shows, for data links. */
   display: FieldDisplay;
+  /** The value has one or more data links, so the cell gets pointer events. */
+  hasLinks?: boolean;
 }
 
 export interface StatLayoutInput {
@@ -449,6 +452,9 @@ function layoutCell(
   const result: StatCell = { ...cell, display };
   if (colors.background) {
     result.background = colors.background;
+  }
+  if (getDisplayLinks(display).length > 0) {
+    result.hasLinks = true;
   }
 
   if (texts.title && titlePosition && titleSize > 0) {

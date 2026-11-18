@@ -42,8 +42,9 @@ editor, and the panel ignores them in saved panel JSON.
 | `orientation` auto, horizontal, vertical                          | Supported | [canvas: Horizontal: one cell for each row of the panel][canvas], [canvas: Vertical: one cell for each column of the panel][canvas], [repeater/layout.test.ts][repeater]                                                                                                                                                                                                                                                                                                             | [Orientation Horizontal, Orientation Vertical][db-basics]                                                                 |
 | `text.titleSize`, `text.valueSize`                                | Supported | [canvas: a set size for the name and for the value][canvas], [canvas: a set size for the value only, four values in a grid][canvas], [layout.test.ts][layout]                                                                                                                                                                                                                                                                                                                        | [Text size][db-basics]                                                                                                    |
 | `showPercentChange`, `percentChangeColorMode`, `text.percentSize` | Supported | [canvas: an increase, stacked with a sparkline][canvas], [canvas: wide with no sparkline][canvas], [canvas: four values in a grid, with the text alignment Center][canvas], [canvas: the text mode None][canvas], [percentChange.test.ts][percent-change], [flow.test.ts][flow]                                                                                                                                                                                                      | [Percent change, Percent change centered inverted colors, Percent change no sparkline same color as the value][db-basics] |
-| Data links and actions                                            | Planned   |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |                                                                                                                           |
-| Presets, panel change handler, migration of old stat JSON         | Planned   |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |                                                                                                                           |
+| Data links and actions                                            | Partial   | [integration: opens the link of a value with one link on a click][data-links], [integration: opens a menu with each link of a value with two links on a click][data-links], [integration: shows the menu cursor on a value with two links][data-links], [dataLinks.test.ts][data-links-unit]                                                                                                                                                                                         | [Data links, one link, Data links, two links][db-basics]                                                                  |
+| Change of the panel type from core Stat                           | Supported | [panelChange.test.ts][panel-change], [panelChange/stat.test.ts][import]                                                                                                                                                                                                                                                                                                                                                                                                              | each core panel of the [dashboard][db-basics]                                                                             |
+| Presets, change from other panel types, Stat JSON before 7.0      | Planned   |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |                                                                                                                           |
 
 The default color scheme is `thresholds`, as in core Stat, and not `palette-classic` as in the other ECharts
 panels ([standardOptions.ts](../../lib/grafana/editor/stat/standardOptions.ts)). A new panel thus draws each
@@ -51,17 +52,41 @@ value in the color of its threshold. Regression tests: [standardOptions.test.ts]
 [canvas: Value, with the default color scheme of the panel][canvas]. Demo panel:
 [Thresholds, default color scheme][db-basics].
 
+Data links are `Partial`: a click and the cursor are as in core, and the keyboard and the native tooltips are
+not (see "Differences from core"). Field actions are not a difference: core Stat gives only the links of a
+value to its menu, and does not handle actions.
+
 [canvas]: ../../lib/components/stat.canvas.test.tsx
 [integration]: ../../lib/components/stat.integration.test.tsx
+[data-links]: ../../lib/components/stat-data-links.integration.test.tsx
+[data-links-unit]: ../../lib/grafana/dataLinks.test.ts
 [layout]: ../../lib/grafana/stat/layout.test.ts
 [colors]: ../../lib/grafana/stat/colors.test.ts
 [repeater]: ../../lib/grafana/repeater/layout.test.ts
 [percent-change]: ../../lib/grafana/stat/percentChange.test.ts
 [flow]: ../../lib/grafana/stat/flow.test.ts
 [field-displays]: ../../lib/grafana/fieldDisplays.test.ts
+[panel-change]: ./panelChange.test.ts
+[import]: ../../lib/grafana/panelChange/stat.test.ts
 [issue]: ../../lib/echarts/charts/statIssue.test.ts
 [standard-options]: ../../lib/grafana/editor/stat/standardOptions.test.ts
 [db-basics]: ../../../provisioning/dashboards/stat/stat-basics.json
+
+## Change from core Stat
+
+A change of the panel type from core Stat to this panel keeps the Stat options, the standard field options and
+the overrides ([panelChange.ts](./panelChange.ts)). The option names and values are the ones of core, so the
+adapter ([panelChange/stat.ts](../../lib/grafana/panelChange/stat.ts)) copies them and changes no value. The
+status of each setting is in
+[capabilities/stat.json](../../lib/grafana/panelChange/capabilities/stat.json).
+
+The adapter also reads core Stat JSON that Grafana did not load. For a panel with a `pluginVersion` before
+8.0, or with none, it applies the last rule of the migration of core: a field with the unit `percent` or
+`percentunit` gets the range of its unit. It does not apply the older rules, for JSON with `fieldOptions` from
+before Grafana 7.0.
+
+A change from another panel type keeps only what Grafana keeps: the standard field options. Core Stat also
+keeps `reduceOptions` and `orientation` from each panel type.
 
 ## Design decisions
 
@@ -92,6 +117,13 @@ value in the color of its threshold. Regression tests: [standardOptions.test.ts]
   `lib/echarts/options/stat.ts` has the two paths, and draws one as a `path` element in the color of the text.
   In a wide cell, the bottom of the arrow is on the baseline of the text, which the layout gets from the metrics
   of the Inter font.
+- **Data links are a click on the canvas.** Core puts a cell with links in a DOM element: an `<a>` for one
+  link, and a menu trigger for more. A canvas cell is not a DOM element. A cell with links gets one invisible
+  rectangle that takes pointer events, and ECharts gives the click with the `dataIndex` of the value. For one
+  link, `lib/grafana/dataLinks.ts` makes the `<a>` element of core and clicks it, so the link handler of
+  Grafana opens the link. For more links, `lib/components/DataLinksMenu.tsx` shows the Grafana context menu.
+  Those two files and `useDataLinkClicks` have no stat code, so the gauge panel can use them.
+  [Mouse events](https://echarts.apache.org/en/api.html#events.Mouse%20events)
 - **Layout code has no ECharts import** (`lib/grafana/stat/layout.ts`), and the option code has no Grafana UI
   import (`lib/echarts/options/stat.ts`). The `StatCell` model is the only type between them.
 
@@ -118,6 +150,12 @@ value in the color of its threshold. Regression tests: [standardOptions.test.ts]
   1px.
 - **Core panels with no `pluginVersion`.** Core Stat runs its migration for a panel saved before Grafana 8.0,
   which sets `min` 0 and `max` 100 for the `percent` unit. The sparkline then has that range. This panel has no
-  migration. The core panels of the demo dashboard have a `pluginVersion`, so the two columns compare.
+  migration of its own JSON. The core panels of the demo dashboard have a `pluginVersion`, so the two columns
+  compare. The import from core Stat applies the rule (see "Change from core Stat").
+- **Data links: keyboard.** In core, a cell with links takes the keyboard focus, shows a focus ring, and opens
+  its link or its menu with Enter or Space. A canvas cell takes no focus, so this panel opens links only with
+  the pointer.
+- **Data links: native tooltips.** Core shows a browser tooltip on a cell: the title of the link on a cell with
+  one link, and the name or the value that the text mode hides on a cell with no link. This panel shows none.
 - **Suggestions.** Core Stat has cards for a table of text and for one value for each row. This panel has one
   card, for data with a number field.

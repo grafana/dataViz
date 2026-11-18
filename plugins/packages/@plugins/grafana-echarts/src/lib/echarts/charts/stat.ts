@@ -4,6 +4,7 @@ import { resolveStatOptions } from 'editor/stat';
 import { DEFAULT_CHART_LEGEND } from 'lib/echarts/options/legend';
 import { getStatSeries } from 'lib/echarts/options/stat';
 import { getNoTooltipOption } from 'lib/echarts/tooltip/option';
+import { getDisplayLinks } from 'lib/grafana/dataLinks';
 import { resolveFieldDisplays } from 'lib/grafana/fieldDisplays';
 import { layoutStatCells, resolveStatTextMode } from 'lib/grafana/stat/layout';
 import { applyGlobalFieldRange } from 'lib/grafana/stat/range';
@@ -44,6 +45,11 @@ export const statChartModule: ChartModule = {
 
   // Core Stat has no tooltip.
   getTooltipOption: getNoTooltipOption,
+
+  // One supplier for each value, in the order of the data items of the series.
+  getDataLinks(ctx) {
+    return resolveStatDisplays(ctx).map((display) => () => getDisplayLinks(display));
+  },
 
   buildOption(ctx): EChartStatOption | null {
     const values = resolveStatDisplays(ctx);

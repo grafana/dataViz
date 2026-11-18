@@ -1,0 +1,76 @@
+{
+  "source": "stat",
+  "target": "grafana-echartsstat-panel",
+  "options": {
+    "reduceOptions": {
+      "status": "supported"
+    },
+    "orientation": {
+      "status": "supported"
+    },
+    "textMode": {
+      "status": "supported"
+    },
+    "wideLayout": {
+      "status": "supported"
+    },
+    "colorMode": {
+      "status": "supported"
+    },
+    "graphMode": {
+      "status": "supported"
+    },
+    "justifyMode": {
+      "status": "supported"
+    },
+    "showPercentChange": {
+      "status": "supported"
+    },
+    "percentChangeColorMode": {
+      "status": "supported"
+    },
+    "text": {
+      "status": "supported"
+    }
+  },
+  "fieldConfig": {
+    "color": {
+      "status": "supported"
+    },
+    "decimals": {
+      "status": "supported"
+    },
+    "displayName": {
+      "status": "supported"
+    },
+    "fieldMinMax": {
+      "status": "supported"
+    },
+    "filterable": {
+      "status": "supported"
+    },
+    "links": {
+      "status": "supported",
+      "note": "A click opens the links. A cell takes no keyboard focus."
+    },
+    "mappings": {
+      "status": "supported"
+    },
+    "max": {
+      "status": "supported"
+    },
+    "min": {
+      "status": "supported"
+    },
+    "noValue": {
+      "status": "cosmetic",
+      "note": "With no value, the panel shows the text in its data issue view, and not as a large value."
+    },
+    "thresholds": {
+      "status": "supported"
+    },
+    "unit": {
+      "status": "supported"
+    }
+  }
+}

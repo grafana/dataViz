@@ -9,7 +9,7 @@ import {
 import { resolveStatOptions, type StatRenderOptions } from 'editor/stat';
 import { resolveFieldDisplays } from 'lib/grafana/fieldDisplays';
 import { applyGrafanaFieldDefaults, defaultTimeRange, theme } from 'test/panel';
-import { cpuFrame, seriesFrame, singlePointFrame } from 'test/statCanvas';
+import { cpuFrame, linkedFrame, seriesFrame, singlePointFrame } from 'test/statCanvas';
 import {
   BACKGROUND_SPARKLINE_FILL,
   getBackgroundGradientColors,
@@ -470,6 +470,18 @@ describe('layoutStatCells', () => {
       });
       expect(center[0].title).toBeUndefined();
       expect(center[0].value).toEqual(auto[0].value);
+    });
+  });
+
+  describe('data links', () => {
+    it('marks a cell whose value has a data link', () => {
+      expect(layout([linkedFrame(1)], 300, 300)[0].hasLinks).toBe(true);
+      expect(layout([linkedFrame(2)], 300, 300)[0].hasLinks).toBe(true);
+    });
+
+    it('does not mark a cell whose value has no data link', () => {
+      expect(layout([cpuFrame], 300, 300)[0].hasLinks).toBeUndefined();
+      expect(layout([linkedFrame(0)], 300, 300)[0].hasLinks).toBeUndefined();
     });
   });
 });

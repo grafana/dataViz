@@ -189,7 +189,26 @@ export function getStatPercentChangeElements(percentChange: StatPercentChange, f
   ];
 }
 
-/** The elements of one cell, in paint order: the background, then the sparkline, then the text. */
+/**
+ * The pointer target of a cell with data links: a rectangle of the size of the cell. It is the only element of
+ * a cell that is not `silent`, so ECharts sends the mouse events of the cell with the `dataIndex` of its value.
+ * `invisible` stops the paint and keeps the pointer events. ZRender hits a rectangle only if it has a fill.
+ * https://echarts.apache.org/en/option.html#series-custom.renderItem.return_rect.invisible
+ * https://echarts.apache.org/en/api.html#events.Mouse%20events
+ */
+export function getStatHitElement(cell: StatCell): StatElement {
+  return {
+    type: 'rect',
+    invisible: true,
+    shape: { x: cell.x, y: cell.y, width: cell.width, height: cell.height },
+    style: { fill: 'transparent' },
+  };
+}
+
+/**
+ * The elements of one cell, in paint order: the background, then the sparkline, then the text. The pointer
+ * target of a cell with data links is above them.
+ */
 export function getStatCellElements(cell: StatCell, fontFamily: string): StatElement[] {
   return [
     ...(cell.background ? [getStatBackgroundElement(cell, cell.background)] : []),
@@ -197,6 +216,7 @@ export function getStatCellElements(cell: StatCell, fontFamily: string): StatEle
     ...(cell.title ? [getStatTitleElement(cell.title, fontFamily)] : []),
     ...(cell.value ? [getStatValueElement(cell.value, fontFamily)] : []),
     ...(cell.percentChange ? getStatPercentChangeElements(cell.percentChange, fontFamily) : []),
+    ...(cell.hasLinks ? [getStatHitElement(cell)] : []),
   ];
 }
 

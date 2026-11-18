@@ -2,6 +2,7 @@ import { type StatCell, type StatSparkline, type StatText, type StatValueText } 
 import {
   getStatBackgroundElement,
   getStatCellElements,
+  getStatHitElement,
   getStatPercentChangeElements,
   getStatSeries,
   getStatSparklineElements,
@@ -216,6 +217,28 @@ describe('getStatCellElements', () => {
 
   it('gives no element for a cell with no part', () => {
     expect(getStatCellElements(cell(), FONT)).toEqual([]);
+  });
+
+  it('puts the pointer target of a cell with data links above all other parts', () => {
+    const elements = getStatCellElements(cell({ title, value, hasLinks: true }), FONT);
+    expect(elements.map((element) => element.type)).toEqual(['text', 'text', 'rect']);
+    expect(elements[2]).toEqual(getStatHitElement(cell()));
+  });
+
+  it('gives pointer events only to the pointer target', () => {
+    const elements = getStatCellElements(cell({ title, value, sparkline, hasLinks: true }), FONT);
+    expect(elements.filter((element) => element.silent !== true)).toEqual([getStatHitElement(cell())]);
+  });
+});
+
+describe('getStatHitElement', () => {
+  it('is a rectangle of the size of the cell that is not painted and has a fill for the hit test', () => {
+    expect(getStatHitElement(cell({ x: 10, y: 20, width: 100, height: 50 }))).toEqual({
+      type: 'rect',
+      invisible: true,
+      shape: { x: 10, y: 20, width: 100, height: 50 },
+      style: { fill: 'transparent' },
+    });
   });
 });
 

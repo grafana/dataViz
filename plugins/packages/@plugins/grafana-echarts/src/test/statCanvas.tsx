@@ -120,6 +120,29 @@ export const defaultColorFrame = toDataFrame({
   ],
 });
 
+/**
+ * The base case with `count` data links on the value, with the titles "Link 1", "Link 2", and so on. The links
+ * are in the field config of the fixture, for the same reason as the mapping of `mappedFrame`.
+ */
+export const linkedFrame = (count: number) =>
+  toDataFrame({
+    fields: [
+      { name: 'time', type: FieldType.time, values: TIMES },
+      {
+        name: 'cpu',
+        type: FieldType.number,
+        values: [35, 52, 48, 72],
+        config: {
+          unit: 'percent',
+          links: Array.from({ length: count }, (_, index) => ({
+            title: `Link ${index + 1}`,
+            url: `http://example.com/${index + 1}`,
+          })),
+        },
+      },
+    ],
+  });
+
 /** `count` series over time, each in one field of one wide frame. */
 export const seriesFrame = (count: number) =>
   toDataFrame({

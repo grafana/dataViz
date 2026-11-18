@@ -3428,6 +3428,310 @@
         "wideLayout": true,
         "showPercentChange": false
       }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 47,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Data links, one link",
+      "description": "Each value has one data link. The cursor on a cell is a pointer, and a click opens the link in this tab.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 135
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent",
+          "links": [
+            {
+              "title": "Search dashboards for ${__field.name}",
+              "url": "/dashboards?query=${__field.name}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 48,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Data links, one link",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 135
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent",
+          "links": [
+            {
+              "title": "Search dashboards for ${__field.name}",
+              "url": "/dashboards?query=${__field.name}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 49,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Data links, two links",
+      "description": "Each value has two data links. The cursor on a cell is the menu cursor, and a click opens a menu with the group \"Data links\". The second link opens in a new tab.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 144
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent",
+          "links": [
+            {
+              "title": "Search dashboards for ${__field.name}",
+              "url": "/dashboards?query=${__field.name}"
+            },
+            {
+              "title": "Stat documentation",
+              "url": "https://grafana.com/docs/grafana/latest/panels-visualizations/visualizations/stat/",
+              "targetBlank": true
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 50,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Data links, two links",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 144
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent",
+          "links": [
+            {
+              "title": "Search dashboards for ${__field.name}",
+              "url": "/dashboards?query=${__field.name}"
+            },
+            {
+              "title": "Stat documentation",
+              "url": "https://grafana.com/docs/grafana/latest/panels-visualizations/visualizations/stat/",
+              "targetBlank": true
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
     }
   ],
   "refresh": "",

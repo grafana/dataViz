@@ -7,6 +7,7 @@ import { addStandardDataReduceOptions } from 'lib/grafana/editor/common/standard
 import { STAT_FIELD_OPTIONS } from 'lib/grafana/editor/stat/standardOptions';
 import { addStatStyleOptions } from 'lib/grafana/editor/stat/styles';
 import { type PanelOptions } from 'types';
+import { statPanelChangeHandler } from './panelChange';
 import { statSuggestionsSupplier } from './suggestions';
 
 // Initialize i18n before the option builders below call `t()`. Every module is
@@ -38,4 +39,6 @@ export const plugin = new PanelPlugin<PanelOptions, EChartsFieldConfig>(makeLazy
   // The cells go to the edges of the panel, as in core Stat.
   .setNoPadding()
   // Advertise fitness for data with a number field (opts in via `"suggestions": true`).
-  .setSuggestionsSupplier(statSuggestionsSupplier);
+  .setSuggestionsSupplier(statSuggestionsSupplier)
+  // A switch from core Stat keeps its options and field overrides (`panelChange.ts`).
+  .setPanelChangeHandler(statPanelChangeHandler);
