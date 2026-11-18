@@ -31,6 +31,7 @@
       "exclude-paths": [
         ".github",
         ".claude",
+        "contribute",
         ".run",
         "plugins/provisioning",
         "plugins/packages/@plugins/grafana-clock-panel",
