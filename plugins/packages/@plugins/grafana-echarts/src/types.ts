@@ -284,11 +284,11 @@ export interface PanelOptions
 
   /**
    * Gauge bar width as a part of the radius, as core Gauge `barWidthFactor` (0.1 to 1).
-   * Defaults to `GAUGE_BAR_WIDTH_FACTOR_DEFAULT`. See `layoutGaugeCell`.
+   * Defaults to `GAUGE_BAR_WIDTH_FACTOR_DEFAULT`. See `layoutGaugeGeometry`.
    */
   [gaugeBarWidthFactorPath]?: number;
 
-  /** Gauge center text, as core Gauge `textMode`. Defaults to `GAUGE_TEXT_MODE_DEFAULT`. See `resolveGaugeTextMode`. */
+  /** Gauge center text, as core Gauge `textMode`. Defaults to `GAUGE_TEXT_MODE_DEFAULT`. See `resolveGaugeTextParts`. */
   [gaugeTextModePath]?: GaugeTextMode;
 
   /** Show the thin threshold band outside the gauge bar, as core Gauge `showThresholdMarkers`. */

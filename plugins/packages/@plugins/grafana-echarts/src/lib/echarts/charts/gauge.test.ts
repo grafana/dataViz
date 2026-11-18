@@ -1,4 +1,4 @@
-import { createTheme, dateTime, type TimeRange, type ValueFormatter } from '@grafana/data';
+import { createTheme, dateTime, FieldType, type TimeRange, toDataFrame, type ValueFormatter } from '@grafana/data';
 import { type GaugeSeriesOption } from 'echarts';
 import { type ChartContext } from 'lib/echarts/charts/types';
 import { gaugeFieldConfig, gaugeFrame } from 'test/gaugeCanvas';
@@ -50,6 +50,24 @@ describe('gaugeChartModule', () => {
         gaugeFieldConfig({ min: undefined, max: undefined, unit: 'percent' })
       );
       expect(resolveGaugeModel(makeContext([frame]))[0]).toMatchObject({ min: 0, max: 100, text: '55%' });
+    });
+
+    // The options of the suggestion for a small table (`modules/gauge/suggestions.ts`).
+    it('gives one gauge for each row with all values, named by the string field', () => {
+      const frame = toDataFrame({
+        fields: [
+          { name: 'host', type: FieldType.string, values: ['a', 'b', 'c'] },
+          { name: 'load', type: FieldType.number, values: [10, 40, 72], config: gaugeFieldConfig() },
+        ],
+      });
+      const all = resolveGaugeModel(makeContext([frame], { reduceOptions: { values: true, calcs: [] } }));
+      expect(all.map((value) => [value.name, value.numeric])).toEqual([
+        ['a', 10],
+        ['b', 40],
+        ['c', 72],
+      ]);
+      // With no reduce options, the same frame gives one gauge with the last row.
+      expect(resolveGaugeModel(makeContext([frame])).map((value) => value.numeric)).toEqual([72]);
     });
   });
 

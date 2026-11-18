@@ -94,6 +94,28 @@ describe('layoutGaugeText', () => {
     expect(small.value!.unitFontSize).toBe(6);
   });
 
+  // Core gives the name the smaller height (0.45 × radius^0.86) only when the value and the name both show. The
+  // name height is a part of the lift of an arc gauge, also when the name does not show.
+  // https://github.com/grafana/grafana/blob/main/packages/grafana-ui/src/components/RadialGauge/RadialText.tsx
+  it('lifts a value with no name by the name height of one text, as core', () => {
+    const large = { radius: 300, barWidth: 60 };
+    const nameOnly = layoutGaugeText({
+      geometry: large,
+      shape: 'gauge',
+      parts: { showValue: false, showName: true },
+      ...texts,
+    });
+    const valueOnly = layoutGaugeText({
+      geometry: large,
+      shape: 'gauge',
+      parts: { showValue: true, showName: false },
+      ...texts,
+    });
+    const lineHeight = 1.21;
+    const lift = (valueOnly.value!.fontSize * lineHeight + nameOnly.name!.fontSize * lineHeight) / 4;
+    expect(valueOnly.value!.offsetY).toBeCloseTo(-lift, 6);
+  });
+
   it('moves the text of an arc gauge up from the center', () => {
     const circle = layoutGaugeText({ geometry, shape: 'circle', parts: both, ...texts });
     const arc = layoutGaugeText({ geometry, shape: 'gauge', parts: both, ...texts });

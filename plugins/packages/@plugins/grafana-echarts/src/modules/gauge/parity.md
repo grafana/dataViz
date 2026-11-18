@@ -85,6 +85,9 @@ their meaning.
 - The panel has no tooltip and no legend, as core.
 - A value text with the rich text syntax of ECharts (`{name|text}`), or a prefix or a suffix with `}`, draws at one
   font size.
+- A suggestion has the options, the field config and the score of the core suggestion, without `sparkline`: this
+  panel does not have that option yet. A preview card uses the shared card options of this package
+  (`previewCardOptions`), not the card options of core (unit `short`, a limit of 4 values).
 
 [canvas]: ../../lib/components/gauge.canvas.test.tsx
 [integration]: ../../lib/components/gauge.integration.test.tsx
