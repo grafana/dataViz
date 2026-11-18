@@ -62,6 +62,14 @@ const config = (env: { development?: boolean }): Configuration => ({
     }),
     // `asyncChunks: false` covers `import()`. This makes sure that no other split adds a file.
     new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
+    // The Grafana services use `@grafana/runtime`. The Renderer gets a file that gives no service, so the bundle has
+    // no `@grafana/runtime` module. `scripts/check-renderer-bundle.mjs` makes sure of it. The pattern matches the
+    // resolved file, because `jsc.baseUrl` changes the `lib/…` imports to relative paths.
+    // https://webpack.js.org/plugins/normal-module-replacement-plugin/
+    new webpack.NormalModuleReplacementPlugin(
+      /[\\/]src[\\/]lib[\\/]grafana[\\/]GrafanaPanelServices\.tsx$/,
+      path.resolve(process.cwd(), 'src/renderer/GrafanaPanelServices.tsx')
+    ),
   ],
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx'],

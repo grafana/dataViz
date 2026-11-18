@@ -14,7 +14,6 @@ digraph release_flow {
   dev_pr        [label="PR with a conventional title\nfeat(relations): … / fix(relations): …"];
   merge_pr      [label="Squash-merge to main"];
   merge_release [label="Review and merge\nthe release PR"];
-  publish_draft [label="Check the draft,\npublish it"];
   dispatch      [label="Run Publish plugin\n(Actions, ref = main or a branch)"];
 
   // GitHub objects
@@ -33,7 +32,7 @@ digraph release_flow {
 
     rp_job [label="release-please job\ncontents: read, id-token: write\n\n1. GitHub App token (grafana-plugins-platform-bot,\n    GATB grant in deployment_tools)\n2. release-please-action\n3. discover-plugins\n4. release-matrix.sh: released path → build target"];
     build_job [label="build job  (one per released plugin)\ncontents: read, id-token: write, attestations: write\n\ncheckout tagged commit → setup-workspace\n→ build-target.sh (id + version check)\n→ Vault signing token → plugin-package (sign + zip)\n→ plugin-validator → attest provenance\n→ upload artifact"];
-    attach_job [label="attach job\ncontents: write, no checkout, no repo code\n\ndownload artifact\n→ softprops/action-gh-release"];
+    attach_job [label="attach job\ncontents: write, no checkout, no repo code\n\ndownload artifact\n→ softprops/action-gh-release\n→ publish the release"];
 
     rp_job -> build_job [label="releases matrix\n(only when a release was created)"];
     build_job -> attach_job [label="artifact"];
@@ -62,10 +61,10 @@ digraph release_flow {
   rp_job -> draft [label="creates"];
   attach_job -> assets [label="uploads"];
   assets -> draft [style=dashed, arrowhead=none];
-  draft -> publish_draft;
+  attach_job -> draft [label="publishes, after\nthe upload"];
 
   // Dev publish flow
   dispatch -> cd_call;
   cd_publish -> catalog;
-  publish_draft -> dispatch [style=dotted, label="optional, after the\nrelease merges to main"];
+  draft -> dispatch [style=dotted, label="optional, after the\nrelease merges to main"];
 }
