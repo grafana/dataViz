@@ -4,9 +4,10 @@ import { isOnXAxisLabels, MIN_PAN_DISTANCE, msPerPixel, panTimeRange } from 'lib
 import { useEffect, useRef } from 'react';
 
 /**
- * Pan with a drag of the x-axis labels, as core time panels (viz contract 26.1). While the user drags, the
- * x axis shows the moved range. On release, a drag of `MIN_PAN_DISTANCE` px or more gives the new range to
- * `onChangeTimeRange`. A shorter drag puts the axis back. The brush zoom stays in the plot area.
+ * Pan with a drag of the x-axis labels, as core time panels (viz contract 26.1).
+ * If `preview` is true, the x axis shows the moved range during the drag.
+ * On release, a drag of `MIN_PAN_DISTANCE` px or more gives the new range to `onChangeTimeRange`.
+ * A shorter drag restores the original axis. The brush zoom stays in the plot area.
  *
  * `range` is the range that the x axis shows. The handlers read the latest `range` and `onChangeTimeRange`
  * through refs, so a new prop does not bind the listeners again.
@@ -15,7 +16,8 @@ import { useEffect, useRef } from 'react';
 export function useTimeAxisPan(
   chart: EChartsType | null,
   range: AbsoluteTimeRange,
-  onChangeTimeRange: (timeRange: AbsoluteTimeRange) => void
+  onChangeTimeRange: (timeRange: AbsoluteTimeRange) => void,
+  preview = true
 ): void {
   const latest = useRef({ range, onChangeTimeRange });
   useEffect(() => {
@@ -54,23 +56,26 @@ export function useTimeAxisPan(
       const start = latest.current.range;
       // The drag goes on outside the chart, as core, so the listeners are on the document and use `clientX`.
       const downClientX = event.event instanceof MouseEvent ? event.event.clientX : event.offsetX;
-      let dragPixels = 0;
       zr.setCursorStyle('grabbing');
 
       const onMove = (e: MouseEvent) => {
-        dragPixels = e.clientX - downClientX;
-        showRange(panTimeRange(start, dragPixels, perPixel));
+        showRange(panTimeRange(start, e.clientX - downClientX, perPixel));
       };
       const onUp = (e: MouseEvent) => {
-        dragPixels = e.clientX - downClientX;
+        const dragPixels = e.clientX - downClientX;
         endDrag?.();
+        if (!preview && latest.current.range !== start) {
+          return;
+        }
         if (Math.abs(dragPixels) >= MIN_PAN_DISTANCE) {
           latest.current.onChangeTimeRange(panTimeRange(start, dragPixels, perPixel));
-        } else {
+        } else if (preview) {
           showRange(start);
         }
       };
-      document.addEventListener('mousemove', onMove);
+      if (preview) {
+        document.addEventListener('mousemove', onMove);
+      }
       document.addEventListener('mouseup', onUp);
       endDrag = () => {
         document.removeEventListener('mousemove', onMove);
@@ -92,5 +97,5 @@ export function useTimeAxisPan(
         zr.off('mousedown', onDown);
       }
     };
-  }, [chart]);
+  }, [chart, preview]);
 }
