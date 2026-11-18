@@ -230,6 +230,8 @@ class Renderer {
   private readonly onRenderError = (error: Error) => {
     // `state.6`: the raw message goes to the console only.
     console.error(LOG_PREFIX, error);
+    // The error view has no time axis, as the error view of the panel (`renderer.61`).
+    this.annotate?.close();
     const prepared = this.prepared;
     if (prepared?.kind === 'chart') {
       const message = errorMessage('render-error', { panelName: prepared.panelName });

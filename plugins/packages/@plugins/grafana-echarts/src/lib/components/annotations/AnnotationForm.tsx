@@ -159,6 +159,7 @@ export const AnnotationForm: React.FC<Props> = ({
                 <AnnotationTagsSelect
                   id={tagsId}
                   tags={tags}
+                  disabled={locked}
                   onChange={(next) => onChange({ tags: next })}
                   searchTags={searchTags}
                 />

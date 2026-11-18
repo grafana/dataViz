@@ -365,6 +365,21 @@ describe('update and destroy', () => {
     }
   );
 
+  // contract-rule: renderer.61
+  it('closes the form when the chart throws while it draws: the error view has no time axis', async () => {
+    const { el, chart, handle } = await draw(fixtureSpec(SET));
+    const [x, y] = pointPixel(chart);
+    await clickAt(chart, x, y, CTRL);
+    setText('Deploy');
+    // The draw of the next viz spec throws, as a bug of a chart module does.
+    jest.spyOn(chart, 'setOption').mockImplementation(() => {
+      throw new Error('raw chart failure');
+    });
+    act(() => handle.update(fixtureSpec(SET)));
+    await waitFor(() => expect(el.getAttribute('data-viz-error')).toBe('render-error'));
+    expect(formEl()).toBeNull();
+  });
+
   // contract-rule: renderer.62
   it('does nothing for setAnnotated after destroy', async () => {
     const { el, chart, handle, requests } = await draw(fixtureSpec(SET));
