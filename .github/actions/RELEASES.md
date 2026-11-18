@@ -130,8 +130,8 @@ caveat above). So its release-please package is the repo root, `.`, which gets e
   package that also changes a file outside the list, for example `plugins/pnpm-lock.yaml` for a new
   dependency, still opens a Renderer release. That release has a bundle that differs only in its version.
   This is accepted, because a missed release is worse than an extra one.
-- A file in the repo root cannot be excluded: `CLAUDE.md`, `AGENTS.md`, `README.md`, `renovate.json` and the
-  release-please files. A CI change usually changes `CLAUDE.md` too, so a `feat(CI)` or `fix(CI)` commit
+- A file in the repo root cannot be excluded: `CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING.md`, `DEVELOPING.md`, `README.md`, `renovate.json` and the
+  release-please files. A CI change usually changes `DEVELOPING.md` too, so a `feat(CI)` or `fix(CI)` commit
   usually opens a Renderer release PR. Leave that PR open until a change of the bundle arrives.
 
 `exclude-paths` entries are directories, relative to the repo root. A file cannot be excluded.
