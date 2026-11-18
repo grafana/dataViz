@@ -23,7 +23,7 @@ import { type RefreshCause, type RefreshStatus } from './refresh';
 import { RendererErrorView } from './RendererErrorView';
 import { RendererTitle } from './RendererTitle';
 import { RendererToolbar } from './RendererToolbar';
-import { ResetTimeRangeButton } from './ResetTimeRangeButton';
+import { ChartResetTimeRangeButton } from './ChartResetTimeRangeButton';
 import { rootClassName } from './rootStyles';
 
 interface Props {
@@ -134,11 +134,7 @@ export const RendererView = ({
                         />
                       </TimeDragContext.Provider>
                       <ChartNotices notices={toChartNotices(prepared.notices)} corner="top-left" />
-                      {timeNavigation?.localRange && (
-                        <div style={{ position: 'absolute', top: 4, right: 32 }}>
-                          <ResetTimeRangeButton onClick={timeNavigation.onReset} />
-                        </div>
-                      )}
+                      {timeNavigation?.localRange && <ChartResetTimeRangeButton onClick={timeNavigation.onReset} />}
                     </ChartErrorBoundary>
                   )}
                 </div>

@@ -33,7 +33,7 @@ export const TimePicker = ({ value, timeZone, onRequest, onPick }: Props) => {
     <TimeRangePicker
       value={value}
       timeZone={timeZone}
-      onChange={(range) => onPick(toRefreshRequest(range))}
+      onChange={(picked) => onPick(toRefreshRequest(picked))}
       onMoveBackward={() => onRequest(toTimeRangeRequest(shiftTimeRange(range, -1)))}
       onMoveForward={() => onRequest(toTimeRangeRequest(shiftTimeRange(range, 1)))}
       onZoom={() => onRequest(toTimeRangeRequest(zoomOutTimeRange(range)))}
