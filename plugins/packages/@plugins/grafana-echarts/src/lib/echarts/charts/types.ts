@@ -401,6 +401,13 @@ export interface ChartModule {
    */
   getDataLinks?(ctx: ChartContext): DataLinkSupplier[];
 
+  /**
+   * The text of the chart for assistive tools. With a text, the chart element has the role `img` and this text
+   * as its accessible name. The stat family sets it: its values are text in core Stat, and a canvas has no text.
+   * https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/img_role
+   */
+  getAccessibleText?(ctx: ChartContext): string | undefined;
+
   /** Return the resize behavior for the current chart context. */
   getResizeStrategy?(ctx: ChartContext): ChartResizeStrategy;
 

@@ -6,6 +6,7 @@ import { getStatSeries } from 'lib/echarts/options/stat';
 import { getNoTooltipOption } from 'lib/echarts/tooltip/option';
 import { getDisplayLinks } from 'lib/grafana/dataLinks';
 import { resolveFieldDisplays } from 'lib/grafana/fieldDisplays';
+import { getStatAccessibleText } from 'lib/grafana/stat/accessibleText';
 import { layoutStatCells, resolveStatTextMode } from 'lib/grafana/stat/layout';
 import { applyGlobalFieldRange } from 'lib/grafana/stat/range';
 import { getStatIssue } from './statIssue';
@@ -45,6 +46,11 @@ export const statChartModule: ChartModule = {
 
   // Core Stat has no tooltip.
   getTooltipOption: getNoTooltipOption,
+
+  // The name and the value of each cell, which core Stat has as DOM text.
+  getAccessibleText(ctx) {
+    return getStatAccessibleText(resolveStatDisplays(ctx));
+  },
 
   // One supplier for each value, in the order of the data items of the series.
   getDataLinks(ctx) {

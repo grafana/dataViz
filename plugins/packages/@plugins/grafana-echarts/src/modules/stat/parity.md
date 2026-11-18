@@ -81,6 +81,18 @@ the Limit option. All values are data items of one series, so a panel with 200 v
 Regression tests: [integration: draws the name of each of %s values, and no name is cut][integration],
 [layout.test.ts][layout]. Demo panels: [50 values, 200 values][db-basics].
 
+## Text for assistive tools
+
+Core Stat draws each cell as DOM text, which a screen reader reads. A canvas has no text. The chart element of
+this panel has the role `img`, and its accessible name is the name and the value of each cell, in the order of
+the cells, with the percent change when the panel shows one: "cpu: 72%, change 106%; memory: 65%"
+([accessibleText.ts](../../lib/grafana/stat/accessibleText.ts)). The name and the value are in the text in each
+text mode, as in core, which gives the part that a text mode hides as a tooltip of the cell. Regression tests:
+[integration: gives the chart the name and the value of each cell as its accessible name][integration],
+[accessibleText.test.ts](../../lib/grafana/stat/accessibleText.test.ts).
+
+The text is one name for the panel. A screen reader does not move from cell to cell, as it does in core.
+
 ## Streaming data
 
 The panel draws each update of a query that streams, as core Stat

@@ -1,6 +1,6 @@
 import { type DataFrame, LoadingState } from '@grafana/data';
 import { BigValueGraphMode, BigValueTextMode } from '@grafana/schema';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { getComponent, getSeriesCanvasEvents } from 'test/panel';
 import { cpuFrame, drawnTexts, renderStat, seriesFrame, singlePointFrame, statCanvasOptions } from 'test/statCanvas';
 
@@ -54,6 +54,17 @@ describe('stat panel', () => {
     const { seriesEvents } = await renderStat([singlePointFrame]);
     expect(strokeCount(seriesEvents)).toBe(0);
     expect(drawnTexts(seriesEvents).join('')).toBe('35');
+  });
+
+  it('gives the chart the name and the value of each cell as its accessible name', async () => {
+    await renderStat([seriesFrame(2)]);
+    expect(screen.getByRole('img', { name: 'server-1: 22; server-2: 11' })).toBeDefined();
+  });
+
+  it('gives the name of the value in the accessible name when the text mode hides it', async () => {
+    const { seriesEvents } = await renderStat([cpuFrame], { textMode: BigValueTextMode.Value });
+    expect(drawnTexts(seriesEvents)).not.toContain('cpu');
+    expect(screen.getByRole('img', { name: 'cpu: 72%' })).toBeDefined();
   });
 
   it('draws the last value of each update while the data streams', async () => {
