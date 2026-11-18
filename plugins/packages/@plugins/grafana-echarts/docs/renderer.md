@@ -34,6 +34,7 @@ The rules are `renderer.49` to `renderer.67` of the contract. `src/renderer/anno
 - The saved annotations stay in memory until `destroy`. The Renderer draws them again after each `update`, with the annotations of the viz spec. The App must not add them to the viz spec.
 - `update` keeps the form. The form is at the x of its start time. If that time is not in the time range of the new chart, the form goes to the nearest edge of the plot area. If the new chart has no time axis, the form closes.
 - The form is not an HTML `form` element, because the sandbox iframe blocks a form submit.
+- The form is 300 px wide (`ANNOTATION_FORM_WIDTH_PX`), not the 460 px of the Grafana panel. A press out of the form does not close it, so it must leave a part of the plot area free for the Ctrl or Cmd click that moves it. The check draws it in elements that are 480 px and 640 px wide.
 
 ## Peers
 

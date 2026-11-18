@@ -1,4 +1,4 @@
-import { css, cx } from '@emotion/css';
+import { css } from '@emotion/css';
 import { type GrafanaTheme2 } from '@grafana/data';
 import { type TimeZone } from '@grafana/schema';
 import { Button, Field, IconButton, Portal, Stack, TagsInput, TextArea, useStyles2 } from '@grafana/ui';
@@ -31,9 +31,17 @@ interface Props extends AnnotationFormValues {
   onCancel: () => void;
   /** A press out of the form. With no callback, such a press does nothing. */
   onPressOut?: () => void;
-  /** A class for the form root. The form is in a portal, so it gets no style from the elements around the chart. */
+  /**
+   * A class for the parent element of the form. The form is in a portal, so it gets no style from the elements
+   * around the chart.
+   */
   className?: string;
+  /** The width of the form in px. The default is the width of core's editor. */
+  width?: number;
 }
+
+/** The width of core's `AnnotationEditor`, in px. */
+const CORE_WIDTH_PX = 460;
 
 /** The data attribute of the form root, for tests and browser probes. */
 export const ANNOTATION_EDITOR_ATTR = 'data-echarts-annotation-editor';
@@ -61,6 +69,7 @@ export const AnnotationForm: React.FC<Props> = ({
   onCancel,
   onPressOut,
   className,
+  width = CORE_WIDTH_PX,
 }) => {
   const styles = useStyles2(getStyles);
   const searchTags = useContext(AnnotationTagsContext);
@@ -118,68 +127,72 @@ export const AnnotationForm: React.FC<Props> = ({
 
   return (
     <Portal>
-      {/* `styles.editor` is last, so it wins over `className`. https://emotion.sh/docs/@emotion/css#cx */}
-      <div ref={rootRef} className={cx(className, styles.editor)} {...{ [ANNOTATION_EDITOR_ATTR]: '' }}>
-        <div className={styles.header}>
-          <Stack justifyContent="space-between" alignItems="center">
-            <Stack gap={0} width="100%" justifyContent="space-between" alignItems="center">
-              <div>Add annotation</div>
-              <div>{formatDraftTime(draft, timeZone)}</div>
+      {/* `className` is on a parent of the form, not on the form. `cx` makes one class from two classes, and
+          that gives each rule of `className` the specificity of a class. Then its rules for bare elements win
+          over the class of a `@grafana/ui` component. https://emotion.sh/docs/@emotion/css#cx */}
+      <div className={className}>
+        <div ref={rootRef} className={styles.editor} style={{ width }} {...{ [ANNOTATION_EDITOR_ATTR]: '' }}>
+          <div className={styles.header}>
+            <Stack justifyContent="space-between" alignItems="center">
+              <Stack gap={0} width="100%" justifyContent="space-between" alignItems="center">
+                <div>Add annotation</div>
+                <div>{formatDraftTime(draft, timeZone)}</div>
+              </Stack>
+              <IconButton aria-label="Close" name="times" disabled={locked} onClick={onCancel} />
             </Stack>
-            <IconButton aria-label="Close" name="times" disabled={locked} onClick={onCancel} />
-          </Stack>
-        </div>
-        {/* Not a `form` element: the sandbox iframe of the standalone renderer blocks a form submit, so the Save
+          </div>
+          {/* Not a `form` element: the sandbox iframe of the standalone renderer blocks a form submit, so the Save
             button has a click handler.
             https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#allow-forms */}
-        <div>
-          <div className={styles.content}>
-            <Field label="Description" invalid={invalid} error={invalid ? 'Annotation description is required' : ''}>
-              <TextArea
-                autoFocus
-                className={styles.textarea}
-                value={description}
-                disabled={locked}
-                onChange={(event) => {
-                  onChange({ description: event.currentTarget.value });
-                  setInvalid(false);
-                }}
-              />
-            </Field>
-            <Field label="Tags" htmlFor={tagsId}>
-              {searchTags === undefined ? (
-                <TagsInput
-                  id={tagsId}
-                  placeholder="Add tags"
-                  tags={tags}
+          <div>
+            <div className={styles.content}>
+              <Field label="Description" invalid={invalid} error={invalid ? 'Annotation description is required' : ''}>
+                <TextArea
+                  autoFocus
+                  className={styles.textarea}
+                  value={description}
                   disabled={locked}
-                  onChange={(next) => onChange({ tags: next })}
+                  onChange={(event) => {
+                    onChange({ description: event.currentTarget.value });
+                    setInvalid(false);
+                  }}
                 />
-              ) : (
-                <AnnotationTagsSelect
-                  id={tagsId}
-                  tags={tags}
-                  disabled={locked}
-                  onChange={(next) => onChange({ tags: next })}
-                  searchTags={searchTags}
-                />
+              </Field>
+              <Field label="Tags" htmlFor={tagsId}>
+                {searchTags === undefined ? (
+                  <TagsInput
+                    id={tagsId}
+                    placeholder="Add tags"
+                    tags={tags}
+                    disabled={locked}
+                    onChange={(next) => onChange({ tags: next })}
+                  />
+                ) : (
+                  <AnnotationTagsSelect
+                    id={tagsId}
+                    tags={tags}
+                    disabled={locked}
+                    onChange={(next) => onChange({ tags: next })}
+                    searchTags={searchTags}
+                  />
+                )}
+              </Field>
+            </div>
+            <div className={styles.footer}>
+              {message != null && (
+                <div role="alert" className={styles.error}>
+                  {message}
+                </div>
               )}
-            </Field>
-          </div>
-          <div className={styles.footer}>
-            {message != null && (
-              <div role="alert" className={styles.error}>
-                {message}
-              </div>
-            )}
-            <Stack justifyContent="flex-end">
-              <Button size="sm" variant="secondary" fill="outline" disabled={locked} onClick={onCancel}>
-                Cancel
-              </Button>
-              <Button size="sm" disabled={saving} onClick={save}>
-                {saving ? 'Saving' : 'Save'}
-              </Button>
-            </Stack>
+              <Stack justifyContent="flex-end">
+                <Button size="sm" variant="secondary" fill="outline" disabled={locked} onClick={onCancel}>
+                  Cancel
+                </Button>
+                <Button size="sm" disabled={saving} onClick={save}>
+                  {saving ? 'Saving' : 'Save'}
+                </Button>
+              </Stack>
+            </div>
           </div>
         </div>
       </div>
@@ -217,7 +230,8 @@ const getStyles = (theme: GrafanaTheme2) => ({
     borderRadius: theme.shape.radius.default,
     boxShadow: theme.shadows.z3,
     userSelect: 'text',
-    width: 460,
+    // The `width` prop gives the width. A viewport that is less wide makes the form less wide.
+    maxWidth: '100vw',
   }),
   header: css({
     borderBottom: `1px solid ${theme.colors.border.weak}`,

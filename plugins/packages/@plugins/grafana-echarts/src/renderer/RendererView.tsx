@@ -15,7 +15,7 @@ import React, { useEffect, useMemo } from 'react';
 import { type AnnotateActions, type AnnotateForm } from './annotate';
 import { CommitSignal } from './CommitSignal';
 import { dataIssueText } from './dataIssueText';
-import { TITLE_HEIGHT_PX, TOOLBAR_HEIGHT_PX } from './layout';
+import { ANNOTATION_FORM_WIDTH_PX, TITLE_HEIGHT_PX, TOOLBAR_HEIGHT_PX } from './layout';
 import { errorMessage } from './messages';
 import { NoDataView } from './NoDataView';
 import { toChartNotices } from './notices';
@@ -25,7 +25,7 @@ import { type RefreshCause, type RefreshStatus } from './refresh';
 import { RendererErrorView } from './RendererErrorView';
 import { RendererTitle } from './RendererTitle';
 import { RendererToolbar } from './RendererToolbar';
-import { rootClassName } from './rootStyles';
+import { portalClassName, rootClassName } from './rootStyles';
 
 interface Props {
   prepared: Prepared;
@@ -78,6 +78,7 @@ export const RendererView = ({
     height - (refresh ? TOOLBAR_HEIGHT_PX : 0) - (prepared.title !== undefined ? TITLE_HEIGHT_PX : 0)
   );
   const rootClass = useMemo(() => rootClassName(prepared.theme), [prepared.theme]);
+  const portalClass = useMemo(() => portalClassName(prepared.theme), [prepared.theme]);
   const pointAction = useMemo(
     () => (prepared.kind === 'chart' && onMessage ? askInChat(prepared.props.data.series, onMessage) : undefined),
     [prepared, onMessage]
@@ -140,11 +141,12 @@ export const RendererView = ({
                       <ChartNotices notices={toChartNotices(prepared.notices)} corner="top-left" />
                     </ChartErrorBoundary>
                   )}
-                  {/* The form is in a portal, so it gets the root class for the font and the text color. A press
+                  {/* The form is in a portal, so it gets the portal class for the font and the text color. A press
                       out of it does not close it: a Ctrl or Cmd click moves it (`renderer.52`). */}
                   {form && actions && (
                     <AnnotationForm
-                      className={rootClass}
+                      className={portalClass}
+                      width={ANNOTATION_FORM_WIDTH_PX}
                       draft={form.draft}
                       timeZone={prepared.timeZone}
                       description={form.text}

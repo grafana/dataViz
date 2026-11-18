@@ -32,10 +32,15 @@ const MODIFIER = 'ControlOrMeta';
 const MARKER_BAND_PX = 60;
 
 /** The page of the test: the chart, the form, and the pointer positions in the plot area. */
-async function open(page: Page, set?: string, options: { onAnnotate?: boolean; onRefresh?: boolean } = {}) {
+async function open(
+  page: Page,
+  set?: string,
+  options: { onAnnotate?: boolean; onRefresh?: boolean; size?: { width: number; height: number } } = {}
+) {
   // A clock of the test, so `annotateTimeoutMs` passes with `fastForward`. https://playwright.dev/docs/clock
   await page.clock.install();
-  // The form is 460 px wide. In an element of this size, it is beside its time, and does not cover the chart there.
+  // In an element of the default size of this test, the form is beside its time for each point of the plot area,
+  // and it does not cover the marker of an annotation there.
   await draw(page, spec(set), { onAnnotate: true, onRefresh: false, size: { width: 1200, height: 600 }, ...options });
   const app = page.frameLocator('#app');
   const box = (await page.locator('#app').boundingBox())!;
@@ -111,7 +116,36 @@ async function open(page: Page, set?: string, options: { onAnnotate?: boolean; o
     await expect(shown).toHaveCount(1);
     await page.mouse.move(box.x + 2, box.y + 2);
   };
-  return { app, form, text, click, drag, pin, addTag, save, setAnnotated, timeout, expectAnnotation };
+  return { app, box, form, text, click, drag, pin, addTag, save, setAnnotated, timeout, expectAnnotation };
+}
+
+// The form does not close on a press out of it, so the user moves it with a Ctrl or Cmd click on the plot area
+// (`renderer.52`). Thus the form must leave a part of the plot area free, also in a small element.
+for (const size of [
+  { width: 480, height: 400 },
+  { width: 640, height: 400 },
+]) {
+  test(`in an element ${size.width} px wide, the form leaves plot area free, and a click there moves it`, async ({
+    page,
+  }) => {
+    const { box, form, text, click, save } = await open(page, undefined, { size });
+    await click(0, true);
+    await text.fill('Deploy');
+    const first = (await form.getByText(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/).textContent())!;
+
+    // A point 30 px to the left or to the right of the form, in the plot area. The y axis labels are at the left
+    // of the plot area.
+    const formBox = (await form.boundingBox())!;
+    const plot = { left: box.x + 100, right: box.x + box.width - 30 };
+    const free = [formBox.x - 30, formBox.x + formBox.width + 30].find((x) => x > plot.left && x < plot.right);
+    expect(free, `the form covers x ${formBox.x} to ${formBox.x + formBox.width}`).toBeDefined();
+
+    await click(free! - (box.x + box.width / 2), true);
+    await expect(text).toHaveValue('Deploy');
+    const moved = headerTime((await save()).time);
+    expect(moved).not.toBe(first);
+    await expect(form).toContainText(moved);
+  });
 }
 
 test('the pinned tooltip has an Add annotation button, and a click on it opens the form', async ({ page }) => {
@@ -278,6 +312,20 @@ test('while the chart is busy with a refresh, the user can open and save the for
   await text.fill('Deploy');
   expect(await save()).toMatchObject({ text: 'Deploy' });
   await expect(app.getByRole('button', { name: 'Refresh' })).toBeDisabled();
+});
+
+test('the form has the font of the theme, and its buttons keep the colors of their component', async ({ page }) => {
+  // contract-rule: renderer.11
+  const { app, form, text, click } = await open(page);
+  await click(0, true);
+  // The form is in a portal, so it gets the font from the portal styles of the Renderer, not from the App. A
+  // browser gives a text field its own font, so the portal styles must also reach each field.
+  await expect(form).toHaveCSS('font-family', /^Inter/);
+  await expect(text).toHaveCSS('font-family', /^Inter/);
+  await expect(app.getByPlaceholder('Add tags')).toHaveCSS('font-family', /^Inter/);
+  // The portal styles do not win over the class of a `@grafana/ui` component: the primary button has white text.
+  await expect(app.getByRole('button', { name: 'Save' })).toHaveCSS('color', 'rgb(255, 255, 255)');
+  await expect(app.getByRole('button', { name: 'Save' })).not.toHaveCSS('border-radius', '0px');
 });
 
 for (const [name, set, onAnnotate] of [
