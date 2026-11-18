@@ -6,9 +6,12 @@ import {
   getPanelOptionsWithDefaults,
   type GrafanaTheme2,
 } from '@grafana/data';
+import { type AnnotateRequest } from '@grafana/viz-contract/renderer-api';
 import { seriesTypePath } from 'editor/constants';
 import { resolveSeriesType } from 'lib/echarts/charts/autoSeriesType';
 import { isMultiValueSeriesType } from 'lib/echarts/charts/narrowing';
+import { resolveChartModule } from 'lib/echarts/charts/registry';
+import { hasAnnotationAxis } from 'lib/echarts/options/panelOption';
 import { type PanelComponentProps } from 'lib/components/types';
 import { applyLegendOverrides, type LegendOverrides, readLegendChange } from 'lib/grafana/fields/seriesConfig';
 import { type PanelOptions } from 'types';
@@ -16,6 +19,7 @@ import { withoutCallOuts } from './callOuts';
 import { isObject } from './parseSpec';
 import { type PanelEntry } from './panels';
 import { MAX_SERIES } from './registry';
+import { savedAnnotationsFrame } from './savedAnnotations';
 import { toSpecData } from './toPanelData';
 import { TRUNCATED_FAMILIES, truncateSeries } from './truncateSeries';
 import { type VizSpec } from './vizSpec';
@@ -70,12 +74,15 @@ export const toPanelProps = (spec: VizSpec, entry: PanelEntry): SpecPanelProps =
  * `toPanelProps`, and the number of series that the `series-truncated` cut leaves out (`state.19`). The cut runs
  * before the field overrides, only for the families of `TRUNCATED_FAMILIES`. A candlestick or boxplot is not cut: it
  * draws one series from several number fields of the first frame, as `PanelContent` resolves the series type.
+ * `savedAnnotations` draw with the annotations of the viz spec (`renderer.63`). `timeAxis` is true if the chart has
+ * a time axis for the Add annotation UI (`renderer.49`).
  */
 export function preparePanel(
   spec: VizSpec,
   entry: PanelEntry,
-  legend?: LegendHook
-): { props: SpecPanelProps; omittedSeries: number } {
+  legend?: LegendHook,
+  savedAnnotations: readonly AnnotateRequest[] = []
+): { props: SpecPanelProps; omittedSeries: number; timeAxis: boolean } {
   const theme = themeOf(spec.theme);
   const { options, fieldConfig: specFieldConfig } = getPanelOptionsWithDefaults({
     plugin: entry.plugin,
@@ -89,7 +96,8 @@ export function preparePanel(
     throw new Error(`The options of ${spec.panel.type} are not an object`);
   }
   const data = toSpecData(spec, entry);
-  const multiValue = isMultiValueSeriesType(resolveSeriesType(options[seriesTypePath], data.series, entry.family));
+  const seriesType = resolveSeriesType(options[seriesTypePath], data.series, entry.family);
+  const multiValue = isMultiValueSeriesType(seriesType);
   const cut =
     TRUNCATED_FAMILIES.has(entry.family) && !multiValue
       ? truncateSeries(data.series, MAX_SERIES)
@@ -102,11 +110,13 @@ export function preparePanel(
     theme,
     timeZone: spec.timeZone,
   });
+  const annotations =
+    savedAnnotations.length > 0 ? [...data.annotations, savedAnnotationsFrame(savedAnnotations)] : data.annotations;
   const props: SpecPanelProps = {
     id: 1,
     title: '',
     family: entry.family,
-    data: { ...data, series },
+    data: { ...data, series, annotations },
     timeRange: data.timeRange,
     timeZone: spec.timeZone,
     options,
@@ -127,5 +137,7 @@ export function preparePanel(
     },
     onChangeTimeRange: noop,
   };
-  return { props, omittedSeries: cut.omitted };
+  // The same test as the chart makes for its Add annotation UI (`EChart`).
+  const timeAxis = hasAnnotationAxis({ frames: series, seriesType, options }, resolveChartModule(seriesType));
+  return { props, omittedSeries: cut.omitted, timeAxis };
 }

@@ -32,3 +32,5 @@ export const DEFAULT_HEIGHT_PX: number = constants.defaultHeightPx.value;
 export const MAX_SERIES: number = constants.maxSeries.value;
 /** Time before a refresh with no result fails (`refresh.5`). */
 export const REFRESH_TIMEOUT_MS: number = constants.refreshTimeoutMs.value;
+/** Time before an annotation save with no result stops being busy (`renderer.56`). */
+export const ANNOTATE_TIMEOUT_MS: number = constants.annotateTimeoutMs.value;

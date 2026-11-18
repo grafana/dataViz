@@ -54,12 +54,14 @@ export interface HarnessOptions {
   /** `false`: the App gives no `onRefresh` to `render`. */
   onRefresh?: boolean;
   onMessage?: boolean;
+  /** `true`: the App gives `onAnnotate` to `render`, and posts each request as an `annotate` message. */
+  onAnnotate?: boolean;
 }
 
 /** The outer page: it records the messages of the iframe in `window.messages`. */
 export function harnessPage(
   spec: unknown,
-  { size = { width: 640, height: 400 }, onRefresh, onMessage }: HarnessOptions = {}
+  { size = { width: 640, height: 400 }, onRefresh, onMessage, onAnnotate }: HarnessOptions = {}
 ) {
   const inner = `<!doctype html><html><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="${MCP_APPS_DEFAULT_CSP}">
@@ -67,7 +69,7 @@ export function harnessPage(
 <body><div id="root"></div>
 <script>${scriptText(PROBES)}</script>
 <script type="application/json" id="viz-spec">${scriptJson(spec)}</script>
-<script type="application/json" id="harness-options">${scriptJson({ onRefresh, onMessage })}</script>
+<script type="application/json" id="harness-options">${scriptJson({ onRefresh, onMessage, onAnnotate })}</script>
 <script>${scriptText(app())}</script></body></html>`;
   const srcdoc = inner.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
   return `<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0">
@@ -112,6 +114,13 @@ export async function draw(page: Page, spec: unknown, options: HarnessOptions = 
 /** All the messages of the iframe up to now. */
 export const readMessages = (page: Page): Promise<Message[]> =>
   page.evaluate(() => (window as unknown as { messages: Message[] }).messages);
+
+/** Sends a message to the test App in the iframe, for example `{ type: 'setAnnotated', id, ok, error }`. */
+export const sendToApp = (page: Page, message: Message): Promise<void> =>
+  page.evaluate(
+    (data) => document.querySelector<HTMLIFrameElement>('#app')!.contentWindow!.postMessage(data, '*'),
+    message
+  );
 
 let pings = 0;
 

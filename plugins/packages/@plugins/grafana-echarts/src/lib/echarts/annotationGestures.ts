@@ -42,3 +42,16 @@ export function timeAtPixel(chart: EChartsType, x: number, y: number): number | 
   const time: unknown = chart.convertFromPixel({ xAxisIndex: 0 }, x);
   return typeof time === 'number' && Number.isFinite(time) ? time : null;
 }
+
+/**
+ * The canvas x of a time (epoch ms) on the first x-axis. A time out of `range`, the range of that axis, gives the
+ * nearest edge of the plot area. `null` when the chart has no such axis.
+ * https://echarts.apache.org/en/api.html#echartsInstance.convertToPixel
+ */
+export function pixelAtTime(chart: EChartsType, time: number, range: { from: number; to: number }): number | null {
+  if (chart.isDisposed()) {
+    return null;
+  }
+  const x: unknown = chart.convertToPixel({ xAxisIndex: 0 }, Math.min(Math.max(time, range.from), range.to));
+  return typeof x === 'number' && Number.isFinite(x) ? x : null;
+}

@@ -2,7 +2,7 @@ import { FieldType, toDataFrame } from '@grafana/data';
 import { type PanelContext } from '@grafana/ui';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { type EChartsType } from 'echarts';
-import { ANNOTATION_EDITOR_ATTR } from 'lib/components/annotations/AnnotationEditor';
+import { ANNOTATION_EDITOR_ATTR } from 'lib/components/annotations/AnnotationForm';
 import { defaultTimeRange } from 'test/panel';
 import { clickAt, dispatch, type Modifiers, renderTooltipPanel, tooltipText } from 'test/tooltipPointer';
 

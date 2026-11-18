@@ -3,7 +3,12 @@ import { debug, LOG_LEVELS } from 'development';
 import { type ECBasicOption } from 'echarts/types/dist/shared';
 import { partToWholeSeriesTypes } from 'editor/pie';
 import { panelTypeToAxis } from 'lib/echarts/axes/converters';
-import { isHierarchySeriesType, isMultivariateSeriesType, isRelationsSeriesType } from 'lib/echarts/charts/narrowing';
+import {
+  isHierarchySeriesType,
+  isMultiValueSeriesType,
+  isMultivariateSeriesType,
+  isRelationsSeriesType,
+} from 'lib/echarts/charts/narrowing';
 import { resolveChartModule } from 'lib/echarts/charts/registry';
 import { type BaseOptionParts, type ChartContext, type ChartModule } from 'lib/echarts/charts/types';
 import { framesHaveTimeField } from 'lib/echarts/converters/frames';
@@ -143,6 +148,9 @@ export function buildPanelChartOption(
   };
 }
 
+/** The parts of the chart context that give the type of the x axis. */
+type AxisContext = Pick<ChartContext, 'frames' | 'seriesType' | 'options'>;
+
 /**
  * Whether the chart has the time brush: drag-to-zoom, and the ctrl/cmd gestures that add an
  * annotation. It is only meaningful on a time axis, where the brush selection maps to an
@@ -150,7 +158,7 @@ export function buildPanelChartOption(
  * axis opt out (see `ChartModule.disableTimeBrush`).
  */
 export function hasTimeBrush(
-  ctx: ChartContext,
+  ctx: AxisContext,
   chartModule: ChartModule,
   hasTimeField = framesHaveTimeField(ctx.frames),
   axisType = panelTypeToAxis(ctx, hasTimeField)
@@ -158,9 +166,17 @@ export function hasTimeBrush(
   return hasTimeAxis(ctx, hasTimeField, axisType) && !chartModule.disableTimeBrush;
 }
 
+/**
+ * Whether the user can add an annotation from the chart, and pan it with a drag of the x-axis labels: the chart
+ * has the time brush, and it is not a candlestick or a boxplot, which draw on a category axis.
+ */
+export function hasAnnotationAxis(ctx: AxisContext, chartModule: ChartModule): boolean {
+  return hasTimeBrush(ctx, chartModule) && !isMultiValueSeriesType(ctx.seriesType);
+}
+
 /** Whether the chart has a time x axis. A double click on such a chart zooms the time range out. */
 export function hasTimeAxis(
-  ctx: ChartContext,
+  ctx: AxisContext,
   hasTimeField = framesHaveTimeField(ctx.frames),
   axisType = panelTypeToAxis(ctx, hasTimeField)
 ): boolean {
