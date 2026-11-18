@@ -43,6 +43,34 @@ describe('layoutRepeaterCells with an orientation', () => {
   it('gives no cell for no value', () => {
     expect(oriented(VizOrientation.Horizontal, 0)).toEqual([]);
   });
+
+  it('gives no cell when the spacing is larger than the share of one cell', () => {
+    // 20 values have 19 spaces of 16 px, which are higher than 300 px. The same spaces are narrower than 400 px.
+    expect(oriented(VizOrientation.Horizontal, 20)).toEqual([]);
+    expect(oriented(VizOrientation.Vertical, 20)).toHaveLength(20);
+    // 27 values have 26 spaces of 16 px, which are wider than 400 px.
+    expect(oriented(VizOrientation.Vertical, 27)).toEqual([]);
+  });
+
+  it.each([VizOrientation.Horizontal, VizOrientation.Vertical])(
+    '%s: keeps every cell inside the panel, with a size above zero',
+    (orientation) => {
+      for (const [width, height] of [
+        [640, 360],
+        [100, 100],
+        [17, 23],
+      ]) {
+        for (const count of [1, 2, 5, 7, 12, 50]) {
+          for (const cell of layoutRepeaterCells({ width, height, count, spacing: SPACING, orientation })) {
+            expect(cell.x + cell.width).toBeLessThanOrEqual(width + 1e-9);
+            expect(cell.y + cell.height).toBeLessThanOrEqual(height + 1e-9);
+            expect(cell.width).toBeGreaterThan(0);
+            expect(cell.height).toBeGreaterThan(0);
+          }
+        }
+      }
+    }
+  );
 });
 
 describe('layoutRepeaterCells', () => {
@@ -77,21 +105,40 @@ describe('layoutRepeaterCells', () => {
     expect(cells.every((cell) => cell.width === 200)).toBe(true);
   });
 
-  it('keeps every cell inside the panel', () => {
-    for (const count of [2, 5, 7, 12, 50]) {
-      for (const cell of layout(640, 360, count)) {
-        expect(cell.x + cell.width).toBeLessThanOrEqual(640 + 1e-9);
-        expect(cell.y + cell.height).toBeLessThanOrEqual(360 + 1e-9);
-        expect(cell.width).toBeGreaterThan(0);
-        expect(cell.height).toBeGreaterThan(0);
+  it('keeps every cell inside the panel, with a size above zero', () => {
+    // The small panels have no space for all counts. For those, the result is empty.
+    const panels = [
+      [640, 360],
+      [100, 100],
+      [300, 40],
+      [40, 300],
+      [17, 23],
+    ];
+    for (const [width, height] of panels) {
+      for (const count of [1, 2, 5, 7, 12, 50, 200]) {
+        for (const cell of layout(width, height, count)) {
+          expect(cell.x + cell.width).toBeLessThanOrEqual(width + 1e-9);
+          expect(cell.y + cell.height).toBeLessThanOrEqual(height + 1e-9);
+          expect(cell.width).toBeGreaterThan(0);
+          expect(cell.height).toBeGreaterThan(0);
+        }
       }
     }
+  });
+
+  it('gives no cell when the spacing is larger than the share of one cell', () => {
+    // 50 values in 100 x 100 give 8 columns. The 7 spaces of 16 px are wider than the panel.
+    expect(layout(100, 100, 50)).toEqual([]);
+    // 4 values give 2 x 2, with cells of 42 x 42.
+    expect(layout(100, 100, 4)).toHaveLength(4);
   });
 
   it.each([
     ['no value', 400, 300, 0],
     ['no width', 0, 300, 3],
     ['no height', 400, 0, 3],
+    ['a width that is not a number', NaN, 300, 3],
+    ['a height that is not a number', 400, NaN, 3],
   ])('gives no cell for %s', (_, width, height, count) => {
     expect(layout(width, height, count)).toEqual([]);
   });

@@ -49,7 +49,7 @@ describe('applyGlobalFieldRange', () => {
   const frames = [frame({ a: { values: [5, 20] } }), frame({ b: { values: [-3, 8] } })];
 
   it('gives each number field the range of all number fields of the panel', () => {
-    const ranged = applyGlobalFieldRange(frames, theme);
+    const ranged = applyGlobalFieldRange(frames, theme, undefined);
     expect(ranged.map((f) => f.fields[0].state?.range)).toEqual([
       { min: -3, max: 20, delta: 23 },
       { min: -3, max: 20, delta: 23 },
@@ -57,26 +57,33 @@ describe('applyGlobalFieldRange', () => {
   });
 
   it('uses the min and the max of the field config for the end that they give', () => {
-    const [ranged] = applyGlobalFieldRange([frame({ a: { values: [5, 20], config: { min: 0 } } })], theme);
+    const [ranged] = applyGlobalFieldRange([frame({ a: { values: [5, 20], config: { min: 0 } } })], theme, undefined);
     expect(ranged.fields[0].state?.range).toEqual({ min: 0, max: 20, delta: 20 });
   });
 
   it('keeps the range that a field has', () => {
     const [input] = [frame({ a: { values: [5, 20] } })];
     input.fields[0].state = { range: { min: 1, max: 2, delta: 1 } };
-    const [ranged] = applyGlobalFieldRange([input], theme);
+    const [ranged] = applyGlobalFieldRange([input], theme, undefined);
     expect(ranged.fields[0]).toBe(input.fields[0]);
   });
 
   it('does not change fields that are not number fields, and does not change the input frames', () => {
     const input = [frame({ time: { values: [1000], type: FieldType.time }, a: { values: [5] } })];
-    const [ranged] = applyGlobalFieldRange(input, theme);
+    const [ranged] = applyGlobalFieldRange(input, theme, undefined);
     expect(ranged.fields[0]).toBe(input[0].fields[0]);
     expect(input[0].fields[1].state?.range).toBeUndefined();
   });
 
   it('gives no range when the panel has no number', () => {
     const input = [frame({ a: { values: [null] } })];
-    expect(applyGlobalFieldRange(input, theme)[0].fields[0]).toBe(input[0].fields[0]);
+    expect(applyGlobalFieldRange(input, theme, undefined)[0].fields[0]).toBe(input[0].fields[0]);
+  });
+
+  it('keeps the time zone of the dashboard for a value with a date unit', () => {
+    // 2023-11-14 22:13:20 in UTC, which is the time zone of the tests.
+    const input = [frame({ a: { values: [1700000000000], config: { unit: 'dateTimeAsIso' } } })];
+    const [ranged] = applyGlobalFieldRange(input, theme, 'Asia/Tokyo');
+    expect(ranged.fields[0].display?.(1700000000000).text).toBe('2023-11-15 07:13:20');
   });
 });

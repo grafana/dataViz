@@ -21,7 +21,7 @@ import { applyGlobalFieldRange } from './range';
 
 const displays = (frames: DataFrame[], sparkline = true, percentChange = false) =>
   resolveFieldDisplays({
-    frames: applyGlobalFieldRange(applyGrafanaFieldDefaults(frames), theme),
+    frames: applyGlobalFieldRange(applyGrafanaFieldDefaults(frames), theme, undefined),
     fieldConfig: { defaults: {}, overrides: [] },
     reduceOptions: undefined,
     defaultCalc: ReducerID.lastNotNull,

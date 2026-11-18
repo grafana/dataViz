@@ -24,7 +24,7 @@ import { type ChartContext, type ChartModule, type EChartStatOption } from './ty
  */
 function resolveStatDisplays(ctx: ChartContext): FieldDisplay[] {
   return resolveFieldDisplays({
-    frames: applyGlobalFieldRange(ctx.frames, ctx.theme),
+    frames: applyGlobalFieldRange(ctx.frames, ctx.theme, ctx.timeZone),
     fieldConfig: ctx.fieldConfig,
     reduceOptions: ctx.options.reduceOptions,
     defaultCalc: ReducerID.lastNotNull,

@@ -32,8 +32,15 @@ export function findNumericRange(frames: DataFrame[]): { min: number; max: numbe
  * config does not give. All sparklines of the panel then use one y scale.
  * Grafana sets this range before the panel draws, but not for streaming data and not in the Renderer.
  * Core Stat applies the same rule: https://github.com/grafana/grafana/blob/main/public/app/plugins/panel/stat/StatPanel.tsx
+ *
+ * `timeZone` is the time zone of the dashboard. A field that gets a range also gets a new display processor, and
+ * without the time zone, a value with a date unit shows in the time zone of the browser.
  */
-export function applyGlobalFieldRange(frames: DataFrame[], theme: GrafanaTheme2): DataFrame[] {
+export function applyGlobalFieldRange(
+  frames: DataFrame[],
+  theme: GrafanaTheme2,
+  timeZone: string | undefined
+): DataFrame[] {
   // The range of the panel is found one time, and only when a field needs it.
   let global: ReturnType<typeof findNumericRange>;
   let hasGlobal = false;
@@ -51,7 +58,9 @@ export function applyGlobalFieldRange(frames: DataFrame[], theme: GrafanaTheme2)
       }
       const min = configMin ?? global?.min;
       const max = configMax ?? global?.max;
-      return typeof min === 'number' && typeof max === 'number' ? withFieldRange(field, { min, max }, theme) : field;
+      return typeof min === 'number' && typeof max === 'number'
+        ? withFieldRange(field, { min, max }, theme, timeZone)
+        : field;
     }),
   }));
 }

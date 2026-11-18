@@ -1,6 +1,8 @@
 // Splits a panel into one cell for each value. The gauge and the stat panels use it.
-// It is the `VizRepeater` component of `@grafana/ui` with its automatic grid, as pixel arithmetic with no React:
-// the automatic grid, and the two orientations that put the cells in one column or in one row.
+// It is the `VizRepeater` component of `@grafana/ui` as pixel arithmetic with no React: the automatic grid, and
+// the two orientations that put the cells in one column or in one row. Core Gauge and core Stat use the component
+// with `autoGrid`, so the orientation `auto` is the grid. The size limits of the component (`minVizWidth`,
+// `minVizHeight`, `maxVizHeight`), which core Gauge sets for its manual size, are not here.
 // https://github.com/grafana/grafana/blob/main/packages/grafana-ui/src/components/VizRepeater/VizRepeater.tsx
 import { VizOrientation } from '@grafana/data';
 
@@ -53,16 +55,8 @@ export interface RepeaterLayoutInput {
   orientation?: VizOrientation;
 }
 
-/**
- * The cells of `count` values in a panel of `width` x `height`, in row order. In the automatic grid, the cells of
- * the last row are wider when the row is not full, so the row fills the panel width. The result is empty when
- * there is no value or no space.
- */
-export function layoutRepeaterCells(input: RepeaterLayoutInput): RepeaterCell[] {
-  const { width, height, count, spacing, orientation } = input;
-  if (count <= 0 || width <= 0 || height <= 0) {
-    return [];
-  }
+/** The cells of the input, in row order. A cell can have a size of zero or less. */
+function layoutCells({ width, height, count, spacing, orientation }: RepeaterLayoutInput): RepeaterCell[] {
   if (orientation === VizOrientation.Horizontal) {
     const cellHeight = partSize(height, count, spacing);
     return Array.from({ length: count }, (_, index) => ({
@@ -96,4 +90,22 @@ export function layoutRepeaterCells(input: RepeaterLayoutInput): RepeaterCell[] 
       height: cellHeight,
     };
   });
+}
+
+/**
+ * The cells of `count` values in a panel of `width` x `height`, in row order. In the automatic grid, the cells of
+ * the last row are wider when the row is not full, so the row fills the panel width.
+ *
+ * The result is empty when there is no value or no space: the panel has no size, or the spacing is larger than
+ * the share of one cell. Thus each cell of a result has a width and a height above zero. Core has no such rule.
+ * In its grid, a browser ignores a negative CSS size. A canvas draws with it.
+ */
+export function layoutRepeaterCells(input: RepeaterLayoutInput): RepeaterCell[] {
+  const { width, height, count } = input;
+  // `!(a > 0)` is also true for NaN.
+  if (!(count > 0) || !(width > 0) || !(height > 0)) {
+    return [];
+  }
+  const cells = layoutCells(input);
+  return cells.every((cell) => cell.width > 0 && cell.height > 0) ? cells : [];
 }
