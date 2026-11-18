@@ -1,9 +1,77 @@
+import { VizOrientation } from '@grafana/data';
 import { layoutRepeaterCells } from './layout';
 
 const SPACING = 16;
 
 const layout = (width: number, height: number, count: number) =>
   layoutRepeaterCells({ width, height, count, spacing: SPACING });
+
+describe('layoutRepeaterCells with an orientation', () => {
+  const oriented = (orientation: VizOrientation, count = 3) =>
+    layoutRepeaterCells({ width: 400, height: 300, count, spacing: SPACING, orientation });
+
+  it('gives the automatic grid for the orientation Auto, as for no orientation', () => {
+    expect(oriented(VizOrientation.Auto, 4)).toEqual(layout(400, 300, 4));
+  });
+
+  it('Horizontal: cells as wide as the panel, one below the other, with the spacing between them', () => {
+    // (300 - 2 * 16) / 3 = 89.33
+    const cells = oriented(VizOrientation.Horizontal);
+    expect(cells.map((cell) => cell.x)).toEqual([0, 0, 0]);
+    expect(cells.map((cell) => cell.width)).toEqual([400, 400, 400]);
+    expect(cells[0].height).toBeCloseTo(89.33, 1);
+    expect(cells[1].y).toBeCloseTo(89.33 + 16, 1);
+    expect(cells[2].y + cells[2].height).toBeCloseTo(300);
+  });
+
+  it('Vertical: cells as high as the panel, side by side, with the spacing between them', () => {
+    // (400 - 2 * 16) / 3 = 122.67
+    const cells = oriented(VizOrientation.Vertical);
+    expect(cells.map((cell) => cell.y)).toEqual([0, 0, 0]);
+    expect(cells.map((cell) => cell.height)).toEqual([300, 300, 300]);
+    expect(cells[0].width).toBeCloseTo(122.67, 1);
+    expect(cells[1].x).toBeCloseTo(122.67 + 16, 1);
+    expect(cells[2].x + cells[2].width).toBeCloseTo(400);
+  });
+
+  it('gives one value the full panel in each orientation', () => {
+    const full = [{ x: 0, y: 0, width: 400, height: 300 }];
+    expect(oriented(VizOrientation.Horizontal, 1)).toEqual(full);
+    expect(oriented(VizOrientation.Vertical, 1)).toEqual(full);
+  });
+
+  it('gives no cell for no value', () => {
+    expect(oriented(VizOrientation.Horizontal, 0)).toEqual([]);
+  });
+
+  it('gives no cell when the spacing is larger than the share of one cell', () => {
+    // 20 values have 19 spaces of 16 px, which are higher than 300 px. The same spaces are narrower than 400 px.
+    expect(oriented(VizOrientation.Horizontal, 20)).toEqual([]);
+    expect(oriented(VizOrientation.Vertical, 20)).toHaveLength(20);
+    // 27 values have 26 spaces of 16 px, which are wider than 400 px.
+    expect(oriented(VizOrientation.Vertical, 27)).toEqual([]);
+  });
+
+  it.each([VizOrientation.Horizontal, VizOrientation.Vertical])(
+    '%s: keeps every cell inside the panel, with a size above zero',
+    (orientation) => {
+      for (const [width, height] of [
+        [640, 360],
+        [100, 100],
+        [17, 23],
+      ]) {
+        for (const count of [1, 2, 5, 7, 12, 50]) {
+          for (const cell of layoutRepeaterCells({ width, height, count, spacing: SPACING, orientation })) {
+            expect(cell.x + cell.width).toBeLessThanOrEqual(width + 1e-9);
+            expect(cell.y + cell.height).toBeLessThanOrEqual(height + 1e-9);
+            expect(cell.width).toBeGreaterThan(0);
+            expect(cell.height).toBeGreaterThan(0);
+          }
+        }
+      }
+    }
+  );
+});
 
 describe('layoutRepeaterCells', () => {
   it('gives one value the full panel', () => {
