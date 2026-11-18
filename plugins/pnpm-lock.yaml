@@ -43,7 +43,7 @@ importers:
         version: 5.104.1(@swc/core@1.15.0(@swc/helpers@0.5.23))(esbuild@0.25.12)(postcss@8.5.26)(webpack-cli@5.1.4)
       webpack-cli:
         specifier: 5.1.4
-        version: 5.1.4(webpack-bundle-analyzer@5.3.0)(webpack@5.104.1)
+        version: 5.1.4(webpack-bundle-analyzer@5.4.3)(webpack@5.104.1)
       webpack-merge:
         specifier: 5.10.0
         version: 5.10.0
@@ -227,7 +227,7 @@ importers:
         version: 5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(esbuild@0.25.12)(postcss@8.5.26)(webpack-cli@7.2.2)
       webpack-cli:
         specifier: 7.2.2
-        version: 7.2.2(js-yaml@4.3.1)(json5@2.2.3)(webpack-bundle-analyzer@5.3.0)(webpack@5.109.2)
+        version: 7.2.2(js-yaml@4.3.1)(json5@2.2.3)(webpack-bundle-analyzer@5.4.3)(webpack@5.109.2)
       webpack-livereload-plugin:
         specifier: 3.0.2
         version: 3.0.2(supports-color@8.1.1)(webpack@5.109.2)
@@ -425,11 +425,11 @@ importers:
         specifier: 5.108.4
         version: 5.108.4(@swc/core@1.15.0(@swc/helpers@0.5.0))(esbuild@0.25.12)(postcss@8.5.26)(webpack-cli@6.0.1)
       webpack-bundle-analyzer:
-        specifier: 5.3.0
-        version: 5.3.0
+        specifier: 5.4.3
+        version: 5.4.3
       webpack-cli:
         specifier: 6.0.1
-        version: 6.0.1(webpack-bundle-analyzer@5.3.0)(webpack@5.108.4)
+        version: 6.0.1(webpack-bundle-analyzer@5.4.3)(webpack@5.108.4)
       webpack-livereload-plugin:
         specifier: 3.0.2
         version: 3.0.2(supports-color@8.1.1)(webpack@5.108.4)
@@ -517,7 +517,7 @@ importers:
         version: 5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(esbuild@0.25.12)(postcss@8.5.26)(webpack-cli@5.1.4)
       webpack-cli:
         specifier: 5.1.4
-        version: 5.1.4(webpack-bundle-analyzer@5.3.0)(webpack@5.109.2)
+        version: 5.1.4(webpack-bundle-analyzer@5.4.3)(webpack@5.109.2)
       webpack-merge:
         specifier: 5.10.0
         version: 5.10.0
@@ -7399,8 +7399,8 @@ packages:
     resolution: {integrity: sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==}
     engines: {node: '>=12'}
 
-  webpack-bundle-analyzer@5.3.0:
-    resolution: {integrity: sha512-PEhAoqiJ+47d0uLMx/+zo5XOvaU+Vk6N2ZLht7H3n09QLy/fhyvqGNwjdRUHJDgMN8crBR2ZwVHkIswT3Xuawg==}
+  webpack-bundle-analyzer@5.4.3:
+    resolution: {integrity: sha512-MIdBirXyiUmQeIc6C0SSBQtbDdwGRL2UsyHVzWqOYu2ZrPRgZEewjydVR81qgMPXbtxT1o1/zCr3yBJ1Q6FIsA==}
     engines: {node: '>= 20.9.0'}
     hasBin: true
 
@@ -11612,47 +11612,47 @@ snapshots:
   '@webpack-cli/configtest@2.1.1(webpack-cli@5.1.4)(webpack@5.104.1)':
     dependencies:
       webpack: 5.104.1(@swc/core@1.15.0(@swc/helpers@0.5.23))(esbuild@0.25.12)(postcss@8.5.26)(webpack-cli@5.1.4)
-      webpack-cli: 5.1.4(webpack-bundle-analyzer@5.3.0)(webpack@5.104.1)
+      webpack-cli: 5.1.4(webpack-bundle-analyzer@5.4.3)(webpack@5.104.1)
 
   '@webpack-cli/configtest@2.1.1(webpack-cli@5.1.4)(webpack@5.109.2)':
     dependencies:
       webpack: 5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(esbuild@0.25.12)(postcss@8.5.26)(webpack-cli@5.1.4)
-      webpack-cli: 5.1.4(webpack-bundle-analyzer@5.3.0)(webpack@5.109.2)
+      webpack-cli: 5.1.4(webpack-bundle-analyzer@5.4.3)(webpack@5.109.2)
 
   '@webpack-cli/configtest@3.0.1(webpack-cli@6.0.1)(webpack@5.108.4)':
     dependencies:
       webpack: 5.108.4(@swc/core@1.15.0(@swc/helpers@0.5.0))(esbuild@0.25.12)(postcss@8.5.26)(webpack-cli@6.0.1)
-      webpack-cli: 6.0.1(webpack-bundle-analyzer@5.3.0)(webpack@5.108.4)
+      webpack-cli: 6.0.1(webpack-bundle-analyzer@5.4.3)(webpack@5.108.4)
 
   '@webpack-cli/info@2.0.2(webpack-cli@5.1.4)(webpack@5.104.1)':
     dependencies:
       webpack: 5.104.1(@swc/core@1.15.0(@swc/helpers@0.5.23))(esbuild@0.25.12)(postcss@8.5.26)(webpack-cli@5.1.4)
-      webpack-cli: 5.1.4(webpack-bundle-analyzer@5.3.0)(webpack@5.104.1)
+      webpack-cli: 5.1.4(webpack-bundle-analyzer@5.4.3)(webpack@5.104.1)
 
   '@webpack-cli/info@2.0.2(webpack-cli@5.1.4)(webpack@5.109.2)':
     dependencies:
       webpack: 5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(esbuild@0.25.12)(postcss@8.5.26)(webpack-cli@5.1.4)
-      webpack-cli: 5.1.4(webpack-bundle-analyzer@5.3.0)(webpack@5.109.2)
+      webpack-cli: 5.1.4(webpack-bundle-analyzer@5.4.3)(webpack@5.109.2)
 
   '@webpack-cli/info@3.0.1(webpack-cli@6.0.1)(webpack@5.108.4)':
     dependencies:
       webpack: 5.108.4(@swc/core@1.15.0(@swc/helpers@0.5.0))(esbuild@0.25.12)(postcss@8.5.26)(webpack-cli@6.0.1)
-      webpack-cli: 6.0.1(webpack-bundle-analyzer@5.3.0)(webpack@5.108.4)
+      webpack-cli: 6.0.1(webpack-bundle-analyzer@5.4.3)(webpack@5.108.4)
 
   '@webpack-cli/serve@2.0.5(webpack-cli@5.1.4)(webpack@5.104.1)':
     dependencies:
       webpack: 5.104.1(@swc/core@1.15.0(@swc/helpers@0.5.23))(esbuild@0.25.12)(postcss@8.5.26)(webpack-cli@5.1.4)
-      webpack-cli: 5.1.4(webpack-bundle-analyzer@5.3.0)(webpack@5.104.1)
+      webpack-cli: 5.1.4(webpack-bundle-analyzer@5.4.3)(webpack@5.104.1)
 
   '@webpack-cli/serve@2.0.5(webpack-cli@5.1.4)(webpack@5.109.2)':
     dependencies:
       webpack: 5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(esbuild@0.25.12)(postcss@8.5.26)(webpack-cli@5.1.4)
-      webpack-cli: 5.1.4(webpack-bundle-analyzer@5.3.0)(webpack@5.109.2)
+      webpack-cli: 5.1.4(webpack-bundle-analyzer@5.4.3)(webpack@5.109.2)
 
   '@webpack-cli/serve@3.0.1(webpack-cli@6.0.1)(webpack@5.108.4)':
     dependencies:
       webpack: 5.108.4(@swc/core@1.15.0(@swc/helpers@0.5.0))(esbuild@0.25.12)(postcss@8.5.26)(webpack-cli@6.0.1)
-      webpack-cli: 6.0.1(webpack-bundle-analyzer@5.3.0)(webpack@5.108.4)
+      webpack-cli: 6.0.1(webpack-bundle-analyzer@5.4.3)(webpack@5.108.4)
 
   '@wojtekmaj/date-utils@1.5.1': {}
 
@@ -16862,7 +16862,7 @@ snapshots:
 
   webidl-conversions@7.0.0: {}
 
-  webpack-bundle-analyzer@5.3.0:
+  webpack-bundle-analyzer@5.4.3:
     dependencies:
       '@discoveryjs/json-ext': 0.6.3
       acorn: 8.18.0
@@ -16878,7 +16878,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  webpack-cli@5.1.4(webpack-bundle-analyzer@5.3.0)(webpack@5.104.1):
+  webpack-cli@5.1.4(webpack-bundle-analyzer@5.4.3)(webpack@5.104.1):
     dependencies:
       '@discoveryjs/json-ext': 0.5.7
       '@webpack-cli/configtest': 2.1.1(webpack-cli@5.1.4)(webpack@5.104.1)
@@ -16895,9 +16895,9 @@ snapshots:
       webpack: 5.104.1(@swc/core@1.15.0(@swc/helpers@0.5.23))(esbuild@0.25.12)(postcss@8.5.26)(webpack-cli@5.1.4)
       webpack-merge: 5.10.0
     optionalDependencies:
-      webpack-bundle-analyzer: 5.3.0
+      webpack-bundle-analyzer: 5.4.3
 
-  webpack-cli@5.1.4(webpack-bundle-analyzer@5.3.0)(webpack@5.109.2):
+  webpack-cli@5.1.4(webpack-bundle-analyzer@5.4.3)(webpack@5.109.2):
     dependencies:
       '@discoveryjs/json-ext': 0.5.7
       '@webpack-cli/configtest': 2.1.1(webpack-cli@5.1.4)(webpack@5.109.2)
@@ -16914,9 +16914,9 @@ snapshots:
       webpack: 5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(esbuild@0.25.12)(postcss@8.5.26)(webpack-cli@5.1.4)
       webpack-merge: 5.10.0
     optionalDependencies:
-      webpack-bundle-analyzer: 5.3.0
+      webpack-bundle-analyzer: 5.4.3
 
-  webpack-cli@6.0.1(webpack-bundle-analyzer@5.3.0)(webpack@5.108.4):
+  webpack-cli@6.0.1(webpack-bundle-analyzer@5.4.3)(webpack@5.108.4):
     dependencies:
       '@discoveryjs/json-ext': 0.6.3
       '@webpack-cli/configtest': 3.0.1(webpack-cli@6.0.1)(webpack@5.108.4)
@@ -16933,9 +16933,9 @@ snapshots:
       webpack: 5.108.4(@swc/core@1.15.0(@swc/helpers@0.5.0))(esbuild@0.25.12)(postcss@8.5.26)(webpack-cli@6.0.1)
       webpack-merge: 6.0.1
     optionalDependencies:
-      webpack-bundle-analyzer: 5.3.0
+      webpack-bundle-analyzer: 5.4.3
 
-  webpack-cli@7.2.2(js-yaml@4.3.1)(json5@2.2.3)(webpack-bundle-analyzer@5.3.0)(webpack@5.109.2):
+  webpack-cli@7.2.2(js-yaml@4.3.1)(json5@2.2.3)(webpack-bundle-analyzer@5.4.3)(webpack@5.109.2):
     dependencies:
       '@discoveryjs/json-ext': 1.1.0
       commander: 14.0.3
@@ -16949,7 +16949,7 @@ snapshots:
     optionalDependencies:
       js-yaml: 4.3.1
       json5: 2.2.3
-      webpack-bundle-analyzer: 5.3.0
+      webpack-bundle-analyzer: 5.4.3
 
   webpack-livereload-plugin@3.0.2(supports-color@8.1.1)(webpack@5.108.4):
     dependencies:
@@ -17025,7 +17025,7 @@ snapshots:
       watchpack: 2.5.2
       webpack-sources: 3.5.1
     optionalDependencies:
-      webpack-cli: 5.1.4(webpack-bundle-analyzer@5.3.0)(webpack@5.104.1)
+      webpack-cli: 5.1.4(webpack-bundle-analyzer@5.4.3)(webpack@5.104.1)
     transitivePeerDependencies:
       - '@minify-html/node'
       - '@swc/core'
@@ -17065,7 +17065,7 @@ snapshots:
       watchpack: 2.5.2
       webpack-sources: 3.5.1
     optionalDependencies:
-      webpack-cli: 6.0.1(webpack-bundle-analyzer@5.3.0)(webpack@5.108.4)
+      webpack-cli: 6.0.1(webpack-bundle-analyzer@5.4.3)(webpack@5.108.4)
     transitivePeerDependencies:
       - '@minify-html/node'
       - '@swc/core'
@@ -17103,7 +17103,7 @@ snapshots:
       watchpack: 2.5.2
       webpack-sources: 3.5.1
     optionalDependencies:
-      webpack-cli: 5.1.4(webpack-bundle-analyzer@5.3.0)(webpack@5.109.2)
+      webpack-cli: 5.1.4(webpack-bundle-analyzer@5.4.3)(webpack@5.109.2)
     transitivePeerDependencies:
       - '@minify-html/node'
       - '@swc/core'
@@ -17141,7 +17141,7 @@ snapshots:
       watchpack: 2.5.2
       webpack-sources: 3.5.1
     optionalDependencies:
-      webpack-cli: 7.2.2(js-yaml@4.3.1)(json5@2.2.3)(webpack-bundle-analyzer@5.3.0)(webpack@5.109.2)
+      webpack-cli: 7.2.2(js-yaml@4.3.1)(json5@2.2.3)(webpack-bundle-analyzer@5.4.3)(webpack@5.109.2)
     transitivePeerDependencies:
       - '@minify-html/node'
       - '@swc/core'
