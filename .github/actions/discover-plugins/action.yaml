@@ -56,6 +56,7 @@ runs:
         CHANGED_ONLY: ${{ inputs.changed-only }}
         SHARED_PATHS: ${{ inputs.shared-paths }}
         PR_BASE: ${{ github.event.pull_request.base.sha }}
+        PR_HEAD: ${{ github.event.pull_request.head.sha }}
         PUSH_BEFORE: ${{ github.event.before }}
         ACTION_PATH: ${{ github.action_path }}
       run: bash "$ACTION_PATH/run.sh"

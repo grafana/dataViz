@@ -78,6 +78,8 @@ function matcherName(rule: ConfigOverrideRule): string | undefined {
 /**
  * Add or replace a single property on the `byName(name)` override, creating the
  * override when absent. Other overrides and unrelated properties are preserved.
+ * With two `byName(name)` rules, it changes the last one: a rule at the end wins,
+ * as in Grafana, so a change to the first one can have no effect.
  */
 function upsertProperty(
   overrides: ConfigOverrideRule[],
@@ -85,7 +87,11 @@ function upsertProperty(
   property: DynamicConfigValue
 ): ConfigOverrideRule[] {
   const next = [...overrides];
-  const index = next.findIndex((rule) => matcherName(rule) === name);
+  // `findLastIndex` is ES2023, and the TypeScript lib of this package is ES2022.
+  let index = next.length - 1;
+  while (index >= 0 && matcherName(next[index]) !== name) {
+    index--;
+  }
 
   if (index < 0) {
     next.push({ matcher: { id: FieldMatcherID.byName, options: name }, properties: [property] });
@@ -198,7 +204,8 @@ export function getSeriesColorOverride(
   name: string,
   theme: GrafanaTheme2
 ): string | undefined {
-  for (const rule of fieldConfig.overrides) {
+  // A rule at the end wins, as in Grafana, so the color rule of the legend (`applyLegendOverrides`) wins.
+  for (const rule of [...fieldConfig.overrides].reverse()) {
     if (matcherName(rule) !== name) {
       continue;
     }
@@ -208,6 +215,81 @@ export function getSeriesColorOverride(
     }
   }
   return undefined;
+}
+
+/**
+ * What the user changed with the legend: the `hideSeriesFrom` override and the fixed colors by series name. The
+ * Renderer keeps this as its own state, apart from the viz spec, so a new viz spec does not remove it
+ * (`renderer.35`). A state that holds only a part of the fields is one change of the legend.
+ */
+export interface LegendOverrides {
+  /**
+   * The `hideSeriesFrom` override. `null` when the user showed every series. `undefined` when the user did not
+   * change it, so the override of the viz spec stays.
+   */
+  hide?: ConfigOverrideRule | null;
+  /** The `color` property that the user chose, by series name. */
+  colors: ReadonlyMap<string, DynamicConfigValue>;
+}
+
+// The overrides are plain JSON, and the legend writes them in one key order.
+const sameJson = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
+
+/** The `color` property of a `byName` rule, and its series name. Other rules give `undefined`. */
+const legendColorOf = (rule: ConfigOverrideRule | undefined): [string, DynamicConfigValue] | undefined => {
+  const name = rule && matcherName(rule);
+  const color = rule?.properties.find((p) => p.id === COLOR_PROP_ID);
+  return name !== undefined && color ? [name, color] : undefined;
+};
+
+/**
+ * The one legend change between `current` and `next`. `current` is the field config that the panel draws with, and
+ * the legend gives `next` after one action. A visibility action replaces the `hideSeriesFrom` override. A color
+ * action writes one color property, in a rule that is there already or in a new rule at the end, so the rules are
+ * compared by their place in the list.
+ */
+export function readLegendChange(next: FieldConfigSource, current: FieldConfigSource): LegendOverrides {
+  const nextHide = next.overrides.find(isHideSeriesOverride);
+  if (!sameJson(nextHide, current.overrides.find(isHideSeriesOverride))) {
+    return { hide: nextHide ?? null, colors: new Map() };
+  }
+  const colors = new Map<string, DynamicConfigValue>();
+  next.overrides.forEach((rule, index) => {
+    const color = legendColorOf(rule);
+    if (color && !sameJson(color, legendColorOf(current.overrides[index]))) {
+      colors.set(color[0], color[1]);
+    }
+  });
+  return { colors };
+}
+
+/** `previous` with one legend change on top. A new choice for a series replaces its old one. */
+export function mergeLegendOverrides(previous: LegendOverrides | undefined, change: LegendOverrides): LegendOverrides {
+  return {
+    hide: change.hide !== undefined ? change.hide : previous?.hide,
+    colors: new Map([...(previous?.colors ?? []), ...change.colors]),
+  };
+}
+
+/**
+ * `fieldConfig` with the legend state on top (`renderer.35`). The state wins over every override of the viz spec,
+ * whatever the place of that override: the legend rules are at the end of the list, and a rule at the end wins in
+ * Grafana. The color is a new rule at the end, not a property of a `byName` rule of the viz spec, because a broader
+ * rule after that rule (`byRegexp`, `byType`) would win over it.
+ * https://grafana.com/docs/grafana/latest/panels-visualizations/configure-overrides/
+ */
+export function applyLegendOverrides(fieldConfig: FieldConfigSource, legend: LegendOverrides): FieldConfigSource {
+  let overrides = fieldConfig.overrides;
+  if (legend.hide !== undefined) {
+    overrides = overrides.filter((rule) => !isHideSeriesOverride(rule));
+    if (legend.hide) {
+      overrides = [...overrides, legend.hide];
+    }
+  }
+  for (const [name, color] of legend.colors) {
+    overrides = [...overrides, { matcher: { id: FieldMatcherID.byName, options: name }, properties: [color] }];
+  }
+  return { ...fieldConfig, overrides };
 }
 
 /** Build the `hideSeriesFrom` system override for the given kept (visible) names. */

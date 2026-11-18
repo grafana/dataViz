@@ -1,10 +1,10 @@
 import { FieldType, LoadingState, type PanelData, toDataFrame } from '@grafana/data';
 import { LegendDisplayMode } from '@grafana/schema';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { type ChartModule } from 'lib/echarts/charts/types';
 import { relationsChartModule } from 'lib/echarts/relations/chartModule';
 import React, { Children, cloneElement, type ReactElement } from 'react';
-import { getComponent } from 'test/panel';
+import { getComponent, renderWithGrafana } from 'test/panel';
 import { type PanelComponentProps } from './types';
 
 const mockGetDataIssue = jest.fn();
@@ -115,7 +115,7 @@ describe('Panel empty view', () => {
     ['one empty frame', [emptyFrame()]],
     ['multiple empty frames', [emptyFrame(), emptyFrame()]],
   ])('shows No data for relations with %s', (_name, frames) => {
-    render(getComponent(frames, 'graph', undefined, undefined, undefined, 'relations'));
+    renderWithGrafana(getComponent(frames, 'graph', undefined, undefined, undefined, 'relations'));
 
     expect(screen.getByText('No data')).toBeInTheDocument();
     expect(mockGetDataIssue).not.toHaveBeenCalled();
@@ -124,7 +124,7 @@ describe('Panel empty view', () => {
   it('shows a chart data issue after the selected time is resolved', () => {
     mockGetDataIssue.mockReturnValue({ reason: 'unsupported-shape', message: 'Frame issue' });
 
-    render(getComponent([unsupportedFrame()], 'graph', undefined, undefined, undefined, 'relations'));
+    renderWithGrafana(getComponent([unsupportedFrame()], 'graph', undefined, undefined, undefined, 'relations'));
 
     expect(screen.getByText('Frame issue')).toBeInTheDocument();
     expect(screen.queryByText('Chart')).not.toBeInTheDocument();
@@ -140,7 +140,7 @@ describe('Panel empty view', () => {
   });
 
   it('shows the newest timeline stop in a preset preview', () => {
-    render(getComponent([graphFrame()], 'graph', { isPreview: true }, undefined, undefined, 'relations'));
+    renderWithGrafana(getComponent([graphFrame()], 'graph', { isPreview: true }, undefined, undefined, 'relations'));
 
     expect(screen.getByRole('slider', { name: 'Selected time' })).toBeInTheDocument();
     expect(mockGetDataIssue).toHaveBeenCalledWith(expect.objectContaining({ selectedTime: 200 }));
@@ -166,7 +166,7 @@ describe('Panel empty view', () => {
       ...frame,
       fields: frame.fields.map((field) => ({ ...field, config: { ...field.config } })),
     }));
-    const { rerender } = render(initial);
+    const { rerender } = renderWithGrafana(initial);
 
     rerender(
       cloneElement(
@@ -210,7 +210,7 @@ describe('Panel empty view', () => {
     const panel = Children.only(initial.props.children) as ReactElement<PanelComponentProps>;
     const frame = panel.props.data.series[0];
     const field = frame.fields[0];
-    const { rerender } = render(initial);
+    const { rerender } = renderWithGrafana(initial);
 
     rerender(
       cloneElement(
@@ -231,7 +231,7 @@ describe('Panel empty view', () => {
   it.each(previewFrameChanges)('renders a preset preview again when its %s changes', (_name, changeFrames) => {
     const initial = getComponent([graphFrame()], 'graph', { isPreview: true }, undefined, undefined, 'relations');
     const panel = Children.only(initial.props.children) as ReactElement<PanelComponentProps>;
-    const { rerender } = render(initial);
+    const { rerender } = renderWithGrafana(initial);
 
     rerender(
       cloneElement(
@@ -249,7 +249,7 @@ describe('Panel empty view', () => {
   it('renders a preset preview again when its loading state changes', () => {
     const initial = getComponent([graphFrame()], 'graph', { isPreview: true }, undefined, undefined, 'relations');
     const panel = Children.only(initial.props.children) as ReactElement<PanelComponentProps>;
-    const { rerender } = render(initial);
+    const { rerender } = renderWithGrafana(initial);
 
     rerender(
       cloneElement(initial, {}, cloneElement(panel, { data: { ...panel.props.data, state: LoadingState.Loading } }))
@@ -261,7 +261,7 @@ describe('Panel empty view', () => {
   it('renders a preset preview again when a query error appears', () => {
     const initial = getComponent([graphFrame()], 'graph', { isPreview: true }, undefined, undefined, 'relations');
     const panel = Children.only(initial.props.children) as ReactElement<PanelComponentProps>;
-    const { rerender } = render(initial);
+    const { rerender } = renderWithGrafana(initial);
 
     rerender(
       cloneElement(
@@ -285,7 +285,7 @@ describe('Panel empty view', () => {
     );
     const panel = Children.only(initial.props.children) as ReactElement<PanelComponentProps>;
     const nextWidth = panel.props.width - 100;
-    const { rerender } = render(initial);
+    const { rerender } = renderWithGrafana(initial);
 
     rerender(
       cloneElement(
@@ -305,7 +305,7 @@ describe('Panel empty view', () => {
   it('keeps the chart path while unsupported data is loading', () => {
     mockGetDataIssue.mockReturnValue({ reason: 'unsupported-shape', message: 'Frame issue' });
 
-    render(
+    renderWithGrafana(
       getComponent([unsupportedFrame()], 'graph', undefined, { state: LoadingState.Loading }, undefined, 'relations')
     );
 
@@ -315,7 +315,9 @@ describe('Panel empty view', () => {
   });
 
   it('renders no panel content while non-empty data is streaming', () => {
-    render(getComponent([graphFrame()], 'graph', undefined, { state: LoadingState.Streaming }, undefined, 'relations'));
+    renderWithGrafana(
+      getComponent([graphFrame()], 'graph', undefined, { state: LoadingState.Streaming }, undefined, 'relations')
+    );
 
     expect(screen.queryByText('Chart')).not.toBeInTheDocument();
     expect(mockPanelDataErrorView).not.toHaveBeenCalled();
@@ -329,7 +331,7 @@ describe('Panel empty view', () => {
   });
 
   it('mounts chart content when streaming data finishes', () => {
-    const { rerender } = render(
+    const { rerender } = renderWithGrafana(
       getComponent([graphFrame()], 'graph', undefined, { state: LoadingState.Streaming }, undefined, 'relations')
     );
 
@@ -343,7 +345,7 @@ describe('Panel empty view', () => {
   it('does not hide a query error with a chart data issue', () => {
     mockGetDataIssue.mockReturnValue({ reason: 'unsupported-shape', message: 'Frame issue' });
 
-    render(
+    renderWithGrafana(
       getComponent(
         [unsupportedFrame()],
         'graph',
@@ -362,7 +364,7 @@ describe('Panel empty view', () => {
   it('mounts chart content for a valid Relations graph', () => {
     activeChartModule = relationsChartModule;
 
-    render(getComponent([graphFrame()], 'graph', undefined, undefined, undefined, 'relations'));
+    renderWithGrafana(getComponent([graphFrame()], 'graph', undefined, undefined, undefined, 'relations'));
 
     expect(screen.getByText('Chart')).toBeInTheDocument();
     expect(mockPanelDataErrorView).not.toHaveBeenCalled();
@@ -371,7 +373,9 @@ describe('Panel empty view', () => {
   it('shows the hidden-marks message from the Relations resolver', () => {
     activeChartModule = relationsChartModule;
 
-    render(getComponent([graphFrame()], 'graph', undefined, undefined, undefined, 'relations', hiddenGraphConfig));
+    renderWithGrafana(
+      getComponent([graphFrame()], 'graph', undefined, undefined, undefined, 'relations', hiddenGraphConfig)
+    );
 
     expect(
       screen.getByText('All graph marks are hidden. Show at least one node or edge in the field configuration.')
@@ -382,7 +386,7 @@ describe('Panel empty view', () => {
   it('shows the mark-limit message without mounting chart content', () => {
     activeChartModule = relationsChartModule;
 
-    render(getComponent([overBudgetGraphFrame()], 'graph', undefined, undefined, undefined, 'relations'));
+    renderWithGrafana(getComponent([overBudgetGraphFrame()], 'graph', undefined, undefined, undefined, 'relations'));
 
     expect(
       screen.getByText(

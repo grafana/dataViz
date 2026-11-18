@@ -27,7 +27,38 @@ command to re-render it is at the top of that file.
    files to the draft.
 5. After the build passes, the `publish` job calls `cd.yml` with the release tag: it publishes the version to the
    dev and ops catalogs and starts the Grafana Cloud rollout to dev and ops (see below).
-6. A maintainer checks the draft and publishes it. This no longer gates the deploy.
+6. The `attach` job publishes the release, once every file is uploaded. Merging the release PR is the only
+   approval.
+
+**Never publish a draft by hand.** This repo has GitHub's
+[immutable releases](https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/immutable-releases)
+on: a published release takes no more files, and its tag name can never be used again, even after the
+release is deleted. A draft published before the `attach` job uploads its files stays empty for good
+(`grafana-echarts-renderer/v0.2.1` and `grafana-relations-panel/v0.2.0` are such releases). `release-guard.yml` fails when someone publishes a release with no files.
+It cannot undo the publish; the fix is to release the next version (a `Release-As: x.y.z` footer, below).
+
+**A draft that stays after its run ended** means the build or the upload failed. What to do depends on the
+age of the run:
+
+- **Up to 30 days after the run started:** re-run the failed jobs of that run. The `attach` job uploads the
+  files and publishes the release.
+- **After 30 days:** GitHub no longer re-runs the run, and a manual run of `release-please.yml` does not
+  attach to a release that exists. Delete the draft release, keep its tag (release-please finds the previous
+  version by it), and release the next version with a `Release-As: x.y.z` footer. That version then has a
+  tag and a CHANGELOG entry but no GitHub release. For `grafana-relations-panel`, the catalogs can already
+  have it: the `publish` job waits for the build, not for the upload.
+
+**Latest and pre-release.** The workflow sets both, because nobody publishes by hand:
+
+- **Latest:** only `grafana-relations-panel` releases. GitHub makes each newly published release the
+  repository's "Latest" unless told otherwise, so `releases/latest` would move between unrelated products.
+  The `attach` job publishes every other release with `--latest=false` (the `LATEST` value of its
+  "Publish the release" step). To find the newest Renderer release, list the `grafana-echarts-renderer/v*`
+  tags; do not use `releases/latest`.
+- **Pre-release:** no release. The publish step does not change it, so a release keeps what release-please
+  gave it. To mark the 0.x versions of a package as pre-releases, set `"prerelease": true` on that package
+  in `release-please-config.json`. GitHub does not let a pre-release be "Latest", so do not set it on the
+  package whose releases are "Latest".
 
 **One plugin or all of them:** every plugin gets its own release PR. Merge one to release that plugin;
 merge several, or all of the open ones, to release them together. A plugin with no releasable changes can
@@ -70,7 +101,8 @@ that the built `plugin.json` carries the tagged version. `scripts/release-matrix
 package to its build target: a package's `component` in `release-please-config.json` is its plugin id (or
 the id of a `plugin-ci.json` release, for the Renderer). The
 draft release and its notes come from release-please. Attaching the zip uses `softprops/action-gh-release`,
-as `cd.yml`'s GitHub release job does; it keeps release-please's notes and the draft state.
+as `cd.yml`'s GitHub release job does; it keeps release-please's notes and the draft state. The next step
+publishes the release with `gh release edit --draft=false`, and refuses if the release has no files.
 
 **Adding a plugin:** a package entry in `release-please-config.json` (`release-type: node`, `component` = the
 plugin id), its current version in `.release-please-manifest.json`, and a `CHANGELOG.md` next to its
@@ -98,8 +130,8 @@ caveat above). So its release-please package is the repo root, `.`, which gets e
   package that also changes a file outside the list, for example `plugins/pnpm-lock.yaml` for a new
   dependency, still opens a Renderer release. That release has a bundle that differs only in its version.
   This is accepted, because a missed release is worse than an extra one.
-- A file in the repo root cannot be excluded: `CLAUDE.md`, `AGENTS.md`, `README.md`, `renovate.json` and the
-  release-please files. A CI change usually changes `CLAUDE.md` too, so a `feat(CI)` or `fix(CI)` commit
+- A file in the repo root cannot be excluded: `CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING.md`, `DEVELOPING.md`, `README.md`, `renovate.json` and the
+  release-please files. A CI change usually changes `DEVELOPING.md` too, so a `feat(CI)` or `fix(CI)` commit
   usually opens a Renderer release PR. Leave that PR open until a change of the bundle arrives.
 
 `exclude-paths` entries are directories, relative to the repo root. A file cannot be excluded.
@@ -109,7 +141,7 @@ caveat above). So its release-please package is the repo root, `.`, which gets e
 [README.md](README.md)). The `build-artifact` job runs its `script`, `check:renderer`, at the tagged commit
 with `EXPECT_VERSION` set to the tag version. The script builds the bundle and fails if the manifest has
 another version, or if `dist-renderer/` does not have exactly the release files. The job then attests the
-provenance of each file, and the `attach` job uploads them to the draft release.
+provenance of each file, and the `attach` job uploads them to the draft release and publishes it.
 
 **Root outputs.** release-please-action gives the outputs of the root package with no path prefix
 (`tag_name`, `sha`, `version`), and the outputs of every other package as `<path>--tag_name`.
@@ -121,7 +153,7 @@ Renderer tag, and the `attach` job appends each changed range to the release not
 Renderer tag, the note lists every peer. The baseline tag below is a previous tag, so with it the first
 release names only the ranges that changed since that tag, or has no note. The full list is always in the
 `package.json` of the release. If the `attach` job runs again, it appends the note again: remove the copy
-from the draft.
+from the release notes.
 
 **Baseline tag.** release-please finds the previous release of a package by its tag. With no
 `grafana-echarts-renderer/v*` tag, the first release notes list every `feat` and `fix` since `bootstrap-sha`.
@@ -130,7 +162,7 @@ commit of `main` before the first run of this configuration. It needs no GitHub 
 
 **Use a release.** `docs/renderer.md` in the echarts package gives the commands to download a release and
 to check its attestation and hash. A draft release is visible only with write access, so a consumer can
-download it after a maintainer publishes it.
+download it after the `attach` job publishes it.
 
 ## Publishing to dev or ops
 
@@ -172,8 +204,8 @@ and publishes it. It creates no tag or GitHub release.
 ## Design rules
 
 - **The job that writes to the release builds nothing.** Building and signing run in a job that can only
-  read the repo. A separate job holding `contents: write` only downloads that job's artifact and attaches
-  it, the same split as the PR-comment jobs in Plugin CI.
+  read the repo. A separate job holding `contents: write` only downloads that job's artifact, attaches
+  it and publishes the release, the same split as the PR-comment jobs in Plugin CI.
 - **The signing token comes from Vault**, the same secret `plugin-ci-workflows` uses, never from a repo
   secret. See [Credentials](#credentials).
 - **Release PRs and tags are made with a GitHub App token**, as upstream's action does, so they trigger CI
@@ -208,7 +240,7 @@ the grant also requires `workflow_ref` (the workflow file on `main`) and `event_
 | Plugin signing token | `release-please.yml` build job (Sign and package); `plugin-publish.yml`, inside `cd.yml`'s CI | `grafana/shared-workflows` `get-vault-secrets`, shared by every `grafana` repo | `sub` matches `repo:grafana/*` or `repo:grafana@7195757/*` (both forms) |
 | Catalog publish token | `plugin-publish.yml`, inside `cd.yml`'s publish job | same as the signing token | same as the signing token |
 | Google credentials (GCS upload, dev and ops catalog APIs) | `plugin-publish.yml`, inside `cd.yml` | Google workload identity | `repository_owner` is `grafana`, and attributes such as `repository_id` and `job_workflow_ref`; not `sub` |
-| `GITHUB_TOKEN`, `contents: write` | `release-please.yml` attach job (upload to the draft release) | GitHub | none |
+| `GITHUB_TOKEN`, `contents: write` | `release-please.yml` attach job (upload to the draft release, then publish it) | GitHub | none |
 
 Only the GitHub App token checks `sub` against a value set for this repo, so it is the only credential the
 immutable subject affects. A token-step failure with `claim "sub" does not match any associated bound claim

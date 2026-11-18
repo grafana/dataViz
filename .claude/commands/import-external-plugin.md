@@ -57,7 +57,7 @@ against an existing sibling package's real path, not by any error.
 5. Inspect staged result (`git status`, `git diff --cached`), resolve any
    conflicts, adjust the imported package to fit this repo's conventions
    (package.json name, tsconfig references, webpack config, wiring into root
-   tsconfig / jest moduleNameMapper / docker-compose — see `CLAUDE.md` "Adding a new
+   tsconfig / jest moduleNameMapper / docker-compose — see `DEVELOPING.md` "Adding a new
    plugin package").
 
    Work through "What comes along with an import" below — a standalone repo
