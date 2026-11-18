@@ -60,8 +60,8 @@ export type SpecPanelProps = Omit<PanelComponentProps, 'width' | 'height'>;
 /**
  * The options and field config get the defaults of the plugin, as in Grafana (`getPanelOptionsWithDefaults`).
  * Then the field overrides are applied to the frames, as `VizPanel.applyFieldConfig` does in Grafana.
- * The panel gets no data links (`toSpecData` also removes them from the frames), no ad-hoc filter (`onAddAdHocFilter` is not set) and a time range change that does
- * nothing (`renderer.12`, `renderer.14`).
+ * The panel gets no ad-hoc filter handler. `toSpecData` removes data links from the frames (`renderer.12`).
+ * The Renderer supplies the handler for time range changes when it draws the panel (`renderer.43`).
  * https://github.com/grafana/grafana/blob/main/packages/grafana-data/src/panel/getPanelOptionsWithDefaults.ts
  * https://github.com/grafana/grafana/blob/main/packages/grafana-data/src/field/fieldOverrides.ts
  */

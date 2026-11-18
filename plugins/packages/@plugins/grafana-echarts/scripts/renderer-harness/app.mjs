@@ -34,13 +34,16 @@ const handle = render(document.getElementById('root'), spec, {
   },
   ...(options.onRefresh === false ? {} : { onRefresh: (request) => post({ type: 'refresh', request }) }),
 });
-// The test sends `{ type: 'setRefreshed', id, ok, error }` to drive a refresh result, and `{ type: 'ping', id }` to
+// The test sends `setRefreshed` or `update` to answer a refresh and `{ type: 'ping', id }` to
 // wait until the work of an interaction is done (`pong` comes in the same way as `idle`).
 addEventListener('message', (event) => {
   if (event.data && event.data.type === 'setRefreshed') {
     handle.setRefreshed(event.data.id, event.data.ok, event.data.error);
   }
-  if (event.data && event.data.type === 'ping') {
+  if (event.data?.type === 'update') {
+    handle.update(event.data.spec);
+  }
+  if (event.data?.type === 'ping') {
     requestIdleCallback(() => post({ type: 'pong', id: event.data.id }));
   }
 });

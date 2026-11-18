@@ -1,9 +1,16 @@
 import { type TimeRange } from '@grafana/data';
 import { type TimeZone } from '@grafana/schema';
 import { TimeRangePicker } from '@grafana/ui';
+import { zoomOutTimeRange } from 'lib/grafana/time/zoomOut';
 import React from 'react';
 import { type RefreshCause } from './refresh';
-import { shiftTimeRange, toRefreshRequest, zoomOutTimeRange } from './timeRangeRequest';
+import {
+  shiftTimeRange,
+  type TimeRangeCause,
+  toAbsoluteTimeRange,
+  toRefreshRequest,
+  toTimeRangeRequest,
+} from './timeRangeRequest';
 
 const noop = () => {};
 
@@ -12,6 +19,7 @@ interface Props {
   value: TimeRange;
   timeZone: TimeZone;
   onRequest: (cause: RefreshCause) => void;
+  onPick: (cause: TimeRangeCause) => void;
 }
 
 /**
@@ -19,14 +27,17 @@ interface Props {
  * zone comes from the viz spec, so a change of it in the picker does nothing.
  * https://github.com/grafana/grafana/blob/main/packages/grafana-ui/src/components/DateTimePickers/TimeRangePicker.tsx
  */
-export const TimePicker = ({ value, timeZone, onRequest }: Props) => (
-  <TimeRangePicker
-    value={value}
-    timeZone={timeZone}
-    onChange={(range) => onRequest(toRefreshRequest(range))}
-    onMoveBackward={() => onRequest(toRefreshRequest(shiftTimeRange(value, -1)))}
-    onMoveForward={() => onRequest(toRefreshRequest(shiftTimeRange(value, 1)))}
-    onZoom={() => onRequest(toRefreshRequest(zoomOutTimeRange(value)))}
-    onChangeTimeZone={noop}
-  />
-);
+export const TimePicker = ({ value, timeZone, onRequest, onPick }: Props) => {
+  const range = toAbsoluteTimeRange(value);
+  return (
+    <TimeRangePicker
+      value={value}
+      timeZone={timeZone}
+      onChange={(range) => onPick(toRefreshRequest(range))}
+      onMoveBackward={() => onRequest(toTimeRangeRequest(shiftTimeRange(range, -1)))}
+      onMoveForward={() => onRequest(toTimeRangeRequest(shiftTimeRange(range, 1)))}
+      onZoom={() => onRequest(toTimeRangeRequest(zoomOutTimeRange(range)))}
+      onChangeTimeZone={noop}
+    />
+  );
+};
