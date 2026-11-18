@@ -1,4 +1,5 @@
 import { FieldType, toDataFrame } from '@grafana/data';
+import { timeHeader } from 'lib/echarts/tooltip/timeHeader';
 import { askInChat } from './pointMessage';
 
 describe('the point in Ask in chat', () => {
@@ -44,5 +45,25 @@ describe('the point in Ask in chat', () => {
         },
       ],
     ]);
+  });
+
+  it('sends the start and the end of a timeline segment on one line', () => {
+    const frame = toDataFrame({ fields: [{ name: 'State', type: FieldType.string, values: ['OK'] }] });
+    const source = { field: frame.fields[0], rowIndex: 0 };
+    const onMessage = jest.fn();
+    askInChat([frame], onMessage).onClick(
+      {
+        header: timeHeader(Date.UTC(2026, 0, 1, 10), 'utc', Date.UTC(2026, 0, 1, 11)),
+        rows: [{ label: 'State', value: 'OK', source }],
+      },
+      source
+    );
+    expect(onMessage.mock.calls[0][0].point).toEqual({
+      x: '2026-01-01 10:00:00 - 2026-01-01 11:00:00',
+      y: 'OK',
+      xType: 'time',
+      xRaw: Date.UTC(2026, 0, 1, 10),
+      xIso: '2026-01-01T10:00:00.000Z',
+    });
   });
 });

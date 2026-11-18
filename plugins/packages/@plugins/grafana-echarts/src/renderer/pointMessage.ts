@@ -22,7 +22,8 @@ export function askInChat(frames: DataFrame[], onMessage: NonNullable<RenderOpti
             ...(frame?.refId !== undefined && { refId: frame.refId }),
           },
           point: {
-            x: header.value || header.label,
+            // A timeline header breaks the line between the start and the end. The message is one line.
+            x: (header.value || header.label).replace(/\s*\n\s*/g, ' '),
             y: row?.value ?? '',
             xType: x?.type ?? 'string',
             ...(x && Number.isFinite(x.value) && { xRaw: x.value }),

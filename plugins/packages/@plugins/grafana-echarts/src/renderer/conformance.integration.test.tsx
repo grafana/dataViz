@@ -147,6 +147,25 @@ describe('Ask in chat', () => {
     ]);
   });
 
+  it('sends the first field of a point that has more than one field', async () => {
+    const onMessage = jest.fn();
+    const { el } = await draw(fixtureSpec('smoke-candlestick'), { onMessage });
+    const chart = getChart(el).chart!;
+    // The body of the first candle: open 10.
+    const [x, y] = chart.convertToPixel({ seriesIndex: 0 }, [0, 10]) as number[];
+    await dispatch(chart, 'mousemove', x, y);
+    await clickAt(chart, x, y);
+    fireEvent.click(screen.getByRole('link', link));
+    expect(onMessage.mock.calls).toEqual([
+      [
+        expect.objectContaining({
+          series: { name: 'open', labels: {}, refId: 'A' },
+          point: expect.objectContaining({ xRaw: 1790352817294, yRaw: 10 }),
+        }),
+      ],
+    ]);
+  });
+
   // contract-rule: renderer.33
   it('keeps the pinned point when onMessage throws', async () => {
     const error = new Error('Chat unavailable');
