@@ -95,6 +95,26 @@ describe('gaugeChartModule', () => {
       expect(new Set(bars.map((bar) => JSON.stringify(bar.center))).size).toBe(4);
     });
 
+    // A viz spec, or panel JSON that a person edits, can have a value that the editor cannot give.
+    it.each([
+      ['shape', { shape: 'arc' }],
+      ['shape', { shape: 7 }],
+      ['barWidthFactor', { barWidthFactor: 'wide' }],
+      ['barWidthFactor', { barWidthFactor: NaN }],
+      ['textMode', { textMode: 'both' }],
+      ['showThresholdMarkers', { showThresholdMarkers: 0 }],
+    ])('draws %s with its default for the value %j', (_name, options) => {
+      // Without the functions: each build makes a new value formatter.
+      const plain = (series: GaugeSeriesOption[]) => JSON.parse(JSON.stringify(series));
+      const defaults = buildSeries(makeContext());
+      // The wrong values are not values of the option types.
+      const series = buildSeries(makeContext(undefined, options as unknown as Partial<PanelOptions>));
+      expect(plain(series)).toEqual(plain(defaults));
+      for (const one of series) {
+        expect([one.radius, ...(one.center as number[])].every(Number.isFinite)).toBe(true);
+      }
+    });
+
     it('gives all gauges of a panel the same font sizes', () => {
       const frame = gaugeFrame({ a: [1], longer_name: [123456] });
       const bars = buildSeries(makeContext([frame], { showThresholdMarkers: false }));

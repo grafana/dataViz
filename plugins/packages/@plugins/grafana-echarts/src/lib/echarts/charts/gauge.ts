@@ -1,4 +1,4 @@
-import { colorManipulator, type GrafanaTheme2 } from '@grafana/data';
+import { colorManipulator, type GrafanaTheme2, type SelectableValue } from '@grafana/data';
 import {
   GAUGE_BAR_WIDTH_FACTOR_DEFAULT,
   GAUGE_BAR_WIDTH_FACTOR_MAX,
@@ -7,6 +7,8 @@ import {
   GAUGE_SHAPE_DEFAULT,
   GAUGE_SHOW_THRESHOLD_MARKERS_DEFAULT,
   GAUGE_TEXT_MODE_DEFAULT,
+  gaugeShapeOptions,
+  gaugeTextModeOptions,
 } from 'editor/gauge';
 import { type GaugeShape, type GaugeTextMode } from 'editor/types';
 import { type GaugeValue, resolveGaugeValues } from 'lib/echarts/converters/gauge';
@@ -43,16 +45,29 @@ interface GaugeRenderOptions {
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
+/** `value` if it is one of the values of an editor option, else `fallback`. */
+function oneOf<T>(value: unknown, choices: Array<SelectableValue<T>>, fallback: T): T {
+  return choices.find((choice) => choice.value === value)?.value ?? fallback;
+}
+
+/**
+ * The options with their defaults. An option with a value that the editor cannot give also gets its default: a
+ * viz spec or panel JSON can have such a value, and the layout arithmetic gives `NaN` for it.
+ */
 function resolveRenderOptions(options: PanelOptions): GaugeRenderOptions {
+  const { barWidthFactor, showThresholdMarkers } = options;
   return {
-    shape: options.shape ?? GAUGE_SHAPE_DEFAULT,
+    shape: oneOf(options.shape, gaugeShapeOptions, GAUGE_SHAPE_DEFAULT),
     barWidthFactor: clamp(
-      options.barWidthFactor ?? GAUGE_BAR_WIDTH_FACTOR_DEFAULT,
+      typeof barWidthFactor === 'number' && Number.isFinite(barWidthFactor)
+        ? barWidthFactor
+        : GAUGE_BAR_WIDTH_FACTOR_DEFAULT,
       GAUGE_BAR_WIDTH_FACTOR_MIN,
       GAUGE_BAR_WIDTH_FACTOR_MAX
     ),
-    textMode: options.textMode ?? GAUGE_TEXT_MODE_DEFAULT,
-    showThresholdMarkers: options.showThresholdMarkers ?? GAUGE_SHOW_THRESHOLD_MARKERS_DEFAULT,
+    textMode: oneOf(options.textMode, gaugeTextModeOptions, GAUGE_TEXT_MODE_DEFAULT),
+    showThresholdMarkers:
+      typeof showThresholdMarkers === 'boolean' ? showThresholdMarkers : GAUGE_SHOW_THRESHOLD_MARKERS_DEFAULT,
   };
 }
 

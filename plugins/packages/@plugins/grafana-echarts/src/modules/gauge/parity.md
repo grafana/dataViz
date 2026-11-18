@@ -4,7 +4,7 @@ This document compares the ECharts **Gauge** module ([module.tsx](./module.tsx))
 panel
 ([`public/app/plugins/panel/gauge/module.tsx`](https://github.com/grafana/grafana/blob/main/public/app/plugins/panel/gauge/module.tsx)).
 
-The panel is experimental (`"state": "beta"` in [plugin.json](./plugin.json)). The Renderer draws it (`src/renderer/panels.ts`): it shows at most 50 gauges, and gives the `series-truncated` notice for more.
+The panel is experimental (`"state": "beta"` in [plugin.json](./plugin.json)). The Renderer draws it (`src/renderer/panels.ts`). The Renderer keeps the first 50 number fields, and gives the `series-truncated` notice for more. With a calculation, each number field is one gauge, so the Renderer shows 50 gauges at most. With all values (`reduceOptions.values`), each row is one gauge, and only the `limit` option sets the number of gauges (25 with no `limit`): the Renderer does not cut the rows.
 
 ## Design
 
