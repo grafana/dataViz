@@ -2,7 +2,7 @@
 
 The Renderer is one ES module that draws a viz spec with the panels of this package. A viz spec is a JSON document that holds one panel and the data of its queries. The App of [grafana/mcp-grafana](https://github.com/grafana/mcp-grafana) loads the Renderer in an MCP Apps sandbox iframe. That iframe has no network and no Grafana server.
 
-The rules come from the viz contract 1.7.0, the `@grafana/viz-contract` npm package from [grafana/viz-contract](https://github.com/grafana/viz-contract). The package is a dependency in `package.json`, so `pnpm install` gets it. This repository has no copy of the contract. The source code is in `src/renderer/`.
+The rules come from the [viz contract](https://github.com/grafana/viz-contract) 1.11.0. `pnpm install` gets the `@grafana/viz-contract` package. The Renderer code is in `src/renderer/`.
 
 ## The module
 
@@ -14,12 +14,27 @@ The module has three exports. Their types are in `renderer-api.d.ts` of the cont
 | `specVersions`              | The viz spec versions that the Renderer supports, from `src/renderer/specVersions.json`. |
 | `render(el, spec, options)` | Draws `spec` into `el` and returns a handle at once.                                     |
 
-`render` throws only if `el` is not an `HTMLElement`. A spec that is not correct gives the `error` state. The handle has `update(spec)`, `setRefreshed(id, ok, error)` and `destroy()`. The App gives two callbacks in `options`:
+`render` throws only if `el` is not an `HTMLElement`. A spec that is not correct gives the `error` state. The handle has `update(spec)`, `setRefreshed(id, ok, error)`, `setAnnotated(id, ok, error)` and `destroy()`. The App can give these callbacks in `options`:
 
 - `onState` receives each new final state: `ready`, `no-data` or `error`, with the notices. The same state is in the `data-viz-state` and `data-viz-error` attributes of `el`.
 - `onRefresh` receives a request when the user clicks Refresh or selects a time range. Each request has a new `id`. Two handles of the same Renderer module never give the same `id`. `setRefreshed` gives the result of the request with that `id`, and does nothing for the `id` of an older request. The Renderer shows Refresh and the time picker only when the App gives `onRefresh`.
+- If the App gives `onMessage`, the pinned tooltip shows Ask in chat for the selected field. A click sends the series name, labels, query ID and point to the App. A message holds one field. For a point with more than one field, for example a candlestick, the message holds the first field of the tooltip. A state timeline tooltip that shows all the lanes has no Ask in chat.
+- If the App gives `onAnnotate`, the user can add an annotation on a chart with a time axis. The pinned tooltip shows an Add annotation button. A click with Ctrl or Cmd opens the form at a point, and a drag with Ctrl or Cmd opens it for a time range. Save sends a request with a new `id`, the `time`, the `timeEnd` of a range, the `text` and the `tags`. `setAnnotated` gives the result of the request with that `id`. See Add an annotation.
 
 The user can hide, show and color the items of the legend. The Renderer keeps these legend overrides in memory until `destroy`, and draws each new viz spec with them (`renderer.34` to `renderer.37`). A legend override finds an item by its name, so it stays for a name that is not in the new data. The Renderer keeps what the user chose, not the difference to the viz spec, and it draws the legend overrides after the overrides of the viz spec, so they win whatever the order of those. It does not change the viz spec, and the App does not get it. A new `render` starts with none.
+
+### Add an annotation
+
+The rules are `renderer.49` to `renderer.67` of the contract. `src/renderer/annotate.ts` keeps the form and the saved annotations of a handle. The chart gives each Ctrl or Cmd gesture and each click on the Add annotation button to it through `AnnotationHostContext`, and `RendererView` shows the form.
+
+- The Renderer shows one form at most. A new gesture moves the open form and keeps its text, its tags and its message.
+- After Save, the form is busy until `setAnnotated` gives the result, or until `annotateTimeoutMs` (60 seconds) passes. A busy form does not move and does not close.
+- `setAnnotated(id, true)` closes the form, and the chart shows the annotation. `setAnnotated(id, false, error)` keeps the form open and shows the error. After the timeout, the form shows a message, and the user can save again.
+- A result that comes after the timeout, or for an earlier save, is a late result. A late `true` still shows its annotation. It closes the form only if the form did not change since that save. A late `false` does nothing.
+- The saved annotations stay in memory until `destroy`. The Renderer draws them again after each `update`, with the annotations of the viz spec. The App must not add them to the viz spec.
+- `update` keeps the form. The form is at the x of its start time. If that time is not in the time range of the new chart, the form goes to the nearest edge of the plot area. If the new chart has no time axis, the form closes.
+- The form is not an HTML `form` element, because the sandbox iframe blocks a form submit.
+- The form is 300 px wide (`ANNOTATION_FORM_WIDTH_PX`), not the 460 px of the Grafana panel. A press out of the form does not close it, so it must leave a part of the plot area free for the Ctrl or Cmd click that moves it. The check draws it in elements that are 480 px and 640 px wide.
 
 ## Peers
 
@@ -123,7 +138,9 @@ The Jest tests are in `src/renderer/`, and `pnpm run test:ci` runs them. They re
 
 The sandbox test is in `tests-renderer/`. It draws the Renderer in `<iframe sandbox="allow-scripts">` with the default content security policy of MCP Apps, and Playwright blocks all network requests. The test App in `scripts/renderer-harness/app.mjs` bundles the peers with the built Renderer, as the App of mcp-grafana does. Run it with `pnpm run test:renderer-sandbox`. It needs Playwright Chromium (`pnpm exec playwright install chromium`) and no Grafana server.
 
-The test App fills the icon cache from `icons.json` before `render`, as the App does. Then the test draws each fixture set in the states of `delivery.8`: with and with no `onRefresh`, 480 px wide, with a tooltip open and pinned, with the color picker of a legend series open, and with the time picker open. The zoom controls show with no interaction. The test fails on each icon request, and names the icon: add it to `src/renderer/iconList.json`. The test finds only the icons of these states.
+The test App fills the icon cache from `icons.json` before `render`, as the App does. Then the test draws each fixture set in the states of `delivery.8`: with and with no `onRefresh`, 480 px wide, with a tooltip open and pinned, with the color picker of a legend series open, and with the time picker open. With `onAnnotate`, it pins a tooltip and opens the Add annotation form with a message. The zoom controls show with no interaction. The test fails on each icon request, and names the icon: add it to `src/renderer/iconList.json`. The test finds only the icons of these states.
+
+`tests-renderer/annotate.spec.ts` is the Add annotation check of `delivery.14`. It draws `prometheus-line` with `onAnnotate` in the same iframe, and it acts as the App: it answers each request with `setAnnotated`. A Playwright clock makes `annotateTimeoutMs` pass. The check finds a saved annotation by its marker under the plot area: a hover on the marker shows the text of the annotation.
 
 `pnpm run renderer:shots` writes a PNG of each fixture set to `.renderer-shots/`. Use it to look at the charts. It is not a test.
 
@@ -161,8 +178,9 @@ The contract package has no contract chapters, so it does not give the rule ids.
 
 The Renderer does not obey all of the contract yet.
 
-No rule is in the `pending` list of `contractRules.json`.
+Two features have pending rules in `contractRules.json`. Issue [#257](https://github.com/grafana/dataViz/issues/257) covers gauge and stat panels. Issue [#258](https://github.com/grafana/dataViz/issues/258) covers zoom and pan.
 
-This difference has a test that fails when the difference is fixed:
+These differences have a test that fails when the difference is fixed:
 
+- Add annotation on a streamgraph (`renderer.49`): the stream panel has a time axis, but it has no Add annotation UI. The Ctrl and Cmd gestures use the time brush of the chart, and the stream chart has none (`disableTimeBrush` in `src/lib/echarts/charts/stream.ts`). `annotate.integration.test.tsx` has the test.
 - Radar and parallel ([#148](https://github.com/grafana/dataViz/issues/148)): the multivariate panel reads each row as one axis, but the contract reads each number field as one axis. `smoke-radar` gives `panel-error`, and `smoke-parallel` draws its axes transposed. `KNOWN_MISMATCHES` in `conformance.integration.test.tsx` records both.

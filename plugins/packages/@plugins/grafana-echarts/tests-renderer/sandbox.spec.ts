@@ -3,7 +3,7 @@
 import { expect, type Page, test } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { draw, fixtureSets, fixtureSpec, fixtureState, type Message, readMessages, settle } from './harness';
+import { draw, fixtureSets, fixtureSpec, fixtureState, type Message, readMessages, sendToApp, settle } from './harness';
 
 /**
  * CSP reports that the Renderer does not cause. The `@grafana/data` bundle of the App tests `new Function('')` in a
@@ -55,7 +55,7 @@ for (const set of fixtureSets()) {
   }) => {
     // contract-rule: delivery.8
     // The zoom controls show with no interaction, for the families that have them.
-    await draw(page, fixtureSpec(set));
+    await draw(page, fixtureSpec(set), { onMessage: true });
     expect(await iconRequests(page)).toEqual([]);
     const app = page.frameLocator('#app');
     const box = (await page.locator('#app').boundingBox())!;
@@ -79,17 +79,77 @@ for (const set of fixtureSets()) {
     }
     expect(await iconRequests(page)).toEqual([]);
   });
+
+  test(`${set}: no icon request with onAnnotate, a tooltip pinned and the Add annotation form open`, async ({
+    page,
+  }) => {
+    // contract-rule: delivery.8
+    await draw(page, fixtureSpec(set), { onAnnotate: true });
+    await pinAndOpenForm(page);
+    expect(await iconRequests(page)).toEqual([]);
+  });
 }
+
+/**
+ * The `onAnnotate` states of `delivery.8`: a click in the middle of the chart pins a tooltip, and a Ctrl or Cmd
+ * click opens the Add annotation form. Only a chart with a time axis has the form. Then the form gets each of its
+ * icons: the message of an empty description, a tag, and the message of a failed save.
+ */
+async function pinAndOpenForm(page: Page) {
+  const app = page.frameLocator('#app');
+  const box = (await page.locator('#app').boundingBox())!;
+  const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
+  await page.mouse.move(x, y);
+  await page.mouse.click(x, y);
+  await settle(page);
+  await page.keyboard.down('ControlOrMeta');
+  await page.mouse.click(x, y);
+  await page.keyboard.up('ControlOrMeta');
+  await settle(page);
+  const save = app.getByRole('button', { name: 'Save' });
+  if ((await save.count()) === 0) {
+    return;
+  }
+  await save.click();
+  await app.getByRole('textbox', { name: 'Description' }).fill('Deploy');
+  await app.getByPlaceholder('Add tags').fill('release');
+  await app.getByPlaceholder('Add tags').press('Enter');
+  await save.click();
+  await settle(page);
+  const request = (await readMessages(page)).find((m) => m.type === 'annotate')!.request as { id: string };
+  await sendToApp(page, { type: 'setAnnotated', id: request.id, ok: false, error: 'boom' });
+  await settle(page);
+}
+
+test('the delivery.8 onAnnotate interactions reach their states', async ({ page }) => {
+  // The test above passes with no icon request if an interaction opens nothing. This set has the button and the form.
+  await draw(page, fixtureSpec('prometheus-line'), { onAnnotate: true });
+  const app = page.frameLocator('#app');
+  const box = (await page.locator('#app').boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(app.getByRole('button', { name: 'Add annotation' })).toBeVisible();
+  // A filled icon cache draws the SVG of the button icon.
+  await expect(app.getByRole('button', { name: 'Add annotation' }).locator('svg path')).not.toHaveCount(0);
+  await pinAndOpenForm(page);
+  await expect(app.getByRole('alert')).toHaveText('Annotation not saved: boom');
+  await expect(app.locator('[data-echarts-annotation-editor]').getByText('release')).toBeVisible();
+  expect(await iconRequests(page)).toEqual([]);
+});
 
 test('the delivery.8 interactions reach their states', async ({ page }) => {
   // The test above passes with no icon request if an interaction opens nothing. This set has each control.
-  await draw(page, fixtureSpec('prometheus-line'));
+  await draw(page, fixtureSpec('prometheus-line'), { onMessage: true });
   const app = page.frameLocator('#app');
   const box = (await page.locator('#app').boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   // A count, not a visible check: with no icon, the close button has no size.
   await expect(app.getByRole('button', { name: 'Close' })).toHaveCount(1);
+  await app.getByRole('link', { name: 'Ask in chat' }).click();
+  await settle(page);
+  expect((await readMessages(page)).filter((message) => message.type === 'message')).toHaveLength(1);
+  expect(await iconRequests(page)).toEqual([]);
   await page.keyboard.press('Escape');
   await app.getByTestId('series-icon').first().click();
   await expect(app.getByTestId('data-testid Tab Colors')).toBeVisible();

@@ -58,7 +58,11 @@ describe('buildStreamBubbleTooltipModel', () => {
   it('puts the time in the header, formatted in the dashboard time zone', () => {
     // Matches the river and core Grafana's TimeSeriesTooltip: no label, the time as
     // the header value.
-    expect(model(params(0, 0, [1000, 1])).header).toEqual({ label: '', value: '1970-01-01 00:00:01' });
+    expect(model(params(0, 0, [1000, 1])).header).toEqual({
+      label: '',
+      value: '1970-01-01 00:00:01',
+      coordinate: { type: 'time', value: 1000 },
+    });
   });
 
   it('labels the row with the layer the seriesIndex points at', () => {

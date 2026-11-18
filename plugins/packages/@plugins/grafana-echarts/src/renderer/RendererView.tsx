@@ -1,5 +1,8 @@
 import { type PanelDataErrorViewProps } from '@grafana/runtime';
 import { ThemeContext } from '@grafana/ui';
+import { type RenderOptions } from '@grafana/viz-contract/renderer-api';
+import { AnnotationForm } from 'lib/components/annotations/AnnotationForm';
+import { type AnnotationHost, AnnotationHostContext } from 'lib/components/annotations/annotationHostContext';
 import { ChartErrorBoundary } from 'lib/components/ChartErrorBoundary';
 import { ChartInitContext, type ChartInitListener } from 'lib/components/chartInitContext';
 import { ChartNotices } from 'lib/components/ChartNotices';
@@ -7,22 +10,26 @@ import { Panel } from 'lib/components/Panel';
 import { PanelDataErrorViewContext } from 'lib/components/panelDataErrorViewContext';
 import { PanelErrorContext, type PanelErrorSignal } from 'lib/components/panelErrorContext';
 import { TimeZoomOutContext } from 'lib/components/TimeZoomOutContext';
+import { TooltipActionContext } from 'lib/components/tooltip/tooltipActionContext';
 import React, { useEffect, useMemo } from 'react';
+import { type AnnotateActions, type AnnotateForm } from './annotate';
 import { CommitSignal } from './CommitSignal';
 import { dataIssueText } from './dataIssueText';
-import { TITLE_HEIGHT_PX, TOOLBAR_HEIGHT_PX } from './layout';
+import { ANNOTATION_FORM_WIDTH_PX, TITLE_HEIGHT_PX, TOOLBAR_HEIGHT_PX } from './layout';
 import { errorMessage } from './messages';
 import { NoDataView } from './NoDataView';
 import { toChartNotices } from './notices';
+import { askInChat } from './pointMessage';
 import { type Prepared } from './prepare';
 import { type RefreshCause, type RefreshStatus } from './refresh';
 import { RendererErrorView } from './RendererErrorView';
 import { RendererTitle } from './RendererTitle';
 import { RendererToolbar } from './RendererToolbar';
-import { rootClassName } from './rootStyles';
+import { portalClassName, rootClassName } from './rootStyles';
 
 interface Props {
   prepared: Prepared;
+  onMessage?: RenderOptions['onMessage'];
   width: number;
   height: number;
   /** Called after a view with no chart (an error, no data) is on screen. */
@@ -37,6 +44,8 @@ interface Props {
   onChartInit: ChartInitListener;
   /** The Refresh and time picker bar. Only when the App gives `onRefresh` (`refresh.1`). */
   refresh?: { status: RefreshStatus; onRequest: (cause: RefreshCause) => void };
+  /** The Add annotation form, or `null` with no form. Only when the App gives `onAnnotate` (`renderer.49`). */
+  annotate?: { form: AnnotateForm | null; actions: AnnotateActions };
 }
 
 const renderDataIssue = (props: PanelDataErrorViewProps) => <RendererErrorView message={dataIssueText(props)} />;
@@ -46,11 +55,13 @@ const renderDataIssue = (props: PanelDataErrorViewProps) => <RendererErrorView m
  * adds the tag search and the error view of Grafana (see `lib/grafana/GrafanaPanelServices.tsx`, which the Renderer
  * build replaces with `src/renderer/GrafanaPanelServices.tsx`). The notices are a badge in
  * the top-left corner, so they do not cover the notices of the panel in the top-right corner. `panel.title` is above
- * the chart, below the Refresh bar (`renderer.17`).
+ * the chart, below the Refresh bar (`renderer.17`). With `annotate`, the chart gives its annotation drafts to the
+ * Renderer, and the Renderer shows the Add annotation form (`renderer.49`).
  * https://github.com/grafana/grafana/blob/main/packages/grafana-ui/src/themes/ThemeContext.tsx
  */
 export const RendererView = ({
   prepared,
+  onMessage,
   width,
   height,
   onViewShown,
@@ -59,6 +70,7 @@ export const RendererView = ({
   onRenderError,
   onChartInit,
   refresh,
+  annotate,
 }: Props) => {
   // `renderer.10`, `renderer.17`: the bar, the title and the chart together fill `el`.
   const chartHeight = Math.max(
@@ -66,6 +78,19 @@ export const RendererView = ({
     height - (refresh ? TOOLBAR_HEIGHT_PX : 0) - (prepared.title !== undefined ? TITLE_HEIGHT_PX : 0)
   );
   const rootClass = useMemo(() => rootClassName(prepared.theme), [prepared.theme]);
+  const portalClass = useMemo(() => portalClassName(prepared.theme), [prepared.theme]);
+  const pointAction = useMemo(
+    () => (prepared.kind === 'chart' && onMessage ? askInChat(prepared.props.data.series, onMessage) : undefined),
+    [prepared, onMessage]
+  );
+  // The chart sees a new host only when the form gets a new start time.
+  const form = annotate?.form ?? null;
+  const actions = annotate?.actions;
+  const formTime = form?.draft.from ?? null;
+  const annotationHost = useMemo<AnnotationHost | undefined>(
+    () => actions && { time: formTime, open: actions.open, place: actions.place },
+    [actions, formTime]
+  );
   useEffect(() => {
     if (prepared.kind !== 'chart') {
       onViewShown();
@@ -75,7 +100,7 @@ export const RendererView = ({
   return (
     <ThemeContext.Provider value={prepared.theme}>
       <ChartInitContext.Provider value={onChartInit}>
-        {/* `renderer.14`: a double click zoom out does nothing. The brush zoom and the pan call the
+        {/* A double click zoom out does nothing. The brush zoom and the pan call the
             `onChangeTimeRange` of `toPanelProps`, which does nothing. */}
         <TimeZoomOutContext.Provider value={null}>
           <PanelErrorContext.Provider value={onPanelError}>
@@ -108,9 +133,31 @@ export const RendererView = ({
                         <RendererErrorView message={errorMessage('render-error', { panelName: prepared.panelName })} />
                       )}
                     >
-                      <Panel {...prepared.props} width={width} height={chartHeight} />
+                      <AnnotationHostContext.Provider value={annotationHost}>
+                        <TooltipActionContext.Provider value={pointAction}>
+                          <Panel {...prepared.props} width={width} height={chartHeight} />
+                        </TooltipActionContext.Provider>
+                      </AnnotationHostContext.Provider>
                       <ChartNotices notices={toChartNotices(prepared.notices)} corner="top-left" />
                     </ChartErrorBoundary>
+                  )}
+                  {/* The form is in a portal, so it gets the portal class for the font and the text color. A press
+                      out of it does not close it: a Ctrl or Cmd click moves it (`renderer.52`). */}
+                  {form && actions && (
+                    <AnnotationForm
+                      className={portalClass}
+                      width={ANNOTATION_FORM_WIDTH_PX}
+                      draft={form.draft}
+                      timeZone={prepared.timeZone}
+                      description={form.text}
+                      tags={form.tags}
+                      saving={form.busy}
+                      locked={form.busy}
+                      message={form.message}
+                      onChange={actions.edit}
+                      onSave={actions.save}
+                      onCancel={actions.cancel}
+                    />
                   )}
                 </div>
               </div>

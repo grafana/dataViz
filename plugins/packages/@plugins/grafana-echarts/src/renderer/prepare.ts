@@ -1,7 +1,7 @@
 // From the input of `render` to what the Renderer shows: an error, the no-data view, or the chart. It never throws
 // (`renderer.3`).
 import { type GrafanaTheme2, type TimeRange } from '@grafana/data';
-import { type Notice, type RenderError } from '@grafana/viz-contract/renderer-api';
+import { type AnnotateRequest, type Notice, type RenderError } from '@grafana/viz-contract/renderer-api';
 import { hasNoRows } from './computeState';
 import { LOG_PREFIX } from './log';
 import { errorMessage } from './messages';
@@ -22,10 +22,18 @@ export type Prepared = {
 } & (
   | { kind: 'error'; error: RenderError }
   | { kind: 'no-data'; notices: Notice[]; noValue?: string }
-  | { kind: 'chart'; props: SpecPanelProps; notices: Notice[]; panelName: string }
+  | {
+      kind: 'chart';
+      props: SpecPanelProps;
+      notices: Notice[];
+      panelName: string;
+      /** True if the chart has a time axis for the Add annotation UI (`renderer.49`). */
+      timeAxis: boolean;
+    }
 );
 
-export function prepare(input: unknown, legend?: LegendHook): Prepared {
+/** `savedAnnotations` are the annotations that the App saved for this handle (`renderer.63`). */
+export function prepare(input: unknown, legend?: LegendHook, savedAnnotations?: readonly AnnotateRequest[]): Prepared {
   const parsed = parseSpec(input);
   if (!parsed.ok) {
     // `renderer.3`: the error also goes to the console. A spec that is not correct can still name its theme.
@@ -43,12 +51,12 @@ export function prepare(input: unknown, legend?: LegendHook): Prepared {
   // `state.6`: `<panelName>` is the `name` of the panel row.
   const panelName = panelType(spec.panel.type)?.name ?? spec.panel.type;
   try {
-    const { props, omittedSeries } = preparePanel(spec, PANELS[spec.panel.type], legend);
+    const { props, omittedSeries, timeAxis } = preparePanel(spec, PANELS[spec.panel.type], legend, savedAnnotations);
     const notices = allNotices(spec, omittedSeries);
     if (hasNoRows(props.data.series)) {
       return { ...base, kind: 'no-data', notices, noValue: props.fieldConfig.defaults.noValue };
     }
-    return { ...base, kind: 'chart', props, notices, panelName };
+    return { ...base, kind: 'chart', props, notices, panelName, timeAxis };
   } catch (error) {
     // `state.6`: the raw message goes to the console only.
     console.error(LOG_PREFIX, error);

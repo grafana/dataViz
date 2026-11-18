@@ -5,7 +5,7 @@ import { timeAtPixel } from 'lib/echarts/annotationGestures';
 import { isMultiValueSeriesType } from 'lib/echarts/charts/narrowing';
 import { type ChartContext, type ChartModule } from 'lib/echarts/charts/types';
 import { type EChartsType, init } from 'lib/echarts/echarts';
-import { hasTimeAxis, hasTimeBrush } from 'lib/echarts/options/panelOption';
+import { hasAnnotationAxis, hasTimeAxis } from 'lib/echarts/options/panelOption';
 import { collectProximitySeries } from 'lib/echarts/tooltip/proximity';
 import React, {
   type RefObject,
@@ -20,7 +20,9 @@ import React, {
 import { type PanelOptions } from 'types';
 import { type InteractedRelationsView } from 'lib/echarts/relations/options/view';
 import { AnnotationEditor } from './annotations/AnnotationEditor';
+import { AnnotationHostContext } from './annotations/annotationHostContext';
 import { type PlacedAnnotationDraft, useAnnotationGestures } from './hooks/useAnnotationGestures';
+import { useAnnotationHostPlacement } from './hooks/useAnnotationHostPlacement';
 import { useTreemapDrillDown } from './hooks/useTreemapDrillDown';
 import { useBrushTimeZoom } from './hooks/useBrushTimeZoom';
 import { useTimeAxisPan } from './hooks/useTimeAxisPan';
@@ -165,21 +167,29 @@ export const EChart: React.FC<Props> = ({
   // Add an annotation from the chart, as core Time series: ctrl/cmd + click or drag, or the
   // tooltip's "Add annotation" button. Only when the dashboard lets the user add annotations
   // and the x-axis is a time axis (candlestick and boxplot use a category axis).
+  // An annotation host (the standalone renderer) takes the place of the dashboard: it gets each draft, and it
+  // shows its own form.
   // https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/annotate-visualizations/#add-annotations
   const { canAddAnnotations } = usePanelContext();
+  const annotationHost = useContext(AnnotationHostContext);
+  const openHostForm = annotationHost?.open;
   const [annotationDraft, setAnnotationDraft] = useState<PlacedAnnotationDraft | null>(null);
   const timeAxis = useMemo(
-    () => !isPreview && hasTimeBrush(chartContext, chartModule) && !isMultiValueSeriesType(chartContext.seriesType),
+    () => !isPreview && hasAnnotationAxis(chartContext, chartModule),
     [chartContext, chartModule, isPreview]
   );
-  const canAnnotate = timeAxis && canAddAnnotations?.() === true;
+  const canAnnotate = timeAxis && (annotationHost !== undefined || canAddAnnotations?.() === true);
   const openAnnotationEditor = useCallback(
     (draft: PlacedAnnotationDraft) => {
       dismissTooltip();
-      setAnnotationDraft(draft);
+      (openHostForm ?? setAnnotationDraft)(draft);
     },
-    [dismissTooltip]
+    [dismissTooltip, openHostForm]
   );
+  useAnnotationHostPlacement(chart, panelDOMRef, timeAxis ? annotationHost : undefined, chartContext, {
+    width,
+    height,
+  });
   const closeAnnotationEditor = useCallback(() => setAnnotationDraft(null), []);
   const annotationGestureRef = useAnnotationGestures(
     isPreview ? null : chart,

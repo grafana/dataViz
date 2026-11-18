@@ -5,6 +5,7 @@ import { formatEChartsValue, unwrapEChartsValue } from 'lib/echarts/style';
 import { getFieldConfigFromField } from 'lib/grafana/fields/fieldConfig';
 import {
   type TooltipFieldResolver,
+  type TooltipHeaderItem,
   type TooltipModel,
   type TooltipModelOptions,
   type TooltipRow,
@@ -101,26 +102,18 @@ export function applyTooltipRowOptions<T>(
 
 /**
  * Header text: the hovered x value. Axis triggers carry it as `axisValueLabel`;
- * item triggers (Single mode) don't, so `formatHeaderValue` (supplied for time
+ * item triggers (Single mode) don't, so `formatHeader` (supplied for time
  * axes) recovers it from the item's `[x, value]` tuple with Grafana's time
  * formatting. Falls back to the single item's `name` (category charts).
  */
-function getHeaderText(items: TooltipParam[], formatHeaderValue?: (item: TooltipParam) => string | undefined): string {
+function getHeader(items: TooltipParam[], formatHeader: TooltipModelOptions['formatHeader']): TooltipHeaderItem {
   const [first] = items;
-  if (first == null) {
-    return '';
-  }
-  const formatted = formatHeaderValue?.(first);
-  if (formatted != null) {
-    return formatted;
-  }
-  if (first.axisValueLabel != null) {
-    return first.axisValueLabel;
-  }
-  if (items.length === 1 && first.name != null) {
-    return String(first.name);
-  }
-  return '';
+  return (
+    (first && formatHeader?.(first)) ?? {
+      label: '',
+      value: first?.axisValueLabel ?? (items.length === 1 ? String(first?.name ?? '') : ''),
+    }
+  );
 }
 
 /**
@@ -187,13 +180,13 @@ function getLabel(item: TooltipParam, headerText: string): string {
 export function buildTooltipModel(
   params: TopLevelFormatterParams,
   resolveValueFormatter: TooltipValueFormatterResolver,
-  { rowOptions, resolveField, formatHeaderValue, multiValueDimensions, multiValueOffset = 1 }: TooltipModelOptions = {}
+  { rowOptions, resolveField, formatHeader, multiValueDimensions, multiValueOffset = 1 }: TooltipModelOptions = {}
 ): TooltipModel {
   const items = Array.isArray(params) ? params : [params];
 
   // Header is the shared axis label, invariant across rows, so derive it before
   // any hide/sort reshaping.
-  const headerText = getHeaderText(items, formatHeaderValue);
+  const header = getHeader(items, formatHeader);
 
   const ordered = rowOptions ? applyTooltipRowOptions(items, (item) => tooltipNumeric(item.value), rowOptions) : items;
 
@@ -210,7 +203,7 @@ export function buildTooltipModel(
         resolveField
       )
     );
-    return { header: { label: '', value: headerText }, rows };
+    return { header, rows };
   }
 
   const rows: TooltipRow[] = ordered.flatMap((item) => {
@@ -231,7 +224,8 @@ export function buildTooltipModel(
     return [
       {
         color: tooltipColor(item.color),
-        label: getLabel(item, headerText),
+        label: getLabel(item, header.value),
+        rawValue: tooltipNumeric(item.value) ?? null,
         value,
         seriesIndex: item.seriesIndex,
         // Every row carries its own source so the overlay can surface the clicked
@@ -246,7 +240,7 @@ export function buildTooltipModel(
   // stays unset and the overlay falls back to the clicked row's own `source`.
   const source = items.length === 1 ? resolveField?.(items[0]) : undefined;
 
-  return { header: { label: '', value: headerText }, rows, source };
+  return { header, rows, source };
 }
 
 /**

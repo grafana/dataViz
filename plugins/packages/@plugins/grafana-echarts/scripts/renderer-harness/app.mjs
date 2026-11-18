@@ -33,12 +33,21 @@ const handle = render(document.getElementById('root'), spec, {
     }
   },
   ...(options.onRefresh === false ? {} : { onRefresh: (request) => post({ type: 'refresh', request }) }),
+  ...(options.onMessage && { onMessage: (request) => post({ type: 'message', request }) }),
+  ...(options.onAnnotate && { onAnnotate: (request) => post({ type: 'annotate', request }) }),
 });
-// The test sends `{ type: 'setRefreshed', id, ok, error }` to drive a refresh result, and `{ type: 'ping', id }` to
-// wait until the work of an interaction is done (`pong` comes in the same way as `idle`).
+// The test sends `{ type: 'setRefreshed', id, ok, error }` to drive a refresh result, `{ type: 'setAnnotated', id,
+// ok, error }` to drive an annotation result, `{ type: 'update', spec }` to draw a new viz spec, and
+// `{ type: 'ping', id }` to wait until the work of an interaction is done (`pong` comes in the same way as `idle`).
 addEventListener('message', (event) => {
   if (event.data && event.data.type === 'setRefreshed') {
     handle.setRefreshed(event.data.id, event.data.ok, event.data.error);
+  }
+  if (event.data && event.data.type === 'setAnnotated') {
+    handle.setAnnotated(event.data.id, event.data.ok, event.data.error);
+  }
+  if (event.data && event.data.type === 'update') {
+    handle.update(event.data.spec);
   }
   if (event.data && event.data.type === 'ping') {
     requestIdleCallback(() => post({ type: 'pong', id: event.data.id }));

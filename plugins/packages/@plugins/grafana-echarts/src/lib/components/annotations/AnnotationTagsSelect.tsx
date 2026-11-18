@@ -7,6 +7,8 @@ interface Props {
   tags: string[];
   onChange: (tags: string[]) => void;
   searchTags: SearchAnnotationTags;
+  /** True when the user cannot change the tags. */
+  disabled?: boolean;
 }
 
 /**
@@ -15,7 +17,7 @@ interface Props {
  * The list opens in a portal, out of the editor element.
  * https://developers.grafana.com/ui/latest/index.html?path=/docs/inputs-multicombobox--docs
  */
-export const AnnotationTagsSelect: React.FC<Props> = ({ id, tags, onChange, searchTags }) => {
+export const AnnotationTagsSelect: React.FC<Props> = ({ id, tags, onChange, searchTags, disabled }) => {
   const options = useCallback(
     async (query: string): Promise<Array<ComboboxOption<string>>> => {
       try {
@@ -32,6 +34,7 @@ export const AnnotationTagsSelect: React.FC<Props> = ({ id, tags, onChange, sear
     <MultiCombobox<string>
       id={id}
       placeholder="Add tags"
+      disabled={disabled}
       createCustomValue
       customValueDescription="New tag"
       options={options}

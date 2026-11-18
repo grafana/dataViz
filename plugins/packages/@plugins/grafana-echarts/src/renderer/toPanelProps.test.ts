@@ -126,7 +126,6 @@ describe('toPanelProps', () => {
     expect(themeOf('light').isLight).toBe(true);
   });
 
-  // contract-rule: renderer.14
   it('gives the time zone of the spec and the time range of data.range', () => {
     const spec = { ...parse(fixtureSpec('epoch-range')), timeZone: 'utc' };
     const props = toPanelProps(spec, cartesian);

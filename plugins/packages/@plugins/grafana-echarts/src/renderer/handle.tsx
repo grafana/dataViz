@@ -1,12 +1,13 @@
-// The handle of `render`: one React root in `el`, the state of each draw, the size of `el`, and the refresh
-// (`renderer.2` to `renderer.5`, `renderer.10`, `renderer.34` to `renderer.37`, `state.1` to `state.13`,
-// `refresh.1` to `refresh.7`, `refresh.13`, `refresh.15`).
+// The handle of `render`: one React root in `el`, the state of each draw, the size of `el`, the refresh and the
+// Add annotation form (`renderer.2` to `renderer.5`, `renderer.10`, `renderer.34` to `renderer.37`, `renderer.49`
+// to `renderer.67`, `state.1` to `state.13`, `refresh.1` to `refresh.7`, `refresh.13`, `refresh.15`).
 // https://react.dev/reference/react-dom/client/createRoot
 import { type RenderError, type RenderHandle, type RenderOptions } from '@grafana/viz-contract/renderer-api';
 import { type EChartsType } from 'lib/echarts/echarts';
 import { type LegendOverrides, mergeLegendOverrides } from 'lib/grafana/fields/seriesConfig';
 import React from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { AnnotateController } from './annotate';
 import { computeState } from './computeState';
 import { LOG_PREFIX } from './log';
 import { errorMessage } from './messages';
@@ -33,6 +34,8 @@ class Renderer {
   private readonly root: Root;
   private readonly reporter: StateReporter;
   private readonly refresh: RefreshController | undefined;
+  /** The Add annotation form and the saved annotations. Only when the App gives `onAnnotate` (`renderer.49`). */
+  private readonly annotate: AnnotateController | undefined;
   private readonly resizeObserver: ResizeObserver | undefined;
   /** The inline height before `renderer.10` set one, so `destroy` can put it back if the App did not change it. */
   private heightBefore: string | undefined;
@@ -54,13 +57,14 @@ class Renderer {
 
   constructor(
     private readonly el: HTMLElement,
-    options: RenderOptions | undefined
+    private readonly options: RenderOptions | undefined
   ) {
     this.reporter = new StateReporter(el, options?.onState);
     this.setDefaultHeight();
     this.size = this.measure();
     this.root = createRoot(el);
     this.refresh = options?.onRefresh ? new RefreshController(options.onRefresh, () => this.draw()) : undefined;
+    this.annotate = options?.onAnnotate ? new AnnotateController(options.onAnnotate, this.onAnnotateChange) : undefined;
     // `renderer.10`: the chart fills `el`, also after a size change.
     // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver
     this.resizeObserver = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(this.onResize);
@@ -75,9 +79,18 @@ class Renderer {
     this.reporter.rendering();
     this.signals = newSignals();
     this.spec = spec;
-    this.prepared = prepare(spec, this.legendHook());
+    this.prepared = this.prepareSpec();
     this.refresh?.updated();
+    // `renderer.61`: the form stays, unless the new chart has no time axis.
+    if (this.prepared.kind !== 'chart' || !this.prepared.timeAxis) {
+      this.annotate?.close();
+    }
     this.draw();
+  }
+
+  /** The last viz spec with the legend changes and the saved annotations of the user (`renderer.35`, `renderer.63`). */
+  private prepareSpec(): Prepared {
+    return prepare(this.spec, this.legendHook(), this.annotate?.savedAnnotations);
   }
 
   private legendHook(): LegendHook {
@@ -90,6 +103,13 @@ class Renderer {
     }
   }
 
+  /** `renderer.62`: after `destroy`, a result does nothing. */
+  setAnnotated(id: string, ok: boolean, error?: string): void {
+    if (!this.destroyed) {
+      this.annotate?.setAnnotated(id, ok, error);
+    }
+  }
+
   /** `renderer.5`: removes the chart, the listeners, the timer and the attributes. */
   destroy(): void {
     if (this.destroyed) {
@@ -98,6 +118,7 @@ class Renderer {
     this.destroyed = true;
     this.resizeObserver?.disconnect();
     this.refresh?.dispose();
+    this.annotate?.dispose();
     // First, so that a signal from the unmount does not report a state again.
     this.reporter.stop();
     this.root.unmount();
@@ -179,18 +200,38 @@ class Renderer {
       return;
     }
     this.legend = mergeLegendOverrides(this.legend, change);
-    this.prepared = prepare(this.spec, this.legendHook());
+    this.prepared = this.prepareSpec();
+    this.draw();
+  };
+
+  /**
+   * The form or the saved annotations changed. A new saved annotation draws the same viz spec again
+   * (`renderer.63`). The state and the notices do not change, as for a legend action.
+   */
+  private readonly onAnnotateChange = (savedChanged: boolean) => {
+    if (this.destroyed) {
+      return;
+    }
+    if (savedChanged && this.spec !== undefined) {
+      this.prepared = this.prepareSpec();
+    }
     this.draw();
   };
 
   private readonly onPanelError = (message: string | null) => {
     this.signals.panelError = message;
+    // The error view of the panel has no time axis (`renderer.61`).
+    if (message !== null) {
+      this.annotate?.close();
+    }
     this.report();
   };
 
   private readonly onRenderError = (error: Error) => {
     // `state.6`: the raw message goes to the console only.
     console.error(LOG_PREFIX, error);
+    // The error view has no time axis, as the error view of the panel (`renderer.61`).
+    this.annotate?.close();
     const prepared = this.prepared;
     if (prepared?.kind === 'chart') {
       const message = errorMessage('render-error', { panelName: prepared.panelName });
@@ -228,6 +269,7 @@ class Renderer {
     this.root.render(
       <RendererView
         prepared={this.prepared}
+        onMessage={this.options?.onMessage}
         width={this.size.width}
         height={this.size.height}
         onViewShown={this.onViewShown}
@@ -236,6 +278,7 @@ class Renderer {
         onRenderError={this.onRenderError}
         onChartInit={this.onChartInit}
         refresh={this.refresh ? { status: this.refresh.current, onRequest: this.onRefreshRequest } : undefined}
+        annotate={this.annotate ? { form: this.annotate.current, actions: this.annotate.actions } : undefined}
       />
     );
   }
@@ -253,6 +296,7 @@ export function createRenderer(el: HTMLElement, spec: unknown, options?: RenderO
   return {
     update: (next) => renderer.update(next),
     setRefreshed: (id, ok, error) => renderer.setRefreshed(id, ok, error),
+    setAnnotated: (id, ok, error) => renderer.setAnnotated(id, ok, error),
     destroy: () => renderer.destroy(),
   };
 }

@@ -61,6 +61,7 @@ describe('the handle', () => {
     expect(handle).toEqual({
       update: expect.any(Function),
       setRefreshed: expect.any(Function),
+      setAnnotated: expect.any(Function),
       destroy: expect.any(Function),
     });
     expect(el.getAttribute('data-viz-state')).toBe('rendering');
@@ -217,7 +218,6 @@ describe('the handle', () => {
     expect(el.style.height).toBe('250px');
   });
 
-  // contract-rule: renderer.14
   it('does nothing outside data.range for a brush zoom: no onRefresh, the same state', async () => {
     const onRefresh = jest.fn();
     const { el, states, handle } = draw(fixtureSpec('smoke-timeseries'), { onRefresh });

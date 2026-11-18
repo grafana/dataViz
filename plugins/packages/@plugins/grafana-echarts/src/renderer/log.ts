@@ -1,2 +1,2 @@
-/** The prefix of each `console.error` of the Renderer (`renderer.3`, `state.6`, `state.13`, `refresh.7`). */
+/** The prefix of each `console.error` of the Renderer (`renderer.3`, `state.6`, `state.13`, `refresh.7`, `renderer.59`). */
 export const LOG_PREFIX = 'grafana-viz:';

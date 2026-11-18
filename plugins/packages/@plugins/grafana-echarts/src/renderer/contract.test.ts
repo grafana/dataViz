@@ -3,9 +3,10 @@ import chartTypes from '@grafana/viz-contract/registry/chart-types.json';
 import panelTypes from '@grafana/viz-contract/registry/panel-types.json';
 import fs from 'node:fs';
 import path from 'node:path';
-import { allFixtureSets, FIXTURES_DIR, fixtureSets } from 'test/rendererFixtures';
+import { allFixtureSets, contractFixtureSets, FIXTURES_DIR } from 'test/rendererFixtures';
+import { PANEL_IDS } from './registry';
 
-const sets = fixtureSets();
+const sets = contractFixtureSets();
 const smokeSets = sets.filter((name) => name.startsWith('smoke-'));
 
 const modulesDir = path.join(__dirname, '..', 'modules');
@@ -49,6 +50,6 @@ describe('viz contract', () => {
   });
 
   it('has one panel of this package for each panel type', () => {
-    expect(panelTypes.panels.map((panel) => panel.id).sort()).toEqual(pluginIds);
+    expect([...PANEL_IDS].sort()).toEqual(pluginIds);
   });
 });

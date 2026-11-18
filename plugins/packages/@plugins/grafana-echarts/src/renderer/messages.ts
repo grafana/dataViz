@@ -15,9 +15,9 @@ export function fillPattern(pattern: string, values: Values): string {
   );
 }
 
-/** The message pattern of a code of `states.json` (`errors` and `refresh`). */
+/** The message pattern of a code of `states.json` (`errors`, `refresh` and `annotate`). */
 function statePattern(code: string): string {
-  const row = [...states.errors, ...states.refresh].find((item) => item.code === code);
+  const row = [...states.errors, ...states.refresh, ...states.annotate].find((item) => item.code === code);
   if (!row) {
     throw new Error(`${code} is not a code of states.json`);
   }
@@ -30,6 +30,12 @@ export const errorMessage = (code: ErrorCode, values: Values): string => fillPat
 /** The message of a refresh code of `states.json` (`refresh.5`). */
 export const refreshMessage = (
   code: 'refresh-failed' | 'refresh-failed-no-detail' | 'refresh-timeout',
+  values: Values = {}
+) => fillPattern(statePattern(code), values);
+
+/** The message of an annotate code of `states.json` (`renderer.56`). */
+export const annotateMessage = (
+  code: 'annotate-failed' | 'annotate-failed-no-detail' | 'annotate-timeout',
   values: Values = {}
 ) => fillPattern(statePattern(code), values);
 
