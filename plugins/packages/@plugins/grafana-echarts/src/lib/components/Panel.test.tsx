@@ -325,7 +325,9 @@ describe('Panel empty view', () => {
   });
 
   it('renders the panel content of the stat family while data is streaming', () => {
-    render(getComponent([graphFrame()], 'stat', undefined, { state: LoadingState.Streaming }, undefined, 'stat'));
+    renderWithGrafana(
+      getComponent([graphFrame()], 'stat', undefined, { state: LoadingState.Streaming }, undefined, 'stat')
+    );
 
     expect(screen.getByText('Chart')).toBeInTheDocument();
   });

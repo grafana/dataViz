@@ -6,6 +6,7 @@ import {
   hierarchySeriesTypes,
   supportsTimeAxisSeriesTypes,
 } from 'editor/constants';
+import { gaugeSeriesTypes } from 'editor/gauge';
 import { geoSeriesTypes } from 'editor/geo';
 import { multivariateSeriesTypes } from 'editor/radar';
 import { statSeriesTypes } from 'editor/stat';
@@ -15,6 +16,7 @@ import {
   type CartesianSingleValueSeriesType,
   type CategoricalAxisSeriesType,
   type CategoricalOnlySeriesType,
+  type GaugeSeriesType,
   type GeoSeriesType,
   type HeatmapSeriesType,
   type HierarchySeriesType,
@@ -97,4 +99,9 @@ export function isTimelineSeriesType(type: SeriesType): type is TimelineSeriesTy
 // The stat family draws one cell for each value: text, and a sparkline.
 export function isStatSeriesType(type: SeriesType): type is StatSeriesType {
   return statSeriesTypes.some((t) => t === type);
+}
+
+// Gauge charts draw one arc for each value. They have no axis.
+export function isGaugeSeriesType(type: SeriesType): type is GaugeSeriesType {
+  return gaugeSeriesTypes.some((t) => t === type);
 }

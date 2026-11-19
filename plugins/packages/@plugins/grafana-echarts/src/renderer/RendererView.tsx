@@ -1,3 +1,4 @@
+import { type TimeRange } from '@grafana/data';
 import { type PanelDataErrorViewProps } from '@grafana/runtime';
 import { ThemeContext } from '@grafana/ui';
 import { ChartErrorBoundary } from 'lib/components/ChartErrorBoundary';
@@ -6,19 +7,23 @@ import { ChartNotices } from 'lib/components/ChartNotices';
 import { Panel } from 'lib/components/Panel';
 import { PanelDataErrorViewContext } from 'lib/components/panelDataErrorViewContext';
 import { PanelErrorContext, type PanelErrorSignal } from 'lib/components/panelErrorContext';
+import { TimeDragContext } from 'lib/components/TimeDragContext';
 import { TimeZoomOutContext } from 'lib/components/TimeZoomOutContext';
 import React, { useEffect, useMemo } from 'react';
 import { CommitSignal } from './CommitSignal';
 import { dataIssueText } from './dataIssueText';
-import { TITLE_HEIGHT_PX, TOOLBAR_HEIGHT_PX } from './layout';
+import { chartPadding, TITLE_HEIGHT_PX, TOOLBAR_HEIGHT_PX } from './layout';
 import { errorMessage } from './messages';
 import { NoDataView } from './NoDataView';
 import { toChartNotices } from './notices';
 import { type Prepared } from './prepare';
+import { type SpecPanelProps } from './toPanelProps';
+import { type TimeRangeCause } from './timeRangeRequest';
 import { type RefreshCause, type RefreshStatus } from './refresh';
 import { RendererErrorView } from './RendererErrorView';
 import { RendererTitle } from './RendererTitle';
 import { RendererToolbar } from './RendererToolbar';
+import { ChartResetTimeRangeButton } from './ChartResetTimeRangeButton';
 import { rootClassName } from './rootStyles';
 
 interface Props {
@@ -35,8 +40,20 @@ interface Props {
   onRenderError: (error: Error) => void;
   /** Called with each chart instance before its first draw. It must be stable. */
   onChartInit: ChartInitListener;
+  timeNavigation?: {
+    localRange?: TimeRange;
+    onChangeTimeRange: SpecPanelProps['onChangeTimeRange'];
+    onReset: () => void;
+    onPan: SpecPanelProps['onChangeTimeRange'];
+    onZoomOut: () => void;
+  };
   /** The Refresh and time picker bar. Only when the App gives `onRefresh` (`refresh.1`). */
-  refresh?: { status: RefreshStatus; onRequest: (cause: RefreshCause) => void };
+  refresh?: {
+    status: RefreshStatus;
+    onRequest: (cause: RefreshCause) => void;
+    onPick: (cause: TimeRangeCause) => void;
+    canReset: boolean;
+  };
 }
 
 const renderDataIssue = (props: PanelDataErrorViewProps) => <RendererErrorView message={dataIssueText(props)} />;
@@ -58,6 +75,7 @@ export const RendererView = ({
   onPanelError,
   onRenderError,
   onChartInit,
+  timeNavigation,
   refresh,
 }: Props) => {
   // `renderer.10`, `renderer.17`: the bar, the title and the chart together fill `el`.
@@ -65,6 +83,7 @@ export const RendererView = ({
     0,
     height - (refresh ? TOOLBAR_HEIGHT_PX : 0) - (prepared.title !== undefined ? TITLE_HEIGHT_PX : 0)
   );
+  const padding = prepared.kind === 'chart' ? chartPadding(prepared.props.family) : 0;
   const rootClass = useMemo(() => rootClassName(prepared.theme), [prepared.theme]);
   useEffect(() => {
     if (prepared.kind !== 'chart') {
@@ -75,9 +94,7 @@ export const RendererView = ({
   return (
     <ThemeContext.Provider value={prepared.theme}>
       <ChartInitContext.Provider value={onChartInit}>
-        {/* `renderer.14`: a double click zoom out does nothing. The brush zoom and the pan call the
-            `onChangeTimeRange` of `toPanelProps`, which does nothing. */}
-        <TimeZoomOutContext.Provider value={null}>
+        <TimeZoomOutContext.Provider value={refresh?.status.busy ? null : timeNavigation?.onZoomOut}>
           <PanelErrorContext.Provider value={onPanelError}>
             <PanelDataErrorViewContext.Provider value={renderDataIssue}>
               {/* Before the chart, so its effect runs before the effect of the chart. */}
@@ -85,10 +102,10 @@ export const RendererView = ({
               <div className={rootClass} style={{ width, height }}>
                 {refresh && (
                   <RendererToolbar
-                    status={refresh.status}
+                    {...refresh}
+                    onReset={timeNavigation?.onReset}
                     timeRange={prepared.timeRange}
                     timeZone={prepared.timeZone}
-                    onRequest={refresh.onRequest}
                   />
                 )}
                 {prepared.title !== undefined && <RendererTitle title={prepared.title} />}
@@ -108,8 +125,19 @@ export const RendererView = ({
                         <RendererErrorView message={errorMessage('render-error', { panelName: prepared.panelName })} />
                       )}
                     >
-                      <Panel {...prepared.props} width={width} height={chartHeight} />
+                      <TimeDragContext.Provider value={refresh?.status.busy ? null : timeNavigation?.onPan}>
+                        <div style={{ padding }}>
+                          <Panel
+                            {...prepared.props}
+                            width={Math.max(0, width - 2 * padding)}
+                            height={Math.max(0, chartHeight - 2 * padding)}
+                            timeRange={timeNavigation?.localRange ?? prepared.props.timeRange}
+                            onChangeTimeRange={timeNavigation?.onChangeTimeRange ?? prepared.props.onChangeTimeRange}
+                          />
+                        </div>
+                      </TimeDragContext.Provider>
                       <ChartNotices notices={toChartNotices(prepared.notices)} corner="top-left" />
+                      {timeNavigation?.localRange && <ChartResetTimeRangeButton onClick={timeNavigation.onReset} />}
                     </ChartErrorBoundary>
                   )}
                 </div>

@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.6.0](https://github.com/grafana/dataviz/compare/grafana-echarts-renderer/v0.5.0...grafana-echarts-renderer/v0.6.0) (2026-11-19)
+
+
+### 🎉 Features
+
+* **ECharts:** Renderer draws the gauge panel, on viz contract 1.10.0 ([#242](https://github.com/grafana/dataviz/issues/242)) ([301ccdc](https://github.com/grafana/dataviz/commit/301ccdcb9a7505091c1ccaf5896ad3e387988b0e))
+
+## [0.5.0](https://github.com/grafana/dataviz/compare/grafana-echarts-renderer/v0.4.0...grafana-echarts-renderer/v0.5.0) (2026-11-19)
+
+
+### 🎉 Features
+
+* **ECharts:** Gauge panel (beta) ([#240](https://github.com/grafana/dataviz/issues/240)) ([8e86401](https://github.com/grafana/dataviz/commit/8e86401293cfab7148d88326d11da4bf56d8c884))
+* **echarts:** request new data when the Renderer time range changes ([5112921](https://github.com/grafana/dataviz/commit/51129212d476c9d06935df5c8de97fb7f7c5f6b5))
+
 ## [0.4.0](https://github.com/grafana/dataViz/compare/grafana-echarts-renderer/v0.3.1...grafana-echarts-renderer/v0.4.0) (2026-11-17)
 
 

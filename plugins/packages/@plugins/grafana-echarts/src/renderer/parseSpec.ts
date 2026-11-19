@@ -6,7 +6,7 @@ import { errorMessage } from './messages';
 import { PANEL_IDS, type SpecErrorCode } from './registry';
 import { orderedResults } from './results';
 import specVersions from './specVersions.json';
-import { type QueryResult, type VizSpec } from './vizSpec';
+import { type QueryResult, type SpecTimeRange, type VizSpec } from './vizSpec';
 
 export type ParseResult = { ok: true; spec: VizSpec } | { ok: false; error: RenderError };
 
@@ -158,6 +158,31 @@ function toFieldConfig(value: unknown): FieldConfigSource {
     defaults: isObject(fieldConfig.defaults) ? fieldConfig.defaults : {},
     overrides: Array.isArray(fieldConfig.overrides) ? fieldConfig.overrides.filter(isOverride) : [],
   };
+}
+
+function readTimeRange(value: unknown): SpecTimeRange | undefined {
+  if (!isObject(value)) {
+    return undefined;
+  }
+  const { from, to } = value;
+  const isBound = (bound: unknown): bound is string | number =>
+    typeof bound === 'string' || (typeof bound === 'number' && Number.isInteger(bound));
+  return isBound(from) && isBound(to) ? { from, to } : undefined;
+}
+
+export function readResetRange(input: unknown): SpecTimeRange | undefined {
+  if (!isObject(input)) {
+    return undefined;
+  }
+  const requested = readTimeRange(input.timeRange);
+  if (requested) {
+    return requested;
+  }
+  const range = isObject(input.data) ? input.data.range : undefined;
+  if (isObject(range) && typeof range.from === 'number' && typeof range.to === 'number') {
+    return { from: range.from, to: range.to };
+  }
+  return undefined;
 }
 
 const toNotices = (value: unknown): Notice[] =>

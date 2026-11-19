@@ -27,6 +27,7 @@ import { useTreemapDrillDown } from './hooks/useTreemapDrillDown';
 import { useBrushTimeZoom } from './hooks/useBrushTimeZoom';
 import { useTimeAxisPan } from './hooks/useTimeAxisPan';
 import { useDoubleClickZoomOut } from './hooks/useDoubleClickZoomOut';
+import { TimeDragContext } from './TimeDragContext';
 import { TimeZoomOutContext } from './TimeZoomOutContext';
 import { ChartInitContext } from './chartInitContext';
 import { useChartOption } from './hooks/useChartOption';
@@ -149,7 +150,9 @@ export const EChart: React.FC<Props> = ({
   }, [instanceRef, onChartInit]);
 
   const treemapRootRef = useTreemapDrillDown(isPreview ? null : chart);
+  const pan = useContext(TimeDragContext);
   useChartOption(chart, chartContext, {
+    brushEnabled: pan !== null,
     isGrafanaLegend,
     plotWidth: width,
     plotHeight: height,
@@ -206,13 +209,13 @@ export const EChart: React.FC<Props> = ({
     }
   }, [chart, openAnnotationEditor]);
 
-  useBrushTimeZoom(isPreview ? null : chart, onChangeTimeRange, annotationGestureRef);
+  useBrushTimeZoom(isPreview || pan === null ? null : chart, onChangeTimeRange, annotationGestureRef);
   // Pan with a drag of the x-axis labels, on the same time axes as the annotations (viz contract 26.2, rule 1).
   const axisRange = useMemo(
     () => ({ from: chartContext.timeRange.from.valueOf(), to: chartContext.timeRange.to.valueOf() }),
     [chartContext.timeRange]
   );
-  useTimeAxisPan(timeAxis ? chart : null, axisRange, onChangeTimeRange);
+  useTimeAxisPan(timeAxis && pan !== null ? chart : null, axisRange, pan ?? onChangeTimeRange, pan === undefined);
   // A double click zooms the time range out, as core. The stream family has a time axis but no time brush.
   const zoomOut = useContext(TimeZoomOutContext);
   const zoomOutAxis = useMemo(

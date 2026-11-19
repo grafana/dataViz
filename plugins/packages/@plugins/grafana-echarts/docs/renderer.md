@@ -2,7 +2,7 @@
 
 The Renderer is one ES module that draws a viz spec with the panels of this package. A viz spec is a JSON document that holds one panel and the data of its queries. The App of [grafana/mcp-grafana](https://github.com/grafana/mcp-grafana) loads the Renderer in an MCP Apps sandbox iframe. That iframe has no network and no Grafana server.
 
-The rules come from the viz contract 1.7.0, the `@grafana/viz-contract` npm package from [grafana/viz-contract](https://github.com/grafana/viz-contract). The package is a dependency in `package.json`, so `pnpm install` gets it. This repository has no copy of the contract. The source code is in `src/renderer/`.
+The rules come from the viz contract 1.10.0, the `@grafana/viz-contract` npm package from [grafana/viz-contract](https://github.com/grafana/viz-contract). The package is a dependency in `package.json`, so `pnpm install` gets it. This repository has no copy of the contract. The source code is in `src/renderer/`.
 
 ## The module
 
@@ -17,7 +17,11 @@ The module has three exports. Their types are in `renderer-api.d.ts` of the cont
 `render` throws only if `el` is not an `HTMLElement`. A spec that is not correct gives the `error` state. The handle has `update(spec)`, `setRefreshed(id, ok, error)` and `destroy()`. The App gives two callbacks in `options`:
 
 - `onState` receives each new final state: `ready`, `no-data` or `error`, with the notices. The same state is in the `data-viz-state` and `data-viz-error` attributes of `el`.
-- `onRefresh` receives a request when the user clicks Refresh or selects a time range. Each request has a new `id`. Two handles of the same Renderer module never give the same `id`. `setRefreshed` gives the result of the request with that `id`, and does nothing for the `id` of an older request. The Renderer shows Refresh and the time picker only when the App gives `onRefresh`.
+- `onRefresh` receives a request when the user clicks Refresh, picks a time range, zooms, zooms out, pans, or clicks Reset time range. Each request has a new `id`. Two handles of the same Renderer module never give the same `id`. `setRefreshed` gives the result of the request with that `id`, and does nothing for the `id` of an older request. The Renderer shows Refresh and the time picker only when the App gives `onRefresh`.
+
+Drag across the plot to zoom in. Double-click the plot or use the time picker to zoom out. Drag the time axis labels to pan. Pan sends one request when the drag ends. The Renderer ignores time range actions while a request runs.
+
+Reset time range asks for the last pick in the time picker or the original query range. It keeps relative values such as `now-15m`. Without `onRefresh`, zoom and pan stay within the supplied data. Reset time range shows the full range again.
 
 The user can hide, show and color the items of the legend. The Renderer keeps these legend overrides in memory until `destroy`, and draws each new viz spec with them (`renderer.34` to `renderer.37`). A legend override finds an item by its name, so it stays for a name that is not in the new data. The Renderer keeps what the user chose, not the difference to the viz spec, and it draws the legend overrides after the overrides of the viz spec, so they win whatever the order of those. It does not change the viz spec, and the App does not get it. A new `render` starts with none.
 
@@ -161,7 +165,14 @@ The contract package has no contract chapters, so it does not give the rule ids.
 
 The Renderer does not obey all of the contract yet.
 
-No rule is in the `pending` list of `contractRules.json`.
+These rules are in the `pending` list of `contractRules.json`:
+
+- Add annotation (`renderer.49` to `renderer.63`, `renderer.66`, `renderer.67`, `delivery.14`, [#251](https://github.com/grafana/dataViz/issues/251)): the Renderer has no Add annotation UI. It does not read `onAnnotate`, and the `setAnnotated` of its handle does nothing.
+
+These differences are not rules of the `pending` list:
+
+- The stat panel: the contract has the panel type `grafana-echartsstat-panel`, and this package does not have the panel yet. `PANEL_TYPES_NOT_IN_PACKAGE` in `src/renderer/registry.ts` has its id. A viz spec for it gives `unsupported-panel-type`, and the tests leave out its fixture sets (`smoke-stat`, `stat-no-data`, `stat-thresholds`). When the stat module is added, remove the id and add the panel to `PANELS`.
+- The `error-unsupported-panel-type` set of contract 1.10.0 lists the panel types of contract 1.7.0 in its message, with no gauge and no stat ([grafana/viz-contract#94](https://github.com/grafana/viz-contract/issues/94)). `fixtureState` in `src/test/rendererFixtures.ts` puts the panel types that the Renderer draws in that message.
 
 This difference has a test that fails when the difference is fixed:
 

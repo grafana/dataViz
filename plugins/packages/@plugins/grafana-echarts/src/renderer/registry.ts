@@ -15,8 +15,17 @@ export type SpecErrorCode = (typeof SPEC_ERROR_CODES)[number];
 /** Every error code of `states.json` (`state.3`, `state.5`). */
 export type ErrorCode = SpecErrorCode | 'panel-error' | 'render-error';
 
+/**
+ * The panel types of the contract that the Renderer of this package does not draw. A viz spec for one of them
+ * gives `unsupported-panel-type`. The stat panel is in the app, and it is not a Renderer panel yet: remove its id
+ * when `panels.ts` has it.
+ */
+export const PANEL_TYPES_NOT_IN_PACKAGE: ReadonlySet<string> = new Set(['grafana-echartsstat-panel']);
+
 /** The panel ids that the Renderer draws (`panel-types.json`), in the registry order. */
-export const PANEL_IDS: readonly string[] = panelTypes.panels.map((panel) => panel.id);
+export const PANEL_IDS: readonly string[] = panelTypes.panels
+  .map((panel) => panel.id)
+  .filter((id) => !PANEL_TYPES_NOT_IN_PACKAGE.has(id));
 
 /** The `panel-types.json` row of a panel id. */
 export const panelType = (id: string) => panelTypes.panels.find((panel) => panel.id === id);

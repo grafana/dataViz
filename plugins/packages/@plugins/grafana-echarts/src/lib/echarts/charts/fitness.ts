@@ -11,6 +11,7 @@ import { type MultiValueSeriesType } from 'editor/types';
 import {
   ALL_VALUES_MAX_ROWS,
   CATEGORY_MAX_ROWS,
+  GAUGE_MAX_VALUES,
   HEATMAP_MATRIX_MAX_COLUMNS,
   HEATMAP_MATRIX_MAX_ROWS,
   MULTIVARIATE_MAX_AXES,
@@ -540,4 +541,23 @@ export const scoreStat = (summary: PanelDataSummary): VisualizationSuggestionSco
     return undefined;
   }
   return VisualizationSuggestionScore.OK;
+};
+
+/**
+ * Gauge fitness: the gate of the core Gauge panel. The data needs a number field, and not more than
+ * `GAUGE_MAX_VALUES` of them, because each number field is one gauge. The score is that of core: `Good` for a
+ * numeric data plane frame type, else `OK` (`defaultNumericVizOptions`).
+ * https://github.com/grafana/grafana/blob/main/public/app/plugins/panel/gauge/suggestions.ts
+ * https://github.com/grafana/grafana/blob/main/public/app/features/panel/suggestions/utils.ts
+ * https://grafana.com/developers/dataplane/numeric
+ */
+export const scoreGauge = (summary: PanelDataSummary): VisualizationSuggestionScore | undefined => {
+  if (
+    !summary.hasData ||
+    !summary.hasFieldType(FieldType.number) ||
+    summary.fieldCountByType(FieldType.number) > GAUGE_MAX_VALUES
+  ) {
+    return undefined;
+  }
+  return isNumericFrame(summary) ? VisualizationSuggestionScore.Good : VisualizationSuggestionScore.OK;
 };

@@ -1,6 +1,7 @@
 import {
   isCategoricalAxisSeriesType,
   isCategoricalOnlySeriesType,
+  isGaugeSeriesType,
   isGeoSeriesType,
   isHeatmapSeriesType,
   isHierarchySeriesType,
@@ -86,6 +87,11 @@ export const panelTypeToAxis = (
   // The stat family draws cells at pixel positions, with no axis. It resolves to `category`, so the panel draws
   // no axis pointer and no time brush.
   if (isStatSeriesType(seriesType)) {
+    return 'category';
+  }
+
+  // The gauge family has no axis. It resolves to `category`, so the panel draws no axis pointer or time brush.
+  if (isGaugeSeriesType(seriesType)) {
     return 'category';
   }
 

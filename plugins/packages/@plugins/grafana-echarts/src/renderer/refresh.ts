@@ -25,6 +25,7 @@ export interface RefreshStatus {
 export class RefreshController {
   /** `busy` is true while the last `onRefresh` call has no result. Only that call gets a result (`refresh.6`). */
   private status: RefreshStatus = { busy: false };
+  private timedOut = false;
   private timer: ReturnType<typeof setTimeout> | undefined;
   /** The `id` of the last `RefreshRequest` of this controller. */
   private lastId: string | undefined;
@@ -46,8 +47,12 @@ export class RefreshController {
     requestCount++;
     const id = String(requestCount);
     this.lastId = id;
+    this.timedOut = false;
     this.set({ busy: true });
-    this.timer = setTimeout(() => this.finish(refreshMessage('refresh-timeout')), REFRESH_TIMEOUT_MS);
+    this.timer = setTimeout(() => {
+      this.timedOut = true;
+      this.finish(refreshMessage('refresh-timeout'));
+    }, REFRESH_TIMEOUT_MS);
     try {
       this.onRefresh({ id, ...cause });
     } catch (error) {
@@ -69,11 +74,14 @@ export class RefreshController {
     }
   }
 
-  /** `update` of the handle: the busy state ends, and a refresh message goes (`refresh.5`, `refresh.15`). */
-  updated(): void {
+  /** Clears the refresh state. Returns true if this update answers a busy or timed-out request. */
+  updated(): boolean {
+    const answersRequest = this.status.busy || this.timedOut;
+    this.timedOut = false;
     if (this.status.busy || this.status.message !== undefined) {
       this.finish(undefined);
     }
+    return answersRequest;
   }
 
   /** Stops the timer (`renderer.5`). */

@@ -1,6 +1,7 @@
 import { createDataFrame, type DataFrame, DataFrameType, FieldType, getPanelDataSummary } from '@grafana/data';
 import { supportedChartSeriesTypes } from 'lib/echarts/charts/registry';
 import { cartesianSuggestionsSupplier } from 'modules/cartesian/suggestions';
+import { gaugeSuggestionsSupplier } from 'modules/gauge/suggestions';
 import { geoSuggestionsSupplier } from 'modules/geo/suggestions';
 import { heatmapSuggestionsSupplier } from 'modules/heatmap/suggestions';
 import { hierarchySuggestionsSupplier } from 'modules/hierarchy/suggestions';
@@ -24,6 +25,7 @@ import { streamSuggestionsSupplier } from 'modules/stream/suggestions';
  */
 const SUPPLIERS = [
   cartesianSuggestionsSupplier,
+  gaugeSuggestionsSupplier,
   geoSuggestionsSupplier,
   heatmapSuggestionsSupplier,
   hierarchySuggestionsSupplier,

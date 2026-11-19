@@ -5,7 +5,7 @@
   "id": "grafana-echarts-app",
   "info": {
     "keywords": ["app", "panel", "echarts", "visualization"],
-    "description": "Apache ECharts visualizations for Grafana: cartesian, part-to-whole, hierarchy, multivariate, stream, heatmap, stat, and relations panels.",
+    "description": "Apache ECharts visualizations for Grafana: cartesian, part-to-whole, hierarchy, multivariate, stream, heatmap, gauge, stat, and relations panels.",
     "author": {
       "name": "Grafana"
     },

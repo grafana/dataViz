@@ -1,5 +1,6 @@
 import { cartesianTimeSeriesTypes, multiValueSeriesTypes } from 'editor/cartesian';
 import { heatmapSeriesTypes, hierarchySeriesTypes } from 'editor/constants';
+import { gaugeSeriesTypes } from 'editor/gauge';
 import { partToWholeSeriesTypes } from 'editor/pie';
 import { multivariateSeriesTypes } from 'editor/radar';
 import { geoSeriesTypes } from 'editor/geo';
@@ -9,6 +10,7 @@ import { timelineSeriesTypes } from 'editor/timeline';
 import { type SeriesType } from 'editor/types';
 import {
   isCartesianSingleValueSeriesType,
+  isGaugeSeriesType,
   isHierarchySeriesType,
   isMultiValueSeriesType,
   isMultivariateSeriesType,
@@ -18,6 +20,7 @@ import {
   isTimelineSeriesType,
 } from './narrowing';
 import { cartesianChartModule } from './cartesian';
+import { gaugeChartModule } from './gauge';
 import { heatmapChartModule } from './heatmap';
 import { hierarchyChartModule } from './hierarchy';
 import { multivariateChartModule, radarChartModule } from './multivariate';
@@ -39,6 +42,7 @@ export const supportedChartSeriesTypes: SeriesType[] = [
   ...heatmapSeriesTypes,
   ...multivariateSeriesTypes,
   ...partToWholeSeriesTypes,
+  ...gaugeSeriesTypes,
   ...hierarchySeriesTypes,
   ...relationsSeriesTypes,
   ...streamSeriesTypes,
@@ -74,6 +78,10 @@ export function resolveChartModule(seriesType: SeriesType): ChartModule {
   if (partToWholeSeriesTypes.includes(seriesType)) {
     return partToWholeModule;
   }
+  // `gauge` is the only render type of the gauge family.
+  if (isGaugeSeriesType(seriesType)) {
+    return gaugeChartModule;
+  }
   // Treemap and sunburst share the hierarchy module; the module picks the render
   // variant from the type.
   if (isHierarchySeriesType(seriesType)) {
@@ -105,6 +113,7 @@ export function resolveChartModule(seriesType: SeriesType): ChartModule {
 
 export {
   cartesianChartModule,
+  gaugeChartModule,
   geoChartModule,
   heatmapChartModule,
   hierarchyChartModule,
