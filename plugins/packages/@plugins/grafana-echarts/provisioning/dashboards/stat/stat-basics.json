@@ -1,0 +1,4126 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "The ECharts Stat panel beside the core Stat panel, with the same data and the same options in each row. See src/modules/stat/parity.md.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 1,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: One value",
+      "description": "One series. The automatic text mode shows only the value, at the center, because the panel has a title. The sparkline fills the space below the text. The unit is a suffix with a smaller font.",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 2,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: One value",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "20,22,25,31,38,44",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "D",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "90,40,75,30,65,20",
+          "alias": "network",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 3,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Four values",
+      "description": "Four series in a 2 x 2 grid. Each cell shows the name above the value. All cells use the same font sizes: the sizes that fit the longest name and the longest value.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "20,22,25,31,38,44",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "D",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "90,40,75,30,65,20",
+          "alias": "network",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 4,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Four values",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "20,22,25,31,38,44",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "D",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "90,40,75,30,65,20",
+          "alias": "network",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "E",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "1.2,1.4,0.9,1.1,1.8,2.4",
+          "alias": "load",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "F",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "0,2,1,5,3,9",
+          "alias": "errors",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "G",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "120,180,160,240,210,300",
+          "alias": "requests",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "H",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "88,92,85,110,97,131",
+          "alias": "latency",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 5,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Eight values",
+      "description": "Eight series. The cells are not higher than 100px, so they have no sparkline.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "20,22,25,31,38,44",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "D",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "90,40,75,30,65,20",
+          "alias": "network",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "E",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "1.2,1.4,0.9,1.1,1.8,2.4",
+          "alias": "load",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "F",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "0,2,1,5,3,9",
+          "alias": "errors",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "G",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "120,180,160,240,210,300",
+          "alias": "requests",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "H",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "88,92,85,110,97,131",
+          "alias": "latency",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 6,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Eight values",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 7,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Wide layout",
+      "description": "A cell more than 2.5 times as wide as it is high: the name at the left, the value at the right, and the sparkline in the lower half.",
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 22
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "textMode": "value_and_name"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 8,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Wide layout",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 22
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 9,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Wide layout off",
+      "description": "The same cell with Wide layout off: the name above the value.",
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 26
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "textMode": "value_and_name",
+        "wideLayout": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 10,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Wide layout off",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 26
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": false,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 11,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Text mode Name",
+      "description": "The name is the large text. The panel shows no value.",
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 30
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "textMode": "name"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 12,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Text mode Name",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 30
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "name",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 13,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Text mode None",
+      "description": "No text. The panel shows only the sparklines.",
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 35
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "textMode": "none"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 14,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Text mode None",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 35
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "none",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 15,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Color mode None",
+      "description": "The value has the text color of the theme. The sparkline keeps the color of the value.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 40
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "colorMode": "none"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 16,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Color mode None",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 40
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "none",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "20,22,25,31,38,44",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 17,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Thresholds",
+      "description": "The color of each value and of its sparkline is the color of the threshold that the value is in: 72 is red, 65 is orange, 44 is green.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 46
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 70
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "20,22,25,31,38,44",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 18,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Thresholds",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 46
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 70
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 19,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Graph mode None",
+      "description": "No sparkline. The name and the value are at the vertical center of each cell.",
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 52
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "graphMode": "none"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 20,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Graph mode None",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 52
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "1.2,1.4,0.9,1.1,1.8,2.4",
+          "alias": "load",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "0,2,1,5,3,9",
+          "alias": "errors",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 21,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Value mappings and decimals",
+      "description": "The standard options apply: two decimals, and a value mapping that shows the text Critical in red for the value 9.",
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 57
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 2,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "9": {
+                  "text": "Critical",
+                  "color": "red",
+                  "index": 0
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "1.2,1.4,0.9,1.1,1.8,2.4",
+          "alias": "load",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "0,2,1,5,3,9",
+          "alias": "errors",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 22,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Value mappings and decimals",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 57
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 2,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "9": {
+                  "text": "Critical",
+                  "color": "red",
+                  "index": 0
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_content",
+          "csvContent": "host,region\na,eu\nb,us",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 23,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: No number field",
+      "description": "A table with text fields only. The ECharts panel shows the steps to fix the data. Core Stat shows No data.",
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 62
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_content",
+          "csvContent": "host,region\na,eu\nb,us",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 24,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: No number field",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 62
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "20,22,25,31,38,44",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 25,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Thresholds, default color scheme",
+      "description": "The panel JSON has thresholds and no color scheme. The default color scheme of the panel is the thresholds scheme, so the colors are the same as in the Thresholds row: 72 is red, 65 is orange, 44 is green.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 67
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 70
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "20,22,25,31,38,44",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 26,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Thresholds, default color scheme",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 67
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 70
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "20,22,25,31,38,44",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 27,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Color mode Background Gradient",
+      "description": "Each cell has a gradient of the color of its threshold: red for 72, orange for 65, green for 44. The texts are light or dark for contrast, and the sparkline is a light line with a white area.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 73
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 70
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "colorMode": "background"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "20,22,25,31,38,44",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 28,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Color mode Background Gradient",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 73
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 70
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "20,22,25,31,38,44",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 29,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Color mode Background Solid",
+      "description": "Each cell has the color of its threshold as one fill: red for 72, orange for 65, green for 44. The texts are light or dark for contrast, and the sparkline is a light line with a white area.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 79
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 70
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "colorMode": "background_solid"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "20,22,25,31,38,44",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 30,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Color mode Background Solid",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 79
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 70
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background_solid",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "20,22,25,31,38,44",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 31,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Text alignment Center",
+      "description": "The name of each value is above the value, and the two are at the center of the cell.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 85
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "justifyMode": "center"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "20,22,25,31,38,44",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 32,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Text alignment Center",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 85
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 33,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Text alignment Center, wide",
+      "description": "A wide cell: the name and the value are in one row at the center of the cell, above the sparkline.",
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 91
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "textMode": "value_and_name",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 34,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Text alignment Center, wide",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 91
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "20,22,25,31,38,44",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 35,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Text size",
+      "description": "The name of each value is 40px and the value is 60px, and not the sizes that fit the cell.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 95
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "text": {
+          "titleSize": 40,
+          "valueSize": 60
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "20,22,25,31,38,44",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 36,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Text size",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 95
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 40,
+          "valueSize": 60
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "44,38,31,25,22,20",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 37,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Percent change",
+      "description": "Below each value is the change from the first value to the last value of the series, in percent: an arrow up and green for an increase, an arrow down and red for a decrease.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 101
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "showPercentChange": true
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "44,38,31,25,22,20",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 38,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Percent change",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 101
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": true,
+        "percentChangeColorMode": "standard"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "44,38,31,25,22,20",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 39,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Percent change, centered, inverted colors",
+      "description": "The text alignment is Center and the percent change color mode is Inverted: red for an increase, green for a decrease.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 107
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "justifyMode": "center",
+        "showPercentChange": true,
+        "percentChangeColorMode": "inverted"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "44,38,31,25,22,20",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 40,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Percent change, centered, inverted colors",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 107
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": true,
+        "percentChangeColorMode": "inverted"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 41,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Percent change, no sparkline, same color as the value",
+      "description": "The graph mode is None and the percent change color mode is Same as Value. The value is smaller than with no percent change, because the percent change needs a part of the height.",
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 113
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "textMode": "value_and_name",
+        "graphMode": "none",
+        "showPercentChange": true,
+        "percentChangeColorMode": "same_as_value"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 42,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Percent change, no sparkline, same color as the value",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 113
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": true,
+        "percentChangeColorMode": "same_as_value"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "20,22,25,31,38,44",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 43,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Orientation Horizontal",
+      "description": "One cell for each row of the panel: the cells are as wide as the panel, one below the other.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 117
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "horizontal"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "20,22,25,31,38,44",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 44,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Orientation Horizontal",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 117
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "20,22,25,31,38,44",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "D",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "9,8,9,7,8,9",
+          "alias": "swap",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 45,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Orientation Vertical",
+      "description": "One cell for each column of the panel: the cells are as high as the panel, side by side. The automatic grid puts these four values in two rows.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 126
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "vertical"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "C",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "20,22,25,31,38,44",
+          "alias": "disk",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "D",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "9,8,9,7,8,9",
+          "alias": "swap",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 46,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Orientation Vertical",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 126
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "vertical",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 47,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Data links, one link",
+      "description": "Each value has one data link. The cursor on a cell is a pointer, and a click opens the link in this tab.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 135
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent",
+          "links": [
+            {
+              "title": "Search dashboards for ${__field.name}",
+              "url": "/dashboards?query=${__field.name}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 48,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Data links, one link",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 135
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent",
+          "links": [
+            {
+              "title": "Search dashboards for ${__field.name}",
+              "url": "/dashboards?query=${__field.name}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 49,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Data links, two links",
+      "description": "Each value has two data links. The cursor on a cell is the menu cursor, and a click opens a menu with the group \"Data links\". The second link opens in a new tab.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 144
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent",
+          "links": [
+            {
+              "title": "Search dashboards for ${__field.name}",
+              "url": "/dashboards?query=${__field.name}"
+            },
+            {
+              "title": "Stat documentation",
+              "url": "https://grafana.com/docs/grafana/latest/panels-visualizations/visualizations/stat/",
+              "targetBlank": true
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "35,52,48,61,57,72",
+          "alias": "cpu",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        },
+        {
+          "refId": "B",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "61,60,64,63,66,65",
+          "alias": "memory",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 50,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Data links, two links",
+      "description": "The core Stat panel with the same data and options, for comparison.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 144
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent",
+          "links": [
+            {
+              "title": "Search dashboards for ${__field.name}",
+              "url": "/dashboards?query=${__field.name}"
+            },
+            {
+              "title": "Stat documentation",
+              "url": "https://grafana.com/docs/grafana/latest/panels-visualizations/visualizations/stat/",
+              "targetBlank": true
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "raw_frame",
+          "rawFrameContent": "[{\"schema\":{\"fields\":[{\"name\":\"time\",\"type\":\"time\"},{\"name\":\"server-01\",\"type\":\"number\"},{\"name\":\"server-02\",\"type\":\"number\"},{\"name\":\"server-03\",\"type\":\"number\"},{\"name\":\"server-04\",\"type\":\"number\"},{\"name\":\"server-05\",\"type\":\"number\"},{\"name\":\"server-06\",\"type\":\"number\"},{\"name\":\"server-07\",\"type\":\"number\"},{\"name\":\"server-08\",\"type\":\"number\"},{\"name\":\"server-09\",\"type\":\"number\"},{\"name\":\"server-10\",\"type\":\"number\"},{\"name\":\"server-11\",\"type\":\"number\"},{\"name\":\"server-12\",\"type\":\"number\"},{\"name\":\"server-13\",\"type\":\"number\"},{\"name\":\"server-14\",\"type\":\"number\"},{\"name\":\"server-15\",\"type\":\"number\"},{\"name\":\"server-16\",\"type\":\"number\"},{\"name\":\"server-17\",\"type\":\"number\"},{\"name\":\"server-18\",\"type\":\"number\"},{\"name\":\"server-19\",\"type\":\"number\"},{\"name\":\"server-20\",\"type\":\"number\"},{\"name\":\"server-21\",\"type\":\"number\"},{\"name\":\"server-22\",\"type\":\"number\"},{\"name\":\"server-23\",\"type\":\"number\"},{\"name\":\"server-24\",\"type\":\"number\"},{\"name\":\"server-25\",\"type\":\"number\"},{\"name\":\"server-26\",\"type\":\"number\"},{\"name\":\"server-27\",\"type\":\"number\"},{\"name\":\"server-28\",\"type\":\"number\"},{\"name\":\"server-29\",\"type\":\"number\"},{\"name\":\"server-30\",\"type\":\"number\"},{\"name\":\"server-31\",\"type\":\"number\"},{\"name\":\"server-32\",\"type\":\"number\"},{\"name\":\"server-33\",\"type\":\"number\"},{\"name\":\"server-34\",\"type\":\"number\"},{\"name\":\"server-35\",\"type\":\"number\"},{\"name\":\"server-36\",\"type\":\"number\"},{\"name\":\"server-37\",\"type\":\"number\"},{\"name\":\"server-38\",\"type\":\"number\"},{\"name\":\"server-39\",\"type\":\"number\"},{\"name\":\"server-40\",\"type\":\"number\"},{\"name\":\"server-41\",\"type\":\"number\"},{\"name\":\"server-42\",\"type\":\"number\"},{\"name\":\"server-43\",\"type\":\"number\"},{\"name\":\"server-44\",\"type\":\"number\"},{\"name\":\"server-45\",\"type\":\"number\"},{\"name\":\"server-46\",\"type\":\"number\"},{\"name\":\"server-47\",\"type\":\"number\"},{\"name\":\"server-48\",\"type\":\"number\"},{\"name\":\"server-49\",\"type\":\"number\"},{\"name\":\"server-50\",\"type\":\"number\"}]},\"data\":{\"values\":[[1785283200000,1785286800000,1785290400000,1785294000000,1785297600000,1785301200000],[17,21,31,47,69,14],[24,29,40,57,80,26],[31,37,49,67,91,38],[38,45,58,77,19,50],[45,53,67,87,30,62],[52,61,76,14,41,74],[59,69,85,24,52,86],[66,77,11,34,63,15],[73,85,20,44,74,27],[80,10,29,54,85,39],[87,18,38,64,13,51],[11,26,47,74,24,63],[18,34,56,84,35,75],[25,42,65,11,46,87],[32,50,74,21,57,16],[39,58,83,31,68,28],[46,66,92,41,79,40],[53,74,18,51,90,52],[60,82,27,61,18,64],[67,90,36,71,29,76],[74,15,45,81,40,88],[81,23,54,91,51,17],[88,31,63,18,62,29],[12,39,72,28,73,41],[19,47,81,38,84,53],[26,55,90,48,12,65],[33,63,16,58,23,77],[40,71,25,68,34,89],[47,79,34,78,45,18],[54,87,43,88,56,30],[61,12,52,15,67,42],[68,20,61,25,78,54],[75,28,70,35,89,66],[82,36,79,45,17,78],[89,44,88,55,28,90],[13,52,14,65,39,19],[20,60,23,75,50,31],[27,68,32,85,61,43],[34,76,41,12,72,55],[41,84,50,22,83,67],[48,92,59,32,11,79],[55,17,68,42,22,91],[62,25,77,52,33,20],[69,33,86,62,44,32],[76,41,12,72,55,44],[83,49,21,82,66,56],[90,57,30,92,77,68],[14,65,39,19,88,80],[21,73,48,29,16,92],[28,81,57,39,27,21]]}}]",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 51,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: 50 values",
+      "description": "One wide frame with 50 number fields. Each cell has the name, the last value and a sparkline when the cell is high enough.",
+      "gridPos": {
+        "h": 14,
+        "w": 12,
+        "x": 0,
+        "y": 153
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "panelId": 51,
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          }
+        }
+      ],
+      "id": 52,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: 50 values",
+      "description": "The core Stat panel with the data of the ECharts panel and the same options, for comparison.",
+      "gridPos": {
+        "h": 14,
+        "w": 12,
+        "x": 12,
+        "y": 153
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "csv_metric_values",
+          "stringInput": "1,38,75,112,149,186,223,260,297,334,371,408,445,482,519,556,593,630,667,704,741,778,815,852,889,926,963,9,46,83,120,157,194,231,268,305,342,379,416,453,490,527,564,601,638,675,712,749,786,823,860,897,934,971,17,54,91,128,165,202,239,276,313,350,387,424,461,498,535,572,609,646,683,720,757,794,831,868,905,942,979,25,62,99,136,173,210,247,284,321,358,395,432,469,506,543,580,617,654,691,728,765,802,839,876,913,950,987,33,70,107,144,181,218,255,292,329,366,403,440,477,514,551,588,625,662,699,736,773,810,847,884,921,958,4,41,78,115,152,189,226,263,300,337,374,411,448,485,522,559,596,633,670,707,744,781,818,855,892,929,966,12,49,86,123,160,197,234,271,308,345,382,419,456,493,530,567,604,641,678,715,752,789,826,863,900,937,974,20,57,94,131,168,205,242,279,316,353,390,427",
+          "alias": "requests",
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 53,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: 200 values",
+      "description": "One series with 200 rows, and one cell for each row (\"All values\", with the limit 200). A cell this small draws only its value.",
+      "gridPos": {
+        "h": 14,
+        "w": 12,
+        "x": 0,
+        "y": 167
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 500
+              },
+              {
+                "color": "red",
+                "value": 800
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": true,
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "limit": 200
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "panelId": 53,
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          }
+        }
+      ],
+      "id": 54,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: 200 values",
+      "description": "The core Stat panel with the data of the ECharts panel and the same options, for comparison.",
+      "gridPos": {
+        "h": 14,
+        "w": 12,
+        "x": 12,
+        "y": 167
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 500
+              },
+              {
+                "color": "red",
+                "value": 800
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": true,
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "limit": 200
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-testdata-datasource",
+        "uid": "trlxrdZVk"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "scenarioId": "streaming_client",
+          "stream": {
+            "type": "signal",
+            "speed": 500,
+            "spread": 3.5,
+            "noise": 2.2,
+            "bands": 1
+          },
+          "datasource": {
+            "type": "grafana-testdata-datasource",
+            "uid": "trlxrdZVk"
+          }
+        }
+      ],
+      "id": 55,
+      "type": "grafana-echartsstat-panel",
+      "title": "ECharts: Streaming data",
+      "description": "A query that streams with no end: a new row each 500 ms. The panel draws the last value and the sparkline of each update.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 181
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "seriesType": "stat",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "panelId": 55,
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          }
+        }
+      ],
+      "id": 56,
+      "type": "stat",
+      "pluginVersion": "13.3.0",
+      "title": "Core: Streaming data",
+      "description": "The core Stat panel with the data of the ECharts panel and the same options, for comparison.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 181
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": ["echarts", "stat"],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "2026-07-29T00:00:00.000Z",
+    "to": "2026-07-29T05:00:00.000Z"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "ECharts Stat — basics",
+  "uid": "echarts-stat-basics",
+  "version": 1,
+  "weekStart": ""
+}

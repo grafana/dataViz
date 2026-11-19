@@ -8,6 +8,7 @@ import {
   isMultiValueSeriesType,
   isMultivariateSeriesType,
   isRelationsSeriesType,
+  isStatSeriesType,
   isStreamSeriesType,
   isTimelineSeriesType,
   isTimeAxisSupportedForSeriesType,
@@ -80,6 +81,12 @@ export const panelTypeToAxis = (
   // The geo family draws on the `geo` coordinate system. Like relations, it resolves to `category`, so the
   // tooltip uses an item trigger and the panel draws no axis pointer or time brush.
   if (isGeoSeriesType(seriesType)) {
+    return 'category';
+  }
+
+  // The stat family draws cells at pixel positions, with no axis. It resolves to `category`, so the panel draws
+  // no axis pointer and no time brush.
+  if (isStatSeriesType(seriesType)) {
     return 'category';
   }
 

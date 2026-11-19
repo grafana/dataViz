@@ -20,6 +20,8 @@ import React, {
 import { type PanelOptions } from 'types';
 import { type InteractedRelationsView } from 'lib/echarts/relations/options/view';
 import { AnnotationEditor } from './annotations/AnnotationEditor';
+import { DataLinksMenu } from './DataLinksMenu';
+import { useDataLinkClicks } from './hooks/useDataLinkClicks';
 import { type PlacedAnnotationDraft, useAnnotationGestures } from './hooks/useAnnotationGestures';
 import { useTreemapDrillDown } from './hooks/useTreemapDrillDown';
 import { useBrushTimeZoom } from './hooks/useBrushTimeZoom';
@@ -227,10 +229,23 @@ export const EChart: React.FC<Props> = ({
     zoomOut ?? undefined
   );
   useRelationsPersistence(isPreview ? null : chart, { chartContext, onFieldConfigChange, onOptionsChange });
+  // Data links on a click of a value, for a family with no tooltip (stat).
+  const dataLinks = useMemo(() => chartModule.getDataLinks?.(chartContext), [chartModule, chartContext]);
+  const { menu: dataLinksMenu, closeMenu: closeDataLinksMenu } = useDataLinkClicks(isPreview ? null : chart, dataLinks);
+  // The text of the chart for assistive tools, for a family whose values are text in the core panel (stat).
+  const accessibleText = useMemo(
+    () => (isPreview ? undefined : chartModule.getAccessibleText?.(chartContext)),
+    [chartModule, chartContext, isPreview]
+  );
 
   return (
     <>
-      <div ref={panelDOMRef} style={{ width, height }} />
+      <div
+        ref={panelDOMRef}
+        style={{ width, height }}
+        role={accessibleText === undefined ? undefined : 'img'}
+        aria-label={accessibleText}
+      />
       {!isPreview && (
         <EChartsTooltip
           state={tooltipState}
@@ -241,6 +256,7 @@ export const EChart: React.FC<Props> = ({
           maxHeight={chartContext.options.tooltip?.maxHeight}
         />
       )}
+      {dataLinksMenu != null && <DataLinksMenu menu={dataLinksMenu} onClose={closeDataLinksMenu} />}
       {annotationDraft != null && (
         <AnnotationEditor draft={annotationDraft} timeZone={chartContext.timeZone} dismiss={closeAnnotationEditor} />
       )}

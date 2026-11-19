@@ -1,5 +1,10 @@
 import { type ReduceDataOptions, type StandardOptionConfig } from '@grafana/data';
 import {
+  type BigValueColorMode,
+  type BigValueGraphMode,
+  type BigValueJustifyMode,
+  type BigValueTextMode,
+  type PercentChangeColorMode,
   type HeatmapCalculationOptions,
   type OptionsWithLegend,
   type OptionsWithTooltip,
@@ -231,6 +236,9 @@ export interface PanelOptions
   /**
    * Cartesian bar orientation (core Bar chart `orientation`). `auto` draws
    * horizontal bars when the panel is taller than it is wide. Category x-axis only.
+   *
+   * The stat panel reads the same option (core Stat `orientation`): `auto` puts the cells in a grid,
+   * `horizontal` gives one cell for each row of the panel, and `vertical` one cell for each column.
    */
   orientation?: VizOrientation;
 
@@ -273,6 +281,19 @@ export interface PanelOptions
   reduceOptions?: ReduceDataOptions;
 
   /**
+   * The options of the stat panel. The names and the values are the ones of core Stat, so a panel keeps them
+   * when it changes type. See `editor/stat.ts` for the defaults.
+   * https://github.com/grafana/grafana/blob/main/public/app/plugins/panel/stat/panelcfg.cue
+   * The stat `textMode` is with the gauge options below: the two panels have the same option path.
+   */
+  colorMode?: BigValueColorMode;
+  graphMode?: BigValueGraphMode;
+  wideLayout?: boolean;
+  justifyMode?: BigValueJustifyMode;
+  showPercentChange?: boolean;
+  percentChangeColorMode?: PercentChangeColorMode;
+
+  /**
    * Pie (part-to-whole) chart type (Grafana Pie chart "Pie chart type" parity):
    * `pie` (full disc) or `donut` (a pie with a hole). Defaults to `PIE_TYPE_DEFAULT`
    * (`pie`) when unset. Rendered as the ECharts series radius; see `getPieRadius`.
@@ -288,8 +309,12 @@ export interface PanelOptions
    */
   [gaugeBarWidthFactorPath]?: number;
 
-  /** Gauge center text, as core Gauge `textMode`. Defaults to `GAUGE_TEXT_MODE_DEFAULT`. See `resolveGaugeTextParts`. */
-  [gaugeTextModePath]?: GaugeTextMode;
+  /**
+   * Gauge center text, as core Gauge `textMode`. Defaults to `GAUGE_TEXT_MODE_DEFAULT`. See `resolveGaugeTextParts`.
+   * The stat panel has the same option path (core Stat `textMode`), with the same values as the enum of
+   * `@grafana/schema`. It defaults to `STAT_TEXT_MODE_DEFAULT`. See `resolveStatOptions`.
+   */
+  [gaugeTextModePath]?: GaugeTextMode | BigValueTextMode;
 
   /** Show the thin threshold band outside the gauge bar, as core Gauge `showThresholdMarkers`. */
   [gaugeShowThresholdMarkersPath]?: boolean;

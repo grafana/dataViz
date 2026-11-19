@@ -16,8 +16,9 @@ export type SpecErrorCode = (typeof SPEC_ERROR_CODES)[number];
 export type ErrorCode = SpecErrorCode | 'panel-error' | 'render-error';
 
 /**
- * The panel types of the contract that this package does not have. A viz spec for one of them gives
- * `unsupported-panel-type`. The stat panel is not in this package yet: remove its id when its module is added.
+ * The panel types of the contract that the Renderer of this package does not draw. A viz spec for one of them
+ * gives `unsupported-panel-type`. The stat panel is in the app, and it is not a Renderer panel yet: remove its id
+ * when `panels.ts` has it.
  */
 export const PANEL_TYPES_NOT_IN_PACKAGE: ReadonlySet<string> = new Set(['grafana-echartsstat-panel']);
 

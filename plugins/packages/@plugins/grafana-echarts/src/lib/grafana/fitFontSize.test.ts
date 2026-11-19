@@ -1,5 +1,5 @@
 import type * as fitFontSizeModule from './fitFontSize';
-import { fitFontSize } from './fitFontSize';
+import { fitFontSize, measureTextWidth } from './fitFontSize';
 
 const base = { text: '72', lineHeight: 1.2, fontFamily: 'Inter, sans-serif' };
 
@@ -78,6 +78,21 @@ describe('fitFontSize', () => {
       expect(measureText).toHaveBeenCalledTimes(1);
       fit({ ...base, fontWeight: 700, width: 50, height: 600 });
       expect(measureText).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('measureTextWidth', () => {
+    it('gives the width of the text at the font size, in proportion to the font size', () => {
+      const small = measureTextWidth({ text: 'cpu', fontSize: 14, fontFamily: base.fontFamily })!;
+      const large = measureTextWidth({ text: 'cpu', fontSize: 28, fontFamily: base.fontFamily })!;
+      expect(small).toBeGreaterThan(0);
+      expect(large).toBeCloseTo(small * 2);
+    });
+
+    it('is larger for a longer text', () => {
+      const short = measureTextWidth({ text: '7', fontSize: 14, fontFamily: base.fontFamily })!;
+      const long = measureTextWidth({ text: '7200', fontSize: 14, fontFamily: base.fontFamily })!;
+      expect(long).toBeGreaterThan(short);
     });
   });
 

@@ -73,6 +73,7 @@ pnpm run server:relations
 
 - [Relations data source guide](https://github.com/grafana/dataViz/blob/main/plugins/packages/@plugins/grafana-echarts/docs/relations-data-sources.md)
 - [Relations data format reference](https://github.com/grafana/dataViz/blob/main/plugins/packages/@plugins/grafana-echarts/data-plane/graph-wide.md)
+- [Stat panel guide](https://github.com/grafana/dataViz/blob/main/plugins/packages/@plugins/grafana-echarts/docs/stat.md)
 
 ## License
 

@@ -17,7 +17,7 @@ const pluginIds = fs
   .map((name) => JSON.parse(fs.readFileSync(path.join(modulesDir, name, 'plugin.json'), 'utf8')).id)
   .sort();
 
-// The chart types and the panel types of the contract that this package has.
+// The chart types of the contract that the Renderer draws.
 const charts = chartTypes.charts.filter((chart) => !PANEL_TYPES_NOT_IN_PACKAGE.has(chart.panel));
 
 describe('viz contract', () => {
@@ -60,7 +60,8 @@ describe('viz contract', () => {
   });
 
   it('has one panel of this package for each panel type', () => {
-    const ids = panelTypes.panels.map((panel) => panel.id).filter((id) => !PANEL_TYPES_NOT_IN_PACKAGE.has(id));
+    // The app has the stat panel. The Renderer does not draw it yet (`PANEL_TYPES_NOT_IN_PACKAGE`).
+    const ids = panelTypes.panels.map((panel) => panel.id);
     expect(ids.sort()).toEqual(pluginIds);
   });
 

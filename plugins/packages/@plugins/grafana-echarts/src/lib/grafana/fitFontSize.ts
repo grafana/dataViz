@@ -68,6 +68,26 @@ function measureWidth(text: string, fontFamily: string, fontWeight: number): num
   return width;
 }
 
+export interface MeasureTextInput {
+  text: string;
+  /** The font size in pixels. */
+  fontSize: number;
+  /** The family that draws the text: `theme.typography.fontFamily`. */
+  fontFamily: string;
+  fontWeight?: number;
+}
+
+/** The width of `text` in pixels. `undefined` when the host cannot measure text. */
+export function measureTextWidth({
+  text,
+  fontSize,
+  fontFamily,
+  fontWeight = 400,
+}: MeasureTextInput): number | undefined {
+  const width = measureWidth(text, fontFamily, fontWeight);
+  return width === undefined ? undefined : (width * fontSize) / MEASURE_FONT_SIZE;
+}
+
 export interface FitFontSizeInput {
   text: string;
   /** The width of the box in pixels. */

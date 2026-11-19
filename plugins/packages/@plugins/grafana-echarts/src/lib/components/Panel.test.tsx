@@ -324,6 +324,14 @@ describe('Panel empty view', () => {
     expect(mockGetDataIssue).not.toHaveBeenCalled();
   });
 
+  it('renders the panel content of the stat family while data is streaming', () => {
+    renderWithGrafana(
+      getComponent([graphFrame()], 'stat', undefined, { state: LoadingState.Streaming }, undefined, 'stat')
+    );
+
+    expect(screen.getByText('Chart')).toBeInTheDocument();
+  });
+
   it('mounts chart content when streaming data finishes', () => {
     const { rerender } = renderWithGrafana(
       getComponent([graphFrame()], 'graph', undefined, { state: LoadingState.Streaming }, undefined, 'relations')

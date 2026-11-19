@@ -7,6 +7,7 @@ import {
   pieChartModule,
   relationsChartModule,
   resolveChartModule,
+  statChartModule,
   streamChartModule,
   supportedChartSeriesTypes,
   timelineChartModule,
@@ -56,6 +57,10 @@ describe('resolveChartModule', () => {
     expect(resolveChartModule('custom')).toBe(timelineChartModule);
   });
 
+  it('routes stat to the stat module', () => {
+    expect(resolveChartModule('stat')).toBe(statChartModule);
+  });
+
   it('routes gauge to the gauge module', () => {
     expect(resolveChartModule('gauge')).toBe(gaugeChartModule);
   });
@@ -81,6 +86,7 @@ describe('resolveChartModule', () => {
         'graph',
         'themeRiver',
         'custom',
+        'stat',
       ])
     );
   });

@@ -60,6 +60,13 @@ const PARITY_DOCS: ParityDocPolicy[] = [
     minimumDashboardSources: 0,
   },
   {
+    doc: 'src/modules/stat/parity.md',
+    minimumCitations: 25,
+    minimumTestTargets: 5,
+    minimumDashboardCitations: 12,
+    minimumDashboardSources: 1,
+  },
+  {
     doc: 'src/modules/gauge/parity.md',
     minimumCitations: 19,
     minimumTestTargets: 2,

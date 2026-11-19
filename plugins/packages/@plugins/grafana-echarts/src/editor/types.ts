@@ -31,7 +31,9 @@ export type SeriesType =
   | 'pictorialBar'
   | 'themeRiver'
   | 'chord'
-  | 'custom';
+  | 'custom'
+  // Not an ECharts series type: the routing token of the stat family. See `StatSeriesType`.
+  | 'stat';
 
 // Funnel joins pie/radar as a non-cartesian, categorical-only type: it is a
 // part-to-whole variant sharing the pie slice model (see editor/funnel.ts).
@@ -69,6 +71,11 @@ export type StreamSeriesType = Extract<SeriesType, 'themeRiver'>;
  * series (the ECharts Gantt pattern). See `data-plane/timeline.md`.
  */
 export type TimelineSeriesType = Extract<SeriesType, 'custom'>;
+/**
+ * The routing token of the stat family. The family draws its cells with a `custom` series, but the timeline
+ * family owns the `custom` token in `resolveChartModule`, so stat has a token of its own.
+ */
+export type StatSeriesType = Extract<SeriesType, 'stat'>;
 /**
  * Render variants of the part-to-whole family, selected per panel via the
  * panel-level `seriesType`: `pie` (radial) and `funnel` (stacked trapezoids).
