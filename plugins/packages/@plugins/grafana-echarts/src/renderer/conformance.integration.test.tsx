@@ -139,18 +139,24 @@ describe('Ask in chat', () => {
         grid.push([x, y]);
       }
     }
-    const targets = new Set<object>();
-    const onElement = grid.filter(([x, y]) => {
-      const { target } = handler.findHover(x, y);
-      return target !== undefined && !targets.has(target) && targets.add(target);
-    });
-    for (const [x, y] of [...onElement, ...grid]) {
+    const pin = async ([x, y]: [number, number]): Promise<boolean> => {
       await dispatch(chart, 'mousemove', x, y);
       if (tooltipText() === '') {
-        continue;
+        return false;
       }
       await clickAt(chart, x, y);
-      if (screen.queryByRole('link', link)) {
+      return screen.queryByRole('link', link) !== null;
+    };
+    // The hit test of a map is slow, so each point gets its hit test only when the scan comes to it.
+    const targets = new Set<object>();
+    for (const point of grid) {
+      const { target } = handler.findHover(...point);
+      if (target !== undefined && !targets.has(target) && targets.add(target) && (await pin(point))) {
+        return tooltipText();
+      }
+    }
+    for (const point of grid) {
+      if (await pin(point)) {
         return tooltipText();
       }
     }
