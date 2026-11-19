@@ -10,6 +10,7 @@ const CHART_NAMES: Record<ChartFamily, string> = {
   relations: 'relations chart',
   stream: 'stream chart',
   geo: 'geo map',
+  gauge: 'gauge',
   timeline: 'state timeline',
   'status-history': 'status history',
 };

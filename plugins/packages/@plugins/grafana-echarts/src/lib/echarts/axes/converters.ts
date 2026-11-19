@@ -1,6 +1,7 @@
 import {
   isCategoricalAxisSeriesType,
   isCategoricalOnlySeriesType,
+  isGaugeSeriesType,
   isGeoSeriesType,
   isHeatmapSeriesType,
   isHierarchySeriesType,
@@ -79,6 +80,11 @@ export const panelTypeToAxis = (
   // The geo family draws on the `geo` coordinate system. Like relations, it resolves to `category`, so the
   // tooltip uses an item trigger and the panel draws no axis pointer or time brush.
   if (isGeoSeriesType(seriesType)) {
+    return 'category';
+  }
+
+  // The gauge family has no axis. It resolves to `category`, so the panel draws no axis pointer or time brush.
+  if (isGaugeSeriesType(seriesType)) {
     return 'category';
   }
 

@@ -56,7 +56,7 @@ initPluginTranslations(__PLUGIN_ID__);
 // slice model (one value per category). The panel-level `seriesType` picks the
 // render variant (mirrors the hierarchy family's Treemap/Sunburst); the shared
 // Panel resolves the part-to-whole chart module, which builds pie or funnel from
-// the same slices. gauge is a planned third variant.
+// the same slices.
 export const plugin = new PanelPlugin<PanelOptions, EChartsFieldConfig>(makeLazyPanel('part-to-whole'))
   .useFieldConfig({
     standardOptions: STANDARD_FIELD_OPTIONS,

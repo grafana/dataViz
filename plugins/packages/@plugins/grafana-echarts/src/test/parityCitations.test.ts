@@ -59,6 +59,13 @@ const PARITY_DOCS: ParityDocPolicy[] = [
     minimumDashboardCitations: 0,
     minimumDashboardSources: 0,
   },
+  {
+    doc: 'src/modules/gauge/parity.md',
+    minimumCitations: 19,
+    minimumTestTargets: 2,
+    minimumDashboardCitations: 11,
+    minimumDashboardSources: 1,
+  },
 ];
 
 /** `[canvas: some test name][ref]` / `[integration: some test name][ref]`. */

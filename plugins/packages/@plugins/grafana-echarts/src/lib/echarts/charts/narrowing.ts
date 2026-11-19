@@ -6,6 +6,7 @@ import {
   hierarchySeriesTypes,
   supportsTimeAxisSeriesTypes,
 } from 'editor/constants';
+import { gaugeSeriesTypes } from 'editor/gauge';
 import { geoSeriesTypes } from 'editor/geo';
 import { multivariateSeriesTypes } from 'editor/radar';
 import { streamSeriesTypes } from 'editor/stream';
@@ -14,6 +15,7 @@ import {
   type CartesianSingleValueSeriesType,
   type CategoricalAxisSeriesType,
   type CategoricalOnlySeriesType,
+  type GaugeSeriesType,
   type GeoSeriesType,
   type HeatmapSeriesType,
   type HierarchySeriesType,
@@ -90,4 +92,9 @@ export function isStreamSeriesType(type: SeriesType): type is StreamSeriesType {
 // series on a time x axis.
 export function isTimelineSeriesType(type: SeriesType): type is TimelineSeriesType {
   return timelineSeriesTypes.some((t) => t === type);
+}
+
+// Gauge charts draw one arc for each value. They have no axis.
+export function isGaugeSeriesType(type: SeriesType): type is GaugeSeriesType {
+  return gaugeSeriesTypes.some((t) => t === type);
 }
