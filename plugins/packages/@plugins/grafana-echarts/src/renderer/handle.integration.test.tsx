@@ -64,6 +64,7 @@ describe('the handle', () => {
     expect(handle).toEqual({
       update: expect.any(Function),
       setRefreshed: expect.any(Function),
+      setAnnotated: expect.any(Function),
       destroy: expect.any(Function),
     });
     expect(el.getAttribute('data-viz-state')).toBe('rendering');

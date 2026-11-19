@@ -1,4 +1,4 @@
-import { ThresholdsMode } from '@grafana/data';
+import { createTheme, ThresholdsMode } from '@grafana/data';
 import { normalizeCanvasEvents } from 'test/canvas';
 import { gaugeFieldConfig, gaugeFrame, renderGauge } from 'test/gaugeCanvas';
 import { height, width } from 'test/panel';
@@ -110,6 +110,14 @@ describe('gauge canvas renders', () => {
 
     it('four circles in a grid', async () => {
       const { defaultEvents, seriesEvents } = await renderGauge(fourValues(), { shape: 'circle' });
+      expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, size);
+    });
+  });
+
+  describe('theme', () => {
+    it('light theme draws a light track and dark text', async () => {
+      const light = createTheme({ colors: { mode: 'light' } });
+      const { defaultEvents, seriesEvents } = await renderGauge(fourValues(), {}, light);
       expect(normalizeCanvasEvents(seriesEvents)).toMatchCanvasSnapshot(defaultEvents, size);
     });
   });

@@ -1,7 +1,26 @@
 {
   "description": "The rules of the viz contract, by owner. A Renderer test or check names a rule in a comment `contract-rule: <id>`. contractCoverage.test.ts fails when a rule of `renderer` has none. The rules of `notRenderer` belong to the Source or the App, or do not apply to the Renderer. The rules of `pending` belong to the Renderer, but the Renderer does not obey them yet (docs/renderer.md, Differences from the contract). When a pending rule gets a test, move it to `renderer`. `contractVersion` must equal the version of the `@grafana/viz-contract` package, and the three lists together must equal the rule ids of its contract chapters (`pnpm run check:contract-rules`).",
-  "contractVersion": "1.8.0",
-  "pending": [],
+  "contractVersion": "1.10.0",
+  "pending": [
+    "renderer.49",
+    "renderer.50",
+    "renderer.51",
+    "renderer.52",
+    "renderer.53",
+    "renderer.54",
+    "renderer.55",
+    "renderer.56",
+    "renderer.57",
+    "renderer.58",
+    "renderer.59",
+    "renderer.60",
+    "renderer.61",
+    "renderer.62",
+    "renderer.63",
+    "renderer.66",
+    "renderer.67",
+    "delivery.14"
+  ],
   "renderer": [
     "spec.9",
     "spec.10",
@@ -69,7 +88,8 @@
     "delivery.12",
     "fixtures.5",
     "fixtures.10",
-    "fixtures.12"
+    "fixtures.12",
+    "fixtures.13"
   ],
   "notRenderer": [
     "tool.1",
@@ -113,6 +133,8 @@
     "spec.15",
     "renderer.15",
     "renderer.16",
+    "renderer.64",
+    "renderer.65",
     "state.14",
     "state.15",
     "state.16",
@@ -135,6 +157,7 @@
     "fixtures.8",
     "fixtures.9",
     "fixtures.11",
+    "fixtures.14",
     "version.1",
     "version.2",
     "version.3",

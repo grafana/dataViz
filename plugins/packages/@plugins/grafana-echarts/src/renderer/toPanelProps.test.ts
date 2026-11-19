@@ -8,7 +8,7 @@ import {
   setMarkPositionsConfig,
   toggleSeriesVisibilityConfig,
 } from 'lib/grafana/fields/seriesConfig';
-import { fixtureSets, fixtureSpec } from 'test/rendererFixtures';
+import { fixtureSets, fixtureSpec, fixtureState } from 'test/rendererFixtures';
 import { PANELS } from './panels';
 import { parseSpec } from './parseSpec';
 import { withoutCallOuts } from './callOuts';
@@ -142,7 +142,7 @@ describe('toPanelProps for each fixture set', () => {
     const spec = parse(fixtureSpec(set));
     const props = toPanelProps(spec, PANELS[spec.panel.type]);
     const rows = props.data.series.reduce((sum, frame) => sum + frame.length, 0);
-    expect(rows > 0).toBe(set !== 'no-data');
+    expect(rows > 0).toBe(fixtureState(set).state !== 'no-data');
     for (const frame of props.data.series) {
       for (const field of frame.fields) {
         expect(field.display).toBeDefined();
@@ -194,6 +194,16 @@ describe('preparePanel: the series-truncated cut', () => {
     expect(preparePanel(wide('grafana-echartsheatmap-panel', 60), heatmap).omittedSeries).toBe(0);
     const stream = PANELS['grafana-echartsstream-panel'];
     expect(preparePanel(wide('grafana-echartsstream-panel', 60), stream).omittedSeries).toBe(10);
+  });
+
+  // contract-rule: state.19
+  it('cuts the gauge panel to 50 number fields: one gauge for each', () => {
+    const gauge = PANELS['grafana-echartsgauge-panel'];
+    const { props, omittedSeries } = preparePanel(wide('grafana-echartsgauge-panel', 53), gauge);
+    expect(omittedSeries).toBe(3);
+    const numbers = props.data.series[0].fields.filter((field) => field.type === FieldType.number);
+    expect(numbers).toHaveLength(50);
+    expect(preparePanel(wide('grafana-echartsgauge-panel', 10), gauge).omittedSeries).toBe(0);
   });
 
   // contract-rule: state.19

@@ -352,6 +352,9 @@ export function createRenderer(el: HTMLElement, spec: unknown, options?: RenderO
   return {
     update: (next) => renderer.update(next),
     setRefreshed: (id, ok, error) => renderer.setRefreshed(id, ok, error),
+    // The Renderer has no Add annotation UI yet (`renderer.49` is pending), so it never calls `onAnnotate` and no
+    // annotation id exists. A call does nothing.
+    setAnnotated: () => {},
     destroy: () => renderer.destroy(),
   };
 }

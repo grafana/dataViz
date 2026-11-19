@@ -3,12 +3,16 @@ import {
   FieldColorModeId,
   type FieldConfig,
   FieldType,
+  type GrafanaTheme2,
   ThresholdsMode,
   toDataFrame,
 } from '@grafana/data';
 import { LegendDisplayMode } from '@grafana/schema';
+import { ThemeContext } from '@grafana/ui';
 import { render } from '@testing-library/react';
+import React from 'react';
 import { SERIES_ZLEVEL } from 'test/canvas';
+import { applyTestFieldConfig } from 'test/fieldConfig';
 import { getComponent, getSeriesCanvasEvents } from 'test/panel';
 import { type PanelOptions } from 'types';
 
@@ -53,7 +57,14 @@ export const gaugeFrame = (fields: Record<string, Array<number | null>>, config:
     fields: Object.entries(fields).map(([name, values]) => ({ name, type: FieldType.number, values, config })),
   });
 
-export const renderGauge = async (frames: DataFrame[], options: Partial<PanelOptions> = {}) => {
-  const { container } = render(getComponent(frames, 'gauge', gaugeOptions(options), undefined, undefined, 'gauge'));
+/**
+ * Renders the gauge panel. With a `theme`, the panel and the display processors of the fields read that theme and
+ * not the default dark theme, as in a host with that theme.
+ * https://github.com/grafana/grafana/blob/main/packages/grafana-ui/src/themes/ThemeContext.tsx
+ */
+export const renderGauge = async (frames: DataFrame[], options: Partial<PanelOptions> = {}, theme?: GrafanaTheme2) => {
+  const data = theme ? { series: applyTestFieldConfig(frames, undefined, theme) } : undefined;
+  const panel = getComponent(frames, 'gauge', gaugeOptions(options), data, undefined, 'gauge');
+  const { container } = render(theme ? <ThemeContext.Provider value={theme}>{panel}</ThemeContext.Provider> : panel);
   return getSeriesCanvasEvents(container);
 };
