@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/grafana/dataviz/compare/grafana-echarts-renderer/v0.5.0...grafana-echarts-renderer/v0.6.0) (2026-11-19)
+
+
+### 🎉 Features
+
+* **ECharts:** Renderer draws the gauge panel, on viz contract 1.10.0 ([#242](https://github.com/grafana/dataviz/issues/242)) ([301ccdc](https://github.com/grafana/dataviz/commit/301ccdcb9a7505091c1ccaf5896ad3e387988b0e))
+
 ## [0.5.0](https://github.com/grafana/dataviz/compare/grafana-echarts-renderer/v0.4.0...grafana-echarts-renderer/v0.5.0) (2026-11-19)
 
 
