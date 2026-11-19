@@ -17,7 +17,11 @@ The module has three exports. Their types are in `renderer-api.d.ts` of the cont
 `render` throws only if `el` is not an `HTMLElement`. A spec that is not correct gives the `error` state. The handle has `update(spec)`, `setRefreshed(id, ok, error)` and `destroy()`. The App gives two callbacks in `options`:
 
 - `onState` receives each new final state: `ready`, `no-data` or `error`, with the notices. The same state is in the `data-viz-state` and `data-viz-error` attributes of `el`.
-- `onRefresh` receives a request when the user clicks Refresh or selects a time range. Each request has a new `id`. Two handles of the same Renderer module never give the same `id`. `setRefreshed` gives the result of the request with that `id`, and does nothing for the `id` of an older request. The Renderer shows Refresh and the time picker only when the App gives `onRefresh`.
+- `onRefresh` receives a request when the user clicks Refresh, picks a time range, zooms, zooms out, pans, or clicks Reset time range. Each request has a new `id`. Two handles of the same Renderer module never give the same `id`. `setRefreshed` gives the result of the request with that `id`, and does nothing for the `id` of an older request. The Renderer shows Refresh and the time picker only when the App gives `onRefresh`.
+
+Drag across the plot to zoom in. Double-click the plot or use the time picker to zoom out. Drag the time axis labels to pan. Pan sends one request when the drag ends. The Renderer ignores time range actions while a request runs.
+
+Reset time range asks for the last pick in the time picker or the original query range. It keeps relative values such as `now-15m`. Without `onRefresh`, zoom and pan stay within the supplied data. Reset time range shows the full range again.
 
 The user can hide, show and color the items of the legend. The Renderer keeps these legend overrides in memory until `destroy`, and draws each new viz spec with them (`renderer.34` to `renderer.37`). A legend override finds an item by its name, so it stays for a name that is not in the new data. The Renderer keeps what the user chose, not the difference to the viz spec, and it draws the legend overrides after the overrides of the viz spec, so they win whatever the order of those. It does not change the viz spec, and the App does not get it. A new `render` starts with none.
 
@@ -163,7 +167,6 @@ The Renderer does not obey all of the contract yet.
 
 These rules are in the `pending` list of `contractRules.json`:
 
-- Zoom, zoom out, Reset and pan (`renderer.42` to `renderer.48`, `delivery.12`, [#250](https://github.com/grafana/dataViz/issues/250)): the Renderer does not call `onRefresh` for them, and it keeps no reset range. A double click on the plot area does nothing. A brush zoom and a pan change nothing.
 - Add annotation (`renderer.49` to `renderer.63`, `renderer.66`, `renderer.67`, `delivery.14`, [#251](https://github.com/grafana/dataViz/issues/251)): the Renderer has no Add annotation UI. It does not read `onAnnotate`, and the `setAnnotated` of its handle does nothing.
 
 These differences are not rules of the `pending` list:

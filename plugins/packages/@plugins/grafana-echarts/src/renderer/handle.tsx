@@ -2,19 +2,24 @@
 // (`renderer.2` to `renderer.5`, `renderer.10`, `renderer.34` to `renderer.37`, `state.1` to `state.13`,
 // `refresh.1` to `refresh.7`, `refresh.13`, `refresh.15`).
 // https://react.dev/reference/react-dom/client/createRoot
+import { type AbsoluteTimeRange, type TimeRange } from '@grafana/data';
 import { type RenderError, type RenderHandle, type RenderOptions } from '@grafana/viz-contract/renderer-api';
 import { type EChartsType } from 'lib/echarts/echarts';
 import { type LegendOverrides, mergeLegendOverrides } from 'lib/grafana/fields/seriesConfig';
+import { zoomOutTimeRange } from 'lib/grafana/time/zoomOut';
 import React from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { computeState } from './computeState';
 import { LOG_PREFIX } from './log';
+import { readResetRange } from './parseSpec';
 import { errorMessage } from './messages';
 import { type Prepared, prepare } from './prepare';
 import { type RefreshCause, RefreshController } from './refresh';
 import { DEFAULT_HEIGHT_PX } from './registry';
 import { RendererView } from './RendererView';
 import { StateReporter } from './stateReporter';
+import { type TimeRangeCause, toAbsoluteTimeRange, toTimeRangeRequest } from './timeRangeRequest';
+import { toTimeRange } from './toPanelData';
 import { type LegendHook } from './toPanelProps';
 
 /** The signals of the draw of one viz spec. `update` starts new signals. */
@@ -51,6 +56,11 @@ class Renderer {
   private signals = newSignals();
   private size: { width: number; height: number };
   private destroyed = false;
+  private localRange: TimeRange | undefined;
+  private resetRange: TimeRangeCause | undefined;
+  private showingResetRange = true;
+  /** Only a pick or Reset can return the chart to the reset range (renderer.48). */
+  private refreshReturnsToResetRange = false;
 
   constructor(
     private readonly el: HTMLElement,
@@ -75,8 +85,16 @@ class Renderer {
     this.reporter.rendering();
     this.signals = newSignals();
     this.spec = spec;
+    this.localRange = undefined;
     this.prepared = prepare(spec, this.legendHook());
-    this.refresh?.updated();
+    if (!this.resetRange) {
+      const initialRange = readResetRange(spec);
+      this.resetRange = initialRange && toTimeRangeRequest(initialRange);
+    }
+    if (this.refresh?.updated() && this.refreshReturnsToResetRange) {
+      this.showingResetRange = true;
+    }
+    this.refreshReturnsToResetRange = false;
     this.draw();
   }
 
@@ -219,7 +237,72 @@ class Renderer {
     });
   };
 
-  private readonly onRefreshRequest = (cause: RefreshCause) => this.refresh?.request(cause);
+  private readonly onRefreshRequest = (cause: RefreshCause, action?: 'pick' | 'reset') => {
+    if (this.destroyed || !this.refresh || this.refresh.current.busy) {
+      return;
+    }
+    if (cause.cause === 'timeRange') {
+      this.showingResetRange = false;
+      if (action === 'pick') {
+        this.resetRange = cause;
+      }
+    }
+    this.refreshReturnsToResetRange = action !== undefined;
+    this.refresh.request(cause);
+  };
+
+  private readonly onTimePickerPick = (cause: TimeRangeCause) => this.onRefreshRequest(cause, 'pick');
+
+  private readonly onReset = () => {
+    if (this.refresh) {
+      if (this.resetRange && !this.showingResetRange) {
+        this.onRefreshRequest(this.resetRange, 'reset');
+      }
+    } else if (this.localRange) {
+      this.localRange = undefined;
+      this.draw();
+    }
+  };
+
+  private readonly onChangeTimeRange = (range: AbsoluteTimeRange, action?: 'pan' | 'zoomOut') => {
+    const dataRange = this.prepared?.timeRange;
+    if (this.destroyed || !dataRange || this.committed !== this.prepared) {
+      return;
+    }
+    if (this.refresh) {
+      this.onRefreshRequest(toTimeRangeRequest(range));
+      return;
+    }
+
+    const bounds = toAbsoluteTimeRange(dataRange);
+    let { from, to } = range;
+    if (action === 'pan') {
+      // Stop at the end of the data and keep the width of the range.
+      const shift = Math.max(0, bounds.from - from) + Math.min(0, bounds.to - to);
+      from += shift;
+      to += shift;
+    } else if (action === 'zoomOut') {
+      // Trim the same amount from each side to keep the center of the range.
+      const excess = Math.max(0, bounds.from - from, to - bounds.to);
+      from += excess;
+      to -= excess;
+    }
+    from = Math.max(bounds.from, Math.round(from));
+    to = Math.min(bounds.to, Math.round(to));
+    if (from < to) {
+      this.localRange = from === bounds.from && to === bounds.to ? undefined : toTimeRange({ from, to });
+      this.draw();
+    }
+  };
+
+  private readonly onPan = (range: AbsoluteTimeRange) => this.onChangeTimeRange(range, 'pan');
+
+  private readonly onZoomOut = () => {
+    const range = this.localRange ?? this.prepared?.timeRange;
+    if (range) {
+      this.onChangeTimeRange(zoomOutTimeRange(toAbsoluteTimeRange(range)), 'zoomOut');
+    }
+  };
 
   private draw(): void {
     if (this.destroyed || !this.prepared) {
@@ -235,7 +318,23 @@ class Renderer {
         onPanelError={this.onPanelError}
         onRenderError={this.onRenderError}
         onChartInit={this.onChartInit}
-        refresh={this.refresh ? { status: this.refresh.current, onRequest: this.onRefreshRequest } : undefined}
+        timeNavigation={{
+          localRange: this.localRange,
+          onChangeTimeRange: this.onChangeTimeRange,
+          onReset: this.onReset,
+          onPan: this.onPan,
+          onZoomOut: this.onZoomOut,
+        }}
+        refresh={
+          this.refresh
+            ? {
+                status: this.refresh.current,
+                onRequest: this.onRefreshRequest,
+                onPick: this.onTimePickerPick,
+                canReset: this.resetRange !== undefined && !this.showingResetRange,
+              }
+            : undefined
+        }
       />
     );
   }

@@ -10,13 +10,14 @@ import {
 } from 'lib/echarts/relations/options/view';
 import { applyForceLayoutHoverFade } from 'lib/echarts/relations/forceHoverFade';
 import { restoreTreemapRoot } from 'lib/echarts/treemapDrillDown';
-import { ENABLE_TIME_BRUSH_ACTION } from 'lib/echarts/timeBrush';
+import { DISABLE_TIME_BRUSH_ACTION, ENABLE_TIME_BRUSH_ACTION } from 'lib/echarts/timeBrush';
 import { getTooltipTrigger } from 'lib/echarts/tooltip/option';
 import { type TooltipSink } from 'lib/echarts/tooltip/types';
 import { type RefObject, useEffect, useRef } from 'react';
 import { type EChartsTooltipController } from '../tooltip/types';
 
 interface Options {
+  brushEnabled?: boolean;
   /** True when the panel renders a Grafana DOM legend instead of ECharts' native legend. */
   isGrafanaLegend: boolean;
   /** Width in pixels that Grafana allocated to the ECharts plot. */
@@ -73,6 +74,7 @@ export function useChartOption(
   chart: EChartsType | null,
   chartContext: ChartContext,
   {
+    brushEnabled = true,
     isGrafanaLegend,
     plotWidth,
     plotHeight,
@@ -83,6 +85,16 @@ export function useChartOption(
   }: Options
 ): void {
   const optionsRef = useRef({ isGrafanaLegend, plotWidth, plotHeight, tooltipSink, reportTooltipTrigger });
+  const brushChart = useRef<EChartsType | null>(null);
+  const cursorAction = brushEnabled ? ENABLE_TIME_BRUSH_ACTION : DISABLE_TIME_BRUSH_ACTION;
+  const brushAction = useRef(cursorAction);
+  // A refresh can disable the brush without rebuilding the chart option.
+  useEffect(() => {
+    brushAction.current = cursorAction;
+    if (chart && chart === brushChart.current) {
+      chart.dispatchAction(cursorAction);
+    }
+  }, [chart, cursorAction]);
   const variant = getViewVariant(chartContext);
   // The geo view after a zoom or a pan of the user, with the view options that it is for. Core Geomap keeps the
   // OpenLayers view across data updates.
@@ -150,6 +162,7 @@ export function useChartOption(
       }
     }
     const option = buildPanelChartOption(chartContext, current);
+    brushChart.current = option && 'brush' in option ? chart : null;
 
     // Nothing to draw from this data: clear the canvas and leave the panel empty
     // rather than throwing, which would replace the panel with an error boundary.
@@ -190,8 +203,8 @@ export function useChartOption(
 
     // `notMerge` recreates the brush component, so arm it after each brush rebuild.
     // Removing the component disposes its controller and releases the pan mutex.
-    if ('brush' in option) {
-      chart.dispatchAction(ENABLE_TIME_BRUSH_ACTION);
+    if (brushChart.current) {
+      chart.dispatchAction(brushAction.current);
     }
     // `notMerge` also resets the treemap view root, so set the drilled-down root again.
     const treemapRoot = treemapRootRef?.current;

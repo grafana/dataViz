@@ -9,6 +9,11 @@ export interface QueryResult {
   error?: string;
 }
 
+export interface SpecTimeRange {
+  from: string | number;
+  to: string | number;
+}
+
 export interface VizSpec {
   specVersion: number;
   panel: {
