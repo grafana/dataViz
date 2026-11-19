@@ -19,8 +19,7 @@
     "renderer.63",
     "renderer.66",
     "renderer.67",
-    "delivery.14",
-    "fixtures.13"
+    "delivery.14"
   ],
   "renderer": [
     "spec.9",
@@ -95,6 +94,7 @@
     "fixtures.5",
     "fixtures.10",
     "fixtures.12",
+    "fixtures.13",
     "fixtures.16"
   ],
   "notRenderer": [

@@ -1,5 +1,6 @@
 import {
   cartesianChartModule,
+  gaugeChartModule,
   heatmapChartModule,
   multivariateChartModule,
   partToWholeChartModule,
@@ -55,9 +56,11 @@ describe('resolveChartModule', () => {
     expect(resolveChartModule('custom')).toBe(timelineChartModule);
   });
 
+  it('routes gauge to the gauge module', () => {
+    expect(resolveChartModule('gauge')).toBe(gaugeChartModule);
+  });
+
   it('throws for unsupported concrete types', () => {
-    // gauge is a planned part-to-whole variant, not yet registered.
-    expect(() => resolveChartModule('gauge')).toThrow();
     // `lines` is a deliberate deferral, not an oversight: it needs coordinate-pair
     // polylines, which no Grafana frame carries. See #29.
     expect(() => resolveChartModule('lines')).toThrow();

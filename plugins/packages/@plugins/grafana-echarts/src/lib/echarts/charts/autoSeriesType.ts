@@ -15,6 +15,7 @@ export type ChartFamily =
   | 'relations'
   | 'stream'
   | 'geo'
+  | 'gauge'
   | 'timeline'
   | 'status-history';
 
@@ -52,6 +53,8 @@ export function resolveAutoSeriesType(family: ChartFamily, frames: DataFrame[]):
     // ECharts `map` is the routing token of the family. The markers use `scatter` on a `geo` component.
     case 'geo':
       return 'map';
+    case 'gauge':
+      return 'gauge';
     // Two families, one chart module: the family selects the timeline mode
     // (`timelineMode` in `charts/timeline.ts`), so `custom` routes the same for both.
     case 'timeline':

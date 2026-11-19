@@ -94,6 +94,6 @@ same `GRAFANA_PORT` and `GRAFANA_CONTAINER_NAME`.
 
     Verify canvas output as images, and show them to the user when reviewing the task — never by reading draw-call JSON.
     1. `npx jest-canvas-mock-compare-viewer`, from this package directory (viewer on :5173, any port-5173 instance works — it takes an absolute `--root`, so one instance serves every worktree)
-    2. `node scripts/canvas-shots.mjs --failing` writes one PNG per changed snapshot to `.jest-canvas-mock-compare/shots/` (gitignored). Omit `--failing` for all of them; drop `--root <dir>` in if the payloads are in another worktree.
+    2. `node scripts/canvas-shots.mjs --failing` writes one PNG per changed snapshot to `.jest-canvas-mock-compare/shots/` (gitignored). Omit `--failing` for all of them; drop `--root <dir>` in if the payloads are in another worktree. For a light-theme case, add `--background '#ffffff'`: the viewer has a dark background, and dark text is not legible on it.
     3. Read each PNG — a changed snapshot renders Expected | Actual | Diff in one image, so it is the before/after to hand the user. Include the paths in the summary.
     Run it from a checkout with node_modules installed (needs `@playwright/test` + `npx playwright install chromium`).

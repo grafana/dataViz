@@ -143,3 +143,9 @@ export const TIMELINE_NUMBER_FIELDS_LIMIT = 30;
  * past this the cells are too narrow to read. Core's value (`status-history/module.tsx`).
  */
 export const STATUS_HISTORY_MAX_ROWS = 100;
+
+/**
+ * Most number fields for which a gauge is suggested: each field is one gauge, and past this the gauges are too
+ * small to read. Core's value (`MAX_GAUGES`, `gauge/suggestions.ts`).
+ */
+export const GAUGE_MAX_VALUES = 10;

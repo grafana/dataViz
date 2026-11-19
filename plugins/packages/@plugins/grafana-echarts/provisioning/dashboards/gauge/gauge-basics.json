@@ -1,0 +1,362 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": { "type": "grafana-testdata-datasource", "uid": "trlxrdZVk" },
+      "description": "Core Gauge, for comparison. One random_walk series, range 0 to 100, three threshold steps. The sparkline and the gradient are off, because the ECharts gauge does not have them yet.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 60 },
+              { "color": "red", "value": 80 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
+        "shape": "gauge",
+        "barWidthFactor": 0.5,
+        "textMode": "auto",
+        "showThresholdMarkers": true,
+        "showThresholdLabels": false,
+        "sparkline": false,
+        "effects": { "gradient": false }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "grafana-testdata-datasource", "uid": "trlxrdZVk" },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "seriesCount": 1,
+          "startValue": 65,
+          "min": 0,
+          "max": 100
+        }
+      ],
+      "title": "Core gauge: one value",
+      "type": "gauge"
+    },
+    {
+      "datasource": { "type": "datasource", "uid": "-- Dashboard --" },
+      "description": "ECharts gauge with the data of panel 1 and the default options: an arc, the threshold band, the value in the center.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 60 },
+              { "color": "red", "value": 80 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 0 },
+      "id": 2,
+      "options": {
+        "seriesType": "gauge",
+        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
+        "shape": "gauge",
+        "barWidthFactor": 0.5,
+        "textMode": "auto",
+        "showThresholdMarkers": true
+      },
+      "targets": [{ "datasource": { "type": "datasource", "uid": "-- Dashboard --" }, "refId": "A", "panelId": 1 }],
+      "title": "ECharts gauge: one value",
+      "type": "grafana-echartsgauge-panel"
+    },
+    {
+      "datasource": { "type": "datasource", "uid": "-- Dashboard --" },
+      "description": "Core Gauge, for comparison: `shape: circle` with the data of panel 1.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 60 },
+              { "color": "red", "value": 80 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 },
+      "id": 3,
+      "options": {
+        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
+        "shape": "circle",
+        "barWidthFactor": 0.5,
+        "textMode": "auto",
+        "showThresholdMarkers": true,
+        "showThresholdLabels": false,
+        "sparkline": false,
+        "effects": { "gradient": false }
+      },
+      "targets": [{ "datasource": { "type": "datasource", "uid": "-- Dashboard --" }, "refId": "A", "panelId": 1 }],
+      "title": "Core gauge: circle",
+      "type": "gauge"
+    },
+    {
+      "datasource": { "type": "datasource", "uid": "-- Dashboard --" },
+      "description": "ECharts gauge: `shape: circle` with the data of panel 1.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 60 },
+              { "color": "red", "value": 80 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 },
+      "id": 4,
+      "options": {
+        "seriesType": "gauge",
+        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
+        "shape": "circle"
+      },
+      "targets": [{ "datasource": { "type": "datasource", "uid": "-- Dashboard --" }, "refId": "A", "panelId": 1 }],
+      "title": "ECharts gauge: circle",
+      "type": "grafana-echartsgauge-panel"
+    },
+    {
+      "datasource": { "type": "grafana-testdata-datasource", "uid": "trlxrdZVk" },
+      "description": "Core Gauge, for comparison. Five random_walk series: one gauge for each series, in the automatic grid.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 60 },
+              { "color": "red", "value": 80 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 8 },
+      "id": 5,
+      "options": {
+        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
+        "orientation": "auto",
+        "shape": "gauge",
+        "barWidthFactor": 0.5,
+        "textMode": "auto",
+        "showThresholdMarkers": true,
+        "showThresholdLabels": false,
+        "sparkline": false,
+        "effects": { "gradient": false }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "grafana-testdata-datasource", "uid": "trlxrdZVk" },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "seriesCount": 5,
+          "startValue": 50,
+          "min": 0,
+          "max": 100
+        }
+      ],
+      "title": "Core gauge: five values",
+      "type": "gauge"
+    },
+    {
+      "datasource": { "type": "datasource", "uid": "-- Dashboard --" },
+      "description": "ECharts gauge with the data of panel 5. Text mode `auto` shows the name of each gauge, because the panel has more than one value.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 60 },
+              { "color": "red", "value": 80 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 8 },
+      "id": 6,
+      "options": {
+        "seriesType": "gauge",
+        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" }
+      },
+      "targets": [{ "datasource": { "type": "datasource", "uid": "-- Dashboard --" }, "refId": "A", "panelId": 5 }],
+      "title": "ECharts gauge: five values",
+      "type": "grafana-echartsgauge-panel"
+    },
+    {
+      "datasource": { "type": "datasource", "uid": "-- Dashboard --" },
+      "description": "Core Gauge, for comparison. The unit is `percent` and the field has no min and no max, so the range is 0 to 100.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "unit": "percent",
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "red", "value": 75 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 18 },
+      "id": 7,
+      "options": {
+        "reduceOptions": { "values": false, "calcs": ["mean"], "fields": "" },
+        "shape": "gauge",
+        "barWidthFactor": 0.5,
+        "textMode": "auto",
+        "showThresholdMarkers": true,
+        "showThresholdLabels": false,
+        "sparkline": false,
+        "effects": { "gradient": false }
+      },
+      "targets": [{ "datasource": { "type": "datasource", "uid": "-- Dashboard --" }, "refId": "A", "panelId": 1 }],
+      "title": "Core gauge: percent unit, mean, percentage thresholds",
+      "type": "gauge"
+    },
+    {
+      "datasource": { "type": "datasource", "uid": "-- Dashboard --" },
+      "description": "ECharts gauge: the unit `percent` with no min and no max gives the range 0 to 100. The calculation is Mean. The thresholds are percentages.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "unit": "percent",
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "red", "value": 75 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 18 },
+      "id": 8,
+      "options": {
+        "seriesType": "gauge",
+        "reduceOptions": { "values": false, "calcs": ["mean"], "fields": "" }
+      },
+      "targets": [{ "datasource": { "type": "datasource", "uid": "-- Dashboard --" }, "refId": "A", "panelId": 1 }],
+      "title": "ECharts gauge: percent unit, mean, percentage thresholds",
+      "type": "grafana-echartsgauge-panel"
+    },
+    {
+      "datasource": { "type": "datasource", "uid": "-- Dashboard --" },
+      "description": "ECharts gauge: `showThresholdMarkers: false` (no threshold band), `barWidthFactor: 1` (the widest bar), `textMode: value_and_name`.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 60 },
+              { "color": "red", "value": 80 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 18 },
+      "id": 9,
+      "options": {
+        "seriesType": "gauge",
+        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
+        "showThresholdMarkers": false,
+        "barWidthFactor": 1,
+        "textMode": "value_and_name"
+      },
+      "targets": [{ "datasource": { "type": "datasource", "uid": "-- Dashboard --" }, "refId": "A", "panelId": 1 }],
+      "title": "ECharts gauge: no band, wide bar, value and name",
+      "type": "grafana-echartsgauge-panel"
+    },
+    {
+      "datasource": { "type": "datasource", "uid": "-- Dashboard --" },
+      "description": "ECharts gauge: `barWidthFactor: 0.1` (the thinnest bar) and `textMode: name`.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 60 },
+              { "color": "red", "value": 80 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 18 },
+      "id": 10,
+      "options": {
+        "seriesType": "gauge",
+        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
+        "barWidthFactor": 0.1,
+        "textMode": "name"
+      },
+      "targets": [{ "datasource": { "type": "datasource", "uid": "-- Dashboard --" }, "refId": "A", "panelId": 1 }],
+      "title": "ECharts gauge: thin bar, name only",
+      "type": "grafana-echartsgauge-panel"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": ["echarts", "gauge"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "ECharts Gauge: basics, with core Gauge for comparison",
+  "uid": "b7c1d2e3-f4a5-4b60-9c71-d8e9f0a1b2c3",
+  "version": 1,
+  "weekStart": ""
+}

@@ -145,3 +145,95 @@ describe('the state of a draw', () => {
     expect(el.hasAttribute('data-viz-state')).toBe(false);
   });
 });
+
+describe('the state of a gauge draw', () => {
+  /** `smoke-gauge` with the fields of `fields`, one row each. */
+  const gaugeSpec = (fields: Array<{ name: string; type: FieldType; value: unknown }>) => {
+    const spec = fixtureSpec('smoke-gauge');
+    (spec.data as { results: unknown }).results = {
+      A: {
+        status: 200,
+        frames: [
+          {
+            schema: { fields: fields.map(({ name, type }) => ({ name, type })) },
+            data: { values: fields.map(({ value }) => [value]) },
+          },
+        ],
+      },
+    };
+    return spec;
+  };
+
+  // contract-rule: state.5
+  it('gives panel-error with the fix steps when the frames have rows and no number field', async () => {
+    const { states } = await draw(gaugeSpec([{ name: 'host', type: FieldType.string, value: 'a' }]));
+    const message = 'Cannot visualize data. Add a number field. Each number field is one gauge.';
+    expect(states.at(-1)).toEqual({ state: 'error', error: { code: 'panel-error', message }, notices: [] });
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+  });
+
+  /** The center and the radius of each gauge series that the chart in `el` draws. */
+  const gaugeGeometry = (el: HTMLElement) => {
+    const chart = getInstanceByDom(el.querySelector('[_echarts_instance_]') as HTMLElement)!;
+    const series = chart.getOption().series as Array<{ center: number[]; radius: number }>;
+    return series.map(({ center, radius }) => [...center, radius]);
+  };
+
+  // `ready` alone shows only that the draw did not throw (`state.5`). The geometry shows that the gauges draw.
+  it('draws the gauges of the default options when an option has a value of the wrong type', async () => {
+    const spec = fixtureSpec('smoke-gauge');
+    (spec.panel as Record<string, unknown>).options = {
+      shape: 'square',
+      barWidthFactor: 'wide',
+      textMode: 7,
+      showThresholdMarkers: 'yes',
+      reduceOptions: 'last',
+    };
+    const wrong = await draw(spec);
+    expect(wrong.states.at(-1)).toEqual({ state: 'ready', notices: [] });
+    const geometry = gaugeGeometry(wrong.el);
+    expect(geometry.length).toBeGreaterThan(0);
+    expect(geometry.flat().every(Number.isFinite)).toBe(true);
+
+    const defaults = await draw(fixtureSpec('smoke-gauge'));
+    expect(geometry).toEqual(gaugeGeometry(defaults.el));
+  });
+
+  // contract-rule: state.19
+  it('gives series-truncated for more number fields than maxSeries', async () => {
+    const fields = Array.from({ length: 53 }, (_, i) => ({ name: `s${i}`, type: FieldType.number, value: i }));
+    const { states } = await draw(gaugeSpec(fields));
+    expect(states.at(-1)).toEqual({
+      state: 'ready',
+      notices: [{ code: 'series-truncated', message: '3 series are not shown. The first 50 series are drawn.' }],
+    });
+  });
+
+  // The cut counts number fields, not gauges. With all values, each row is one gauge, and `limit` sets their number.
+  it('does not cut the rows of one number field: 60 gauges with all values and a limit of 60', async () => {
+    const spec = fixtureSpec('smoke-gauge');
+    (spec.panel as Record<string, unknown>).options = { reduceOptions: { values: true, calcs: [], limit: 60 } };
+    (spec.data as { results: unknown }).results = {
+      A: {
+        status: 200,
+        frames: [
+          {
+            schema: { fields: [{ name: 'load', type: FieldType.number }] },
+            data: { values: [Array.from({ length: 60 }, (_, i) => i)] },
+          },
+        ],
+      },
+    };
+    const { el, states } = await draw(spec);
+    expect(states.at(-1)).toEqual({ state: 'ready', notices: [] });
+    // Each gauge is two series: the threshold band and the value bar.
+    expect(gaugeGeometry(el)).toHaveLength(120);
+  });
+
+  it('gives unsupported-panel-type for the stat panel, which this package does not have', async () => {
+    const spec = fixtureSpec('smoke-gauge');
+    (spec.panel as Record<string, unknown>).type = 'grafana-echartsstat-panel';
+    const { el } = await draw(spec);
+    expect(el.getAttribute('data-viz-error')).toBe('unsupported-panel-type');
+  });
+});

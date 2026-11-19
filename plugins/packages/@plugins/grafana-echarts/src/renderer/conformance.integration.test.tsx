@@ -157,7 +157,10 @@ describe('Ask in chat', () => {
     throw new Error('No point has the Ask in chat link');
   }
 
-  const chartSets = sets.filter((set) => fixtureState(set).state === 'ready');
+  // The gauge panel has no tooltip, so it has no Ask in chat.
+  const hasTooltip = (set: string) =>
+    (fixtureSpec(set).panel as { type?: string }).type !== 'grafana-echartsgauge-panel';
+  const chartSets = sets.filter((set) => fixtureState(set).state === 'ready' && hasTooltip(set));
 
   // The contract has a `message.json` only for a time series. This test makes sure that the message of each other
   // panel has the shape of `renderer.31` and `renderer.32`.

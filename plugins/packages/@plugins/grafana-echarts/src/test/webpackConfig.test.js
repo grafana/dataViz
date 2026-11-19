@@ -46,6 +46,7 @@ describe('webpack configuration', () => {
     expect(Object.keys(defaultConfig.entry).sort()).toEqual([
       'module',
       'modules/cartesian/module',
+      'modules/gauge/module',
       'modules/geo/module',
       'modules/heatmap/module',
       'modules/hierarchy/module',
