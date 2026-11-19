@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "devDependencies": {
     "@biomejs/biome": "2.6.8",
-    "@swc/core": "1.15.0",
+    "@swc/core": "1.16.22",
     "copy-webpack-plugin": "11.0.0",
     "pnpm": "11.21.0",
     "replace-in-file-webpack-plugin": "1.0.6",
