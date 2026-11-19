@@ -246,6 +246,21 @@ There's deliberately no fallback for a missing secret. `get-vault-secrets` fails
 
 The token reaches the Crowdin actions through `fromJSON(steps.vault-secrets.outputs.secrets)`, not `env`. `get-vault-secrets` sets `exportEnv: false`, so reading it from `env` silently passes an empty string.
 
+## GitHub App permissions
+
+The Crowdin download workflow gets two tokens with different jobs. Keep the workflow token narrow; all repo writes use the App token so commits are signed and downstream workflows run.
+
+| Layer | Needed permissions | Why |
+|---|---|---|
+| Workflow `GITHUB_TOKEN` | `contents: read` | Checkout only. |
+| Workflow `GITHUB_TOKEN` | `id-token: write` | OIDC auth for Vault and `grafana/shared-workflows/actions/create-github-app-token`. |
+| `grafana-pr-automation` GitHub App token | `contents: write` | Create signed commits and create or force-update the translation branch through the Git API. |
+| `grafana-pr-automation` GitHub App token | `pull-requests: write` | Create and resolve translation PRs. |
+| `grafana-pr-automation` GitHub App token | `issues: write` | Apply labels to PRs; GitHub models PR labels as issue labels. |
+| `grafana-pr-automation` GitHub App token | ProjectV2 write access | Add the PR to the configured GitHub project board when `github_board_id` is set. |
+
+The App must be installed on `grafana/dataViz` before `i18n-crowdin-download.yml` runs. If the grant is missing or too narrow, `create-github-app-token` may still return a token, but the later branch, PR, label, or project-board operation fails.
+
 ## Design decisions
 
 **The download action is local.** `grafana/grafana-github-actions/crowdin-download` hardcodes the branch `i18n_crowdin_translations` in every place it does git work, and has no input to change it. With several plugins, every matrix job would build from main and force-push the same ref, so only the last job's translations would survive. Running the jobs one at a time doesn't help, because the overwrite is then deterministic. `crowdin-download/` takes a `localization_branch_name`, and the workflow passes `i18n_crowdin_translations_<plugin id>`. Upload and create-tasks still use the upstream actions, which have no git involvement.
