@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.0](https://github.com/grafana/dataviz/compare/grafana-echarts-renderer/v0.6.0...grafana-echarts-renderer/v0.7.0) (2026-11-19)
+
+
+### 🎉 Features
+
+* **echarts:** send a chart point to chat from the tooltip ([139d864](https://github.com/grafana/dataviz/commit/139d864b435eeb565506a7737f122ac5fb9a0809))
+* **echarts:** stat panel init ([410b7f1](https://github.com/grafana/dataviz/commit/410b7f19e8649067a6c69139c59a83c165dd7ff8))
+
 ## [0.6.0](https://github.com/grafana/dataviz/compare/grafana-echarts-renderer/v0.5.0...grafana-echarts-renderer/v0.6.0) (2026-11-19)
 
 
