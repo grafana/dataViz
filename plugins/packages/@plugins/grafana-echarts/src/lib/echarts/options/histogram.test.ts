@@ -341,8 +341,8 @@ describe('histogram tooltip', () => {
 
   it('gives the bucket range in the header and the hovered count in Single mode', () => {
     const model = tooltipOf(frames, {}, 1, 1);
-    expect(model.header).toEqual({ label: 'Bucket', value: '10 - 20' });
-    expect(model.rows.map(({ label, value }) => [label, value])).toEqual([['B', '2']]);
+    expect(model.header).toEqual({ label: 'Bucket', value: '10 - 20', coordinate: { type: 'number', value: 10 } });
+    expect(model.rows.map(({ label, value, rawValue }) => [label, value, rawValue])).toEqual([['B', '2', 2]]);
     expect(model.source?.rowIndex).toBe(1);
   });
 

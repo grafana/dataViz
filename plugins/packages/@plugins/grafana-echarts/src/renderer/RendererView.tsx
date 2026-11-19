@@ -1,6 +1,7 @@
 import { type TimeRange } from '@grafana/data';
 import { type PanelDataErrorViewProps } from '@grafana/runtime';
 import { ThemeContext } from '@grafana/ui';
+import { type RenderOptions } from '@grafana/viz-contract/renderer-api';
 import { ChartErrorBoundary } from 'lib/components/ChartErrorBoundary';
 import { ChartInitContext, type ChartInitListener } from 'lib/components/chartInitContext';
 import { ChartNotices } from 'lib/components/ChartNotices';
@@ -9,6 +10,7 @@ import { PanelDataErrorViewContext } from 'lib/components/panelDataErrorViewCont
 import { PanelErrorContext, type PanelErrorSignal } from 'lib/components/panelErrorContext';
 import { TimeDragContext } from 'lib/components/TimeDragContext';
 import { TimeZoomOutContext } from 'lib/components/TimeZoomOutContext';
+import { TooltipActionContext } from 'lib/components/tooltip/tooltipActionContext';
 import React, { useEffect, useMemo } from 'react';
 import { CommitSignal } from './CommitSignal';
 import { dataIssueText } from './dataIssueText';
@@ -16,6 +18,7 @@ import { chartPadding, TITLE_HEIGHT_PX, TOOLBAR_HEIGHT_PX } from './layout';
 import { errorMessage } from './messages';
 import { NoDataView } from './NoDataView';
 import { toChartNotices } from './notices';
+import { askInChat } from './pointMessage';
 import { type Prepared } from './prepare';
 import { type SpecPanelProps } from './toPanelProps';
 import { type TimeRangeCause } from './timeRangeRequest';
@@ -28,6 +31,7 @@ import { rootClassName } from './rootStyles';
 
 interface Props {
   prepared: Prepared;
+  onMessage?: RenderOptions['onMessage'];
   width: number;
   height: number;
   /** Called after a view with no chart (an error, no data) is on screen. */
@@ -68,6 +72,7 @@ const renderDataIssue = (props: PanelDataErrorViewProps) => <RendererErrorView m
  */
 export const RendererView = ({
   prepared,
+  onMessage,
   width,
   height,
   onViewShown,
@@ -85,6 +90,10 @@ export const RendererView = ({
   );
   const padding = prepared.kind === 'chart' ? chartPadding(prepared.props.family) : 0;
   const rootClass = useMemo(() => rootClassName(prepared.theme), [prepared.theme]);
+  const pointAction = useMemo(
+    () => (prepared.kind === 'chart' && onMessage ? askInChat(prepared.props.data.series, onMessage) : undefined),
+    [prepared, onMessage]
+  );
   useEffect(() => {
     if (prepared.kind !== 'chart') {
       onViewShown();
@@ -126,15 +135,17 @@ export const RendererView = ({
                       )}
                     >
                       <TimeDragContext.Provider value={refresh?.status.busy ? null : timeNavigation?.onPan}>
-                        <div style={{ padding }}>
-                          <Panel
-                            {...prepared.props}
-                            width={Math.max(0, width - 2 * padding)}
-                            height={Math.max(0, chartHeight - 2 * padding)}
-                            timeRange={timeNavigation?.localRange ?? prepared.props.timeRange}
-                            onChangeTimeRange={timeNavigation?.onChangeTimeRange ?? prepared.props.onChangeTimeRange}
-                          />
-                        </div>
+                        <TooltipActionContext.Provider value={pointAction}>
+                          <div style={{ padding }}>
+                            <Panel
+                              {...prepared.props}
+                              width={Math.max(0, width - 2 * padding)}
+                              height={Math.max(0, chartHeight - 2 * padding)}
+                              timeRange={timeNavigation?.localRange ?? prepared.props.timeRange}
+                              onChangeTimeRange={timeNavigation?.onChangeTimeRange ?? prepared.props.onChangeTimeRange}
+                            />
+                          </div>
+                        </TooltipActionContext.Provider>
                       </TimeDragContext.Provider>
                       <ChartNotices notices={toChartNotices(prepared.notices)} corner="top-left" />
                       {timeNavigation?.localRange && <ChartResetTimeRangeButton onClick={timeNavigation.onReset} />}

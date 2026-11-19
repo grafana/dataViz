@@ -1,4 +1,4 @@
-import { dateTimeFormat } from '@grafana/data';
+import { timeHeader } from './timeHeader';
 import { type TopLevelFormatterParams } from 'echarts/types/dist/shared';
 import { fmtDuration } from 'lib/grafana/timeline/duration';
 import { type TimelineLane, type TimelineModel, type TimelineSegment } from 'lib/grafana/timeline/types';
@@ -26,8 +26,6 @@ export function buildTimelineTooltipModel(
   items: TimelineItem[],
   ctx: TimelineTooltipContext
 ): (params: TopLevelFormatterParams) => TooltipModel {
-  const formatTime = (ms: number) => dateTimeFormat(ms, { timeZone: ctx.timeZone });
-
   return (params) => {
     const param = Array.isArray(params) ? params[0] : params;
     const item = param?.dataIndex != null ? items[param.dataIndex] : undefined;
@@ -39,12 +37,12 @@ export function buildTimelineTooltipModel(
     const valueRow = { color: segment.color, label: lane.name, value: segment.text, source };
 
     if (ctx.mode === 'samples') {
-      return { header: { label: '', value: formatTime(segment.start) }, rows: [valueRow], source };
+      return { header: timeHeader(segment.start, ctx.timeZone), rows: [valueRow], source };
     }
 
     return {
       // Core puts a line break after the dash.
-      header: { label: '', value: `${formatTime(segment.start)} - \n${formatTime(segment.end)}` },
+      header: timeHeader(segment.start, ctx.timeZone, segment.end),
       rows: [valueRow, { label: 'Duration', value: fmtDuration(segment.end - segment.start) }],
       source,
     };
@@ -89,6 +87,6 @@ export function buildTimelineMultiTooltipModel(
       const source = { field: lane.field, rowIndex: segment.rowIndex };
       return [{ color: segment.color, label: lane.name, value: segment.text, source }];
     });
-    return { header: { label: '', value: dateTimeFormat(time, { timeZone: ctx.timeZone }) }, rows };
+    return { header: timeHeader(time, ctx.timeZone), rows };
   };
 }

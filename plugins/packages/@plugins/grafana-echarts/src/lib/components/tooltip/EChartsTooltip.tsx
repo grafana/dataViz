@@ -3,6 +3,7 @@ import { type Field, type GrafanaTheme2, type LinkModel } from '@grafana/data';
 import { TooltipDisplayMode, type VizTooltipOptions } from '@grafana/schema';
 import {
   type AdHocFilterModel,
+  Button,
   type FilterByGroupedLabelsModel,
   getFieldDisplayLinks,
   IconButton,
@@ -25,7 +26,8 @@ import {
   type TooltipRow,
   type TooltipSource,
 } from 'lib/echarts/tooltip/types';
-import React, { useLayoutEffect, useRef } from 'react';
+import React, { useContext, useLayoutEffect, useRef } from 'react';
+import { TooltipActionContext } from './tooltipActionContext';
 import { AnnotationTooltipContent } from './AnnotationTooltipContent';
 import { TOOLTIP_MARKER_ATTR } from './constants';
 import { anchorTransform, cursorTransform } from './placement';
@@ -261,6 +263,7 @@ const getStyles = (theme: GrafanaTheme2) => ({
 export const EChartsTooltip: React.FC<Props> = ({ state, dismiss, annotate, mode, maxWidth, maxHeight }) => {
   // Hooks must run before any early return (Rules of Hooks).
   const { onAddAdHocFilter } = usePanelContext();
+  const action = useContext(TooltipActionContext);
   const styles = useStyles2(getStyles);
   const wrapperRef = useRef<HTMLDivElement>(null);
   // Latest placement, so the ResizeObserver below always positions against the
@@ -333,10 +336,23 @@ export const EChartsTooltip: React.FC<Props> = ({ state, dismiss, annotate, mode
   } else if (pinned) {
     const sources = resolveActiveSources(state);
     const dataLinks = collectDataLinks(sources);
+    const [source] = sources;
+    const onPointAction = action && source ? action.resolve(model, source) : undefined;
+    const pointAction = action && onPointAction && (
+      <Button role="link" icon="link" fill="text" size="sm" onClick={onPointAction}>
+        {action.title}
+      </Button>
+    );
     const filters = resolveFilters(state, sources);
     const adHocFilters = collectAdHocFilters(filters.each, onAddAdHocFilter);
     const filterByGroupedLabels = groupedLabelFilters(filters, onAddAdHocFilter);
-    if (dataLinks.length > 0 || adHocFilters.length > 0 || filterByGroupedLabels != null || annotate != null) {
+    if (
+      dataLinks.length > 0 ||
+      adHocFilters.length > 0 ||
+      filterByGroupedLabels != null ||
+      annotate != null ||
+      pointAction
+    ) {
       // `annotate` renders core's "Add annotation" button. The footer hides it when a data
       // link is one-click, as core.
       // https://github.com/grafana/grafana/blob/main/packages/grafana-ui/src/components/VizTooltip/VizTooltipFooter.tsx
@@ -346,6 +362,7 @@ export const EChartsTooltip: React.FC<Props> = ({ state, dismiss, annotate, mode
           adHocFilters={adHocFilters}
           filterByGroupedLabels={filterByGroupedLabels}
           annotate={annotate}
+          additionalContent={pointAction}
         />
       );
     }

@@ -287,8 +287,8 @@ importers:
         specifier: 2.0.1
         version: 2.0.1
       '@grafana/viz-contract':
-        specifier: 1.10.0
-        version: 1.10.0
+        specifier: 1.11.0
+        version: 1.11.0
       '@playwright/test':
         specifier: 1.65.1
         version: 1.65.1
@@ -383,11 +383,11 @@ importers:
         specifier: 30.4.1
         version: 30.4.1(supports-color@8.1.1)
       prettier:
-        specifier: 3.10.1
-        version: 3.10.1
+        specifier: 3.9.6
+        version: 3.9.6
       pretty-format:
-        specifier: 30.5.1
-        version: 30.5.1
+        specifier: 30.4.1
+        version: 30.4.1
       replace-in-file-webpack-plugin:
         specifier: 1.0.6
         version: 1.0.6
@@ -1634,8 +1634,8 @@ packages:
       react: '>=19'
       react-dom: '>=19'
 
-  '@grafana/viz-contract@1.10.0':
-    resolution: {integrity: sha512-kSOBA0/c0NJ76Zdb9MqjjZ0E/Jf1hgR1N1jLYyA3JGgorpTXFX3M1plHDLqf8IsfQbRXNCRjGCMJt4K/I1oOOA==}
+  '@grafana/viz-contract@1.11.0':
+    resolution: {integrity: sha512-4Wq8Jqi0s/tuk3xhvWwL/nZZivXF/aveXc01f56ANg05aKuiQ6wg6WjNvtL8BY0kehbTDD96RIHmLzB1+QOtUg==}
 
   '@hello-pangea/dnd@17.0.0':
     resolution: {integrity: sha512-LDDPOix/5N0j5QZxubiW9T0M0+1PR0rTDWeZF5pu1Tz91UQnuVK4qQ/EjY83Qm2QeX0eM8qDXANfDh3VVqtR4Q==}
@@ -6021,6 +6021,11 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
+  prettier@3.9.6:
+    resolution: {integrity: sha512-OpN0zzVdiaiAhxpuuj5efpIS4sY9j7bY6uR5mnj5yPzGkdkjNKSJeUThPb60Jw29QuAZgA4o+/iB49kFiaBX6g==}
+    engines: {node: '>=14'}
+    hasBin: true
+
   pretty-format@27.5.1:
     resolution: {integrity: sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
@@ -9308,7 +9313,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@grafana/viz-contract@1.10.0': {}
+  '@grafana/viz-contract@1.11.0': {}
 
   '@hello-pangea/dnd@17.0.0(@types/react@18.3.26)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
@@ -14893,6 +14898,8 @@ snapshots:
   prelude-ls@1.2.1: {}
 
   prettier@3.10.1: {}
+
+  prettier@3.9.6: {}
 
   pretty-format@27.5.1:
     dependencies:

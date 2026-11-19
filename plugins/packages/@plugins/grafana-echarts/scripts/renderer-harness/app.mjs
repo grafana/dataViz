@@ -33,6 +33,7 @@ const handle = render(document.getElementById('root'), spec, {
     }
   },
   ...(options.onRefresh === false ? {} : { onRefresh: (request) => post({ type: 'refresh', request }) }),
+  ...(options.onMessage && { onMessage: (request) => post({ type: 'message', request }) }),
 });
 // The test sends `setRefreshed` or `update` to answer a refresh and `{ type: 'ping', id }` to
 // wait until the work of an interaction is done (`pong` comes in the same way as `idle`).

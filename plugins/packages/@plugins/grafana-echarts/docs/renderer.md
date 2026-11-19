@@ -2,7 +2,7 @@
 
 The Renderer is one ES module that draws a viz spec with the panels of this package. A viz spec is a JSON document that holds one panel and the data of its queries. The App of [grafana/mcp-grafana](https://github.com/grafana/mcp-grafana) loads the Renderer in an MCP Apps sandbox iframe. That iframe has no network and no Grafana server.
 
-The rules come from the viz contract 1.10.0, the `@grafana/viz-contract` npm package from [grafana/viz-contract](https://github.com/grafana/viz-contract). The package is a dependency in `package.json`, so `pnpm install` gets it. This repository has no copy of the contract. The source code is in `src/renderer/`.
+The rules come from the viz contract 1.11.0, the `@grafana/viz-contract` npm package from [grafana/viz-contract](https://github.com/grafana/viz-contract). The package is a dependency in `package.json`, so `pnpm install` gets it. This repository has no copy of the contract. The source code is in `src/renderer/`.
 
 ## The module
 
@@ -14,10 +14,11 @@ The module has three exports. Their types are in `renderer-api.d.ts` of the cont
 | `specVersions`              | The viz spec versions that the Renderer supports, from `src/renderer/specVersions.json`. |
 | `render(el, spec, options)` | Draws `spec` into `el` and returns a handle at once.                                     |
 
-`render` throws only if `el` is not an `HTMLElement`. A spec that is not correct gives the `error` state. The handle has `update(spec)`, `setRefreshed(id, ok, error)` and `destroy()`. The App gives two callbacks in `options`:
+`render` throws only if `el` is not an `HTMLElement`. A spec that is not correct gives the `error` state. The handle has `update(spec)`, `setRefreshed(id, ok, error)`, `setAnnotated(id, ok, error)` and `destroy()`. The App can give these callbacks in `options`:
 
 - `onState` receives each new final state: `ready`, `no-data` or `error`, with the notices. The same state is in the `data-viz-state` and `data-viz-error` attributes of `el`.
 - `onRefresh` receives a request when the user clicks Refresh, picks a time range, zooms, zooms out, pans, or clicks Reset time range. Each request has a new `id`. Two handles of the same Renderer module never give the same `id`. `setRefreshed` gives the result of the request with that `id`, and does nothing for the `id` of an older request. The Renderer shows Refresh and the time picker only when the App gives `onRefresh`.
+- If the App gives `onMessage`, the pinned tooltip shows Ask in chat for the selected field. A click sends the series name, labels, query ID and point to the App. A message holds one field. For a point with more than one field, for example a candlestick, the message holds the first field of the tooltip. A state timeline tooltip that shows all the lanes has no Ask in chat. A point that has no value in the tooltip has none also, for example a node that shows only its edges.
 
 Drag across the plot to zoom in. Double-click the plot or use the time picker to zoom out. Drag the time axis labels to pan. Pan sends one request when the drag ends. The Renderer ignores time range actions while a request runs.
 
@@ -172,7 +173,7 @@ These rules are in the `pending` list of `contractRules.json`:
 These differences are not rules of the `pending` list:
 
 - The stat panel: the contract has the panel type `grafana-echartsstat-panel`, and this package does not have the panel yet. `PANEL_TYPES_NOT_IN_PACKAGE` in `src/renderer/registry.ts` has its id. A viz spec for it gives `unsupported-panel-type`, and the tests leave out its fixture sets (`smoke-stat`, `stat-no-data`, `stat-thresholds`). When the stat module is added, remove the id and add the panel to `PANELS`.
-- The `error-unsupported-panel-type` set of contract 1.10.0 lists the panel types of contract 1.7.0 in its message, with no gauge and no stat ([grafana/viz-contract#94](https://github.com/grafana/viz-contract/issues/94)). `fixtureState` in `src/test/rendererFixtures.ts` puts the panel types that the Renderer draws in that message.
+- The `error-unsupported-panel-type` set of contract 1.11.0 lists the panel types of contract 1.7.0 in its message, with no gauge and no stat ([grafana/viz-contract#94](https://github.com/grafana/viz-contract/issues/94)). `fixtureState` in `src/test/rendererFixtures.ts` puts the panel types that the Renderer draws in that message.
 
 This difference has a test that fails when the difference is fixed:
 

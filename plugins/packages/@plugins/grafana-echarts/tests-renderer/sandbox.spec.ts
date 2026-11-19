@@ -55,7 +55,7 @@ for (const set of fixtureSets()) {
   }) => {
     // contract-rule: delivery.8
     // The zoom controls show with no interaction, for the families that have them.
-    await draw(page, fixtureSpec(set));
+    await draw(page, fixtureSpec(set), { onMessage: true });
     expect(await iconRequests(page)).toEqual([]);
     const app = page.frameLocator('#app');
     const box = (await page.locator('#app').boundingBox())!;
@@ -83,13 +83,17 @@ for (const set of fixtureSets()) {
 
 test('the delivery.8 interactions reach their states', async ({ page }) => {
   // The test above passes with no icon request if an interaction opens nothing. This set has each control.
-  await draw(page, fixtureSpec('prometheus-line'));
+  await draw(page, fixtureSpec('prometheus-line'), { onMessage: true });
   const app = page.frameLocator('#app');
   const box = (await page.locator('#app').boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   // A count, not a visible check: with no icon, the close button has no size.
   await expect(app.getByRole('button', { name: 'Close' })).toHaveCount(1);
+  await app.getByRole('link', { name: 'Ask in chat' }).click();
+  await settle(page);
+  expect((await readMessages(page)).filter((message) => message.type === 'message')).toHaveLength(1);
+  expect(await iconRequests(page)).toEqual([]);
   await page.keyboard.press('Escape');
   await app.getByTestId('series-icon').first().click();
   await expect(app.getByTestId('data-testid Tab Colors')).toBeVisible();

@@ -64,7 +64,7 @@ class Renderer {
 
   constructor(
     private readonly el: HTMLElement,
-    options: RenderOptions | undefined
+    private readonly options: RenderOptions | undefined
   ) {
     this.reporter = new StateReporter(el, options?.onState);
     this.setDefaultHeight();
@@ -311,6 +311,7 @@ class Renderer {
     this.root.render(
       <RendererView
         prepared={this.prepared}
+        onMessage={this.options?.onMessage}
         width={this.size.width}
         height={this.size.height}
         onViewShown={this.onViewShown}

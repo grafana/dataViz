@@ -28,7 +28,11 @@ const items: TimelineItem[] = [
 describe('buildTimelineTooltipModel', () => {
   it('shows start - end, the lane value with its swatch, and the duration', () => {
     const model = buildTimelineTooltipModel(items, { timeZone: 'utc' })({ dataIndex: 0 } as TopLevelFormatterParams);
-    expect(model.header).toEqual({ label: '', value: '2026-01-01 10:00:00 - \n2026-01-01 11:05:00' });
+    expect(model.header).toEqual({
+      label: '',
+      value: '2026-01-01 10:00:00 - \n2026-01-01 11:05:00',
+      coordinate: { type: 'time', value: items[0].segment.start },
+    });
     expect(model.rows).toEqual([
       { color: 'green', label: 'server A', value: 'OK', source: { field, rowIndex: 3 } },
       { label: 'Duration', value: '1h 5m' },
@@ -40,7 +44,11 @@ describe('buildTimelineTooltipModel', () => {
     const model = buildTimelineTooltipModel(items, { timeZone: 'utc', mode: 'samples' })({
       dataIndex: 0,
     } as TopLevelFormatterParams);
-    expect(model.header).toEqual({ label: '', value: '2026-01-01 10:00:00' });
+    expect(model.header).toEqual({
+      label: '',
+      value: '2026-01-01 10:00:00',
+      coordinate: { type: 'time', value: items[0].segment.start },
+    });
     expect(model.rows).toEqual([{ color: 'green', label: 'server A', value: 'OK', source: { field, rowIndex: 3 } }]);
   });
 });
@@ -79,7 +87,7 @@ describe('findTimelineSegment', () => {
 describe('buildTimelineMultiTooltipModel', () => {
   it('lists the state of each lane at the hovered time', () => {
     const model = buildTimelineMultiTooltipModel(multiModel, { timeZone: 'utc' })(at(16));
-    expect(model.header).toEqual({ label: '', value: '1970-01-01 00:00:00' });
+    expect(model.header).toEqual({ label: '', value: '1970-01-01 00:00:00', coordinate: { type: 'time', value: 16 } });
     expect(model.rows).toEqual([
       { color: 'red', label: 'A', value: 'ERR', source: { field, rowIndex: 1 } },
       { color: 'green', label: 'B', value: 'OK', source: { field, rowIndex: 0 } },

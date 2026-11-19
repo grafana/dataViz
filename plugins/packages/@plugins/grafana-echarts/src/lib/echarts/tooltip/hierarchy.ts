@@ -38,6 +38,7 @@ export function buildHierarchyTooltipModel(
         color: typeof param?.color === 'string' ? param.color : undefined,
         label: 'Value',
         value: formatEChartsValue(hovered?.value ?? null, ctx.formatValue),
+        rawValue: hovered?.value ?? null,
         source,
       },
     ];

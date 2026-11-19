@@ -1,11 +1,18 @@
 // The conformance test of the viz contract (`fixtures.10`): each fixture set draws, and its last `onState` value
 // equals its `state.json`. It never looks at pixels.
-import { type RenderHandle, type RenderState } from '@grafana/viz-contract/renderer-api';
-import { act, waitFor } from '@testing-library/react';
+import {
+  type MessageRequest,
+  type RenderHandle,
+  type RenderOptions,
+  type RenderState,
+} from '@grafana/viz-contract/renderer-api';
+import fs from 'node:fs';
+import path from 'node:path';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { getInstanceByDom } from 'lib/echarts/echarts';
 import { getChart } from 'test/canvas';
-import { fixtureSets, fixtureSpec, fixtureState } from 'test/rendererFixtures';
-import { dispatch, tooltipText } from 'test/tooltipPointer';
+import { allFixtureSets, FIXTURES_DIR, fixtureSets, fixtureSpec, fixtureState } from 'test/rendererFixtures';
+import { clickAt, dispatch, markPoint, tooltipText } from 'test/tooltipPointer';
 import { render } from './index';
 
 /** An element with an inline size: the jsdom shim of `jest-setup.js` reads `clientWidth` from the style. */
@@ -21,10 +28,10 @@ function sizedElement(): HTMLElement {
 const handles: RenderHandle[] = [];
 
 /** Draws `spec` and waits for the first final state. */
-async function draw(spec: unknown) {
+async function draw(spec: unknown, options?: RenderOptions) {
   const el = sizedElement();
   const states: RenderState[] = [];
-  handles.push(render(el, spec, { onState: (state) => states.push(state) }));
+  handles.push(render(el, spec, { ...options, onState: (state) => states.push(state) }));
   await waitFor(() => expect(el.getAttribute('data-viz-state')).not.toBe('rendering'));
   return { el, states };
 }
@@ -85,6 +92,204 @@ function markup(root: HTMLElement): string[] {
     ...[...node.attributes].filter((attribute) => attribute.name.startsWith('on')).map((attribute) => attribute.name),
   ]);
 }
+
+describe('Ask in chat', () => {
+  const link = { name: 'Ask in chat' };
+  const messageSets = allFixtureSets().filter((set) => fs.existsSync(path.join(FIXTURES_DIR, set, 'message.json')));
+
+  // contract-rule: renderer.30
+  // contract-rule: renderer.31
+  // contract-rule: renderer.32
+  // contract-rule: fixtures.16
+  // contract-rule: delivery.15
+  it.each(messageSets)('%s sends the point from the pinned tooltip once per click', async (set) => {
+    const onMessage = jest.fn();
+    const { el } = await draw(fixtureSpec(set), { onMessage });
+    const chart = getChart(el).chart!;
+    const series = chart.getOption().series as Array<{ name: string }>;
+    const { cases }: { cases: Array<{ renderer: boolean; request: MessageRequest }> } = JSON.parse(
+      fs.readFileSync(path.join(FIXTURES_DIR, set, 'message.json'), 'utf8')
+    );
+
+    for (const { request } of cases.filter((item) => item.renderer)) {
+      const seriesIndex = series.findIndex((item) => item.name === request.series.name);
+      expect(seriesIndex).toBeGreaterThanOrEqual(0);
+      const [x, y] = chart.convertToPixel({ seriesIndex }, [request.point.xRaw, request.point.yRaw]) as number[];
+      await dispatch(chart, 'mousemove', x, y);
+      await clickAt(chart, x, y);
+      expect(onMessage).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole('link', link));
+      expect(onMessage.mock.calls).toEqual([[request]]);
+      onMessage.mockClear();
+    }
+  });
+
+  /**
+   * Pins the first point whose tooltip has the link, and gives the text of that tooltip. The points that are on a
+   * chart element come first, one for each element. The other points of the grid follow, for a tooltip of the axis.
+   */
+  async function pinPointWithLink(chart: NonNullable<ReturnType<typeof getChart>['chart']>): Promise<string> {
+    // The `findHover` of the ZRender Handler is not part of the public typings.
+    const { handler } = chart.getZr() as unknown as {
+      handler: { findHover: (x: number, y: number) => { target?: object } };
+    };
+    const grid: Array<[number, number]> = [];
+    for (let y = 10; y < 300; y += 12) {
+      for (let x = 10; x < 600; x += 12) {
+        grid.push([x, y]);
+      }
+    }
+    const pin = async ([x, y]: [number, number]): Promise<boolean> => {
+      await dispatch(chart, 'mousemove', x, y);
+      if (tooltipText() === '') {
+        return false;
+      }
+      await clickAt(chart, x, y);
+      return screen.queryByRole('link', link) !== null;
+    };
+    // The hit test of a map is slow, so each point gets its hit test only when the scan comes to it.
+    const targets = new Set<object>();
+    for (const point of grid) {
+      const { target } = handler.findHover(...point);
+      if (target !== undefined && !targets.has(target) && targets.add(target) && (await pin(point))) {
+        return tooltipText();
+      }
+    }
+    for (const point of grid) {
+      if (await pin(point)) {
+        return tooltipText();
+      }
+    }
+    throw new Error('No point has the Ask in chat link');
+  }
+
+  // The gauge panel has no tooltip, so it has no Ask in chat.
+  const hasTooltip = (set: string) =>
+    (fixtureSpec(set).panel as { type?: string }).type !== 'grafana-echartsgauge-panel';
+  const chartSets = sets.filter((set) => fixtureState(set).state === 'ready' && hasTooltip(set));
+
+  // The contract has a `message.json` only for a time series. This test makes sure that the message of each other
+  // panel has the shape of `renderer.31` and `renderer.32`.
+  it.each(chartSets)('%s sends a message that agrees with its tooltip', async (set) => {
+    const spec = fixtureSpec(set);
+    const onMessage = jest.fn();
+    const { el } = await draw(spec, { onMessage });
+    const text = await pinPointWithLink(getChart(el).chart!);
+    fireEvent.click(screen.getByRole('link', link));
+    expect(onMessage).toHaveBeenCalledTimes(1);
+    const { series, point }: MessageRequest = onMessage.mock.calls[0][0];
+
+    expect(Object.keys((spec.data as { results: object }).results)).toContain(series.refId);
+    expect(point.y).not.toBe('');
+    expect(text).toContain(point.y);
+    expect(text.replace(/\s*\n\s*/g, ' ')).toContain(point.x);
+    expect(typeof point.xRaw).toBe(point.xType === 'string' ? 'undefined' : 'number');
+    expect(point.xIso).toBe(point.xType === 'time' ? new Date(point.xRaw ?? 0).toISOString() : undefined);
+  });
+
+  it('sends the lower bound of a histogram bucket as a number, with the refId of the raw field', async () => {
+    const onMessage = jest.fn();
+    const { el } = await draw(fixtureSpec('smoke-histogram'), { onMessage });
+    await pinPointWithLink(getChart(el).chart!);
+    fireEvent.click(screen.getByRole('link', link));
+    const { series, point }: MessageRequest = onMessage.mock.calls[0][0];
+    expect(series).toEqual({ name: 'latency', labels: {}, refId: 'A' });
+    expect(point.xType).toBe('number');
+    expect(point.x.startsWith(`${point.xRaw} - `)).toBe(true);
+    expect(typeof point.yRaw).toBe('number');
+  });
+
+  it.each(['smoke-sankey', 'smoke-nodeGraph'])(
+    '%s has no link for a node that shows only its edges, and has one for an edge',
+    async (set) => {
+      const onMessage = jest.fn();
+      const { el } = await draw(fixtureSpec(set), { onMessage });
+      const chart = getChart(el).chart!;
+
+      const node = markPoint(chart, 'node', 0);
+      await dispatch(chart, 'mousemove', ...node);
+      await clickAt(chart, ...node);
+      expect(tooltipText()).not.toBe('');
+      expect(screen.queryByRole('link', link)).toBeNull();
+
+      // The header of an edge is `source → target`.
+      expect(await pinPointWithLink(chart)).toContain(' → ');
+      fireEvent.click(screen.getByRole('link', link));
+      expect(onMessage.mock.calls[0][0].point.y).not.toBe('');
+    }
+  );
+
+  it('sends only the pinned series from a multi-series tooltip', async () => {
+    const spec = fixtureSpec('message-no-title');
+    const panel = spec.panel as { options: Record<string, unknown> };
+    panel.options.tooltip = { mode: 'multi' };
+    const onMessage = jest.fn();
+    const { el } = await draw(spec, { onMessage });
+    const chart = getChart(el).chart!;
+    const [x, y] = chart.convertToPixel({ seriesIndex: 2 }, [1790352660000, 10]) as number[];
+    await dispatch(chart, 'mousemove', x, y);
+    await clickAt(chart, x, y);
+    expect(tooltipText()).toContain('many labels');
+    expect(tooltipText()).toContain('plain');
+    fireEvent.click(screen.getByRole('link', link));
+    expect(onMessage.mock.calls).toEqual([
+      [
+        expect.objectContaining({
+          series: { name: 'plain', labels: {}, refId: 'A' },
+          point: expect.objectContaining({ y: '10 req/s', yRaw: 10 }),
+        }),
+      ],
+    ]);
+  });
+
+  it('sends the first field of a point that has more than one field', async () => {
+    const onMessage = jest.fn();
+    const { el } = await draw(fixtureSpec('smoke-candlestick'), { onMessage });
+    const chart = getChart(el).chart!;
+    // The body of the first candle: open 10.
+    const [x, y] = chart.convertToPixel({ seriesIndex: 0 }, [0, 10]) as number[];
+    await dispatch(chart, 'mousemove', x, y);
+    await clickAt(chart, x, y);
+    fireEvent.click(screen.getByRole('link', link));
+    expect(onMessage.mock.calls).toEqual([
+      [
+        expect.objectContaining({
+          series: { name: 'open', labels: {}, refId: 'A' },
+          point: expect.objectContaining({ xRaw: 1790352817294, yRaw: 10 }),
+        }),
+      ],
+    ]);
+  });
+
+  // contract-rule: renderer.33
+  it('keeps the pinned point when onMessage throws', async () => {
+    const error = new Error('Chat unavailable');
+    const onMessage = () => {
+      throw error;
+    };
+    const { el } = await draw(fixtureSpec('message-no-title'), { onMessage });
+    const chart = getChart(el).chart!;
+    const [x, y] = chart.convertToPixel({ seriesIndex: 0 }, [1790352660000, 2]) as number[];
+    await dispatch(chart, 'mousemove', x, y);
+    expect(screen.queryByRole('link', link)).toBeNull();
+    await clickAt(chart, x, y);
+    const action = screen.getByRole('link', link);
+    fireEvent.click(action);
+    expect(consoleError).toHaveBeenCalledWith('grafana-viz:', error);
+    expect(action).toBeVisible();
+    expect(el.dataset.vizState).toBe('ready');
+  });
+
+  it('omits the link when the App has no onMessage callback', async () => {
+    const { el } = await draw(fixtureSpec('message-no-title'));
+    const chart = getChart(el).chart!;
+    const [x, y] = chart.convertToPixel({ seriesIndex: 0 }, [1790352660000, 2]) as number[];
+    await dispatch(chart, 'mousemove', x, y);
+    await clickAt(chart, x, y);
+    expect(tooltipText()).toContain('many labels');
+    expect(screen.queryByRole('link', link)).toBeNull();
+  });
+});
 
 describe('hostile-label', () => {
   // No tag: `fixtures.4` names the set, and the Source owns that rule. The contract has no Renderer rule for it.

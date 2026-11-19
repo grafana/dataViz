@@ -422,21 +422,27 @@ function buildHistogramTooltip(
     const count = (i: number): unknown => (value(model.counts[i]) === 0 ? null : value(model.counts[i]));
     const row = (i: number): TooltipRow => {
       const field = model.counts[i];
+      const raw = count(i);
       return {
         color: colors[i],
         label: model.names[i],
-        value: formattedValueToString(getDisplay(field, theme)(count(i))),
+        value: formattedValueToString(getDisplay(field, theme)(raw)),
         emphasis: multi && i === seriesField,
+        rawValue: typeof raw === 'number' ? raw : null,
         source: { field, rowIndex },
       };
     };
+    const xMin = value(model.xMin);
     const indexes = (multi ? model.counts.map((_, i) => i) : [seriesField]).filter(
       (i) => !hidden.has(model.names[i]) && (count(i) != null || model.counts[i].config.noValue != null)
     );
     return {
       header: {
         label: 'Bucket',
-        value: `${formattedValueToString(formatMin(value(model.xMin)))} - ${formattedValueToString(formatMax(value(model.xMax)))}`,
+        value: `${formattedValueToString(formatMin(xMin))} - ${formattedValueToString(formatMax(value(model.xMax)))}`,
+        // The x of a bucket is its lower bound.
+        ...(typeof xMin === 'number' &&
+          Number.isFinite(xMin) && { coordinate: { type: 'number' as const, value: xMin } }),
       },
       rows: indexes.map(row),
       source: multi ? undefined : { field: model.counts[seriesField], rowIndex },

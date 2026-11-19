@@ -91,18 +91,18 @@ describe('buildTooltipModel', () => {
   });
 
   it('formats the header with the supplied time formatter, overriding axisValueLabel', () => {
-    const formatHeaderValue = (item: { value?: unknown }) =>
-      Array.isArray(item.value) ? `t${item.value[0]}` : undefined;
+    const formatHeader = (item: { value?: unknown }) =>
+      Array.isArray(item.value) ? { label: '', value: `t${item.value[0]}` } : undefined;
     // Item-trigger (Single): no axisValueLabel at all — recovered from the tuple.
     const single = buildTooltipModel(asParams({ seriesName: 'A', value: [1000, 5] }), resolveValue, {
-      formatHeaderValue,
+      formatHeader,
     });
     expect(single.header).toEqual({ label: '', value: 't1000' });
     // Axis-trigger: Grafana formatting wins over ECharts' axisValueLabel.
     const multi = buildTooltipModel(
       asParams([{ seriesName: 'A', value: [1000, 5], axisValueLabel: 'echarts-format' }]),
       resolveValue,
-      { formatHeaderValue }
+      { formatHeader }
     );
     expect(multi.header).toEqual({ label: '', value: 't1000' });
   });
