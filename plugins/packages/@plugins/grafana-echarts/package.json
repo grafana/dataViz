@@ -79,7 +79,7 @@
     "jest-canvas-mock-compare": "0.1.0",
     "jest-environment-jsdom": "30.4.1",
     "prettier": "3.10.1",
-    "pretty-format": "30.4.1",
+    "pretty-format": "30.5.1",
     "replace-in-file-webpack-plugin": "1.0.6",
     "sass": "1.89.0",
     "sass-loader": "17.0.0",
