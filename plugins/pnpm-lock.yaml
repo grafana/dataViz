@@ -284,8 +284,8 @@ importers:
         specifier: 3.3.3
         version: 3.3.3(supports-color@8.1.1)
       '@grafana/tsconfig':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.2.0
+        version: 2.2.0
       '@grafana/viz-contract':
         specifier: 1.11.0
         version: 1.11.0
@@ -1615,9 +1615,6 @@ packages:
     resolution: {integrity: sha512-bCdRRCYB8NccQbEnmDcLqZrODLP1R4nhYwOzYGtQMTh7xISf7ddj2HlpPN4DeX1aPhV9yCNxcCyLZm3N6zjATQ==}
     engines: {node: '>=20'}
     hasBin: true
-
-  '@grafana/tsconfig@2.0.1':
-    resolution: {integrity: sha512-yGNQWQDlxFfklzMfk0i8qnDqKOvIGc0Aqe62zLS4LTqptkhnyLEVsdaVmX99m3QFOcBiiFn8scREDzGeF2iNvQ==}
 
   '@grafana/tsconfig@2.2.0':
     resolution: {integrity: sha512-hhhXetqhSKTfgErStfWVPhqo4JPi+lNqBJNhBF6RT4ZIM4vwKxEfnfsyswT+NwHIXNrOz23xoOGeKWPpxmaHWQ==}
@@ -9047,8 +9044,6 @@ snapshots:
       proxy-agent: 8.0.1(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
-
-  '@grafana/tsconfig@2.0.1': {}
 
   '@grafana/tsconfig@2.2.0': {}
 
