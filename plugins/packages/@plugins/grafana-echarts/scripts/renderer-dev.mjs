@@ -31,7 +31,9 @@ function run(task) {
 }
 
 async function build() {
-  if (stopped) return;
+  if (stopped) {
+    return;
+  }
   if (building) {
     pending = true;
     return;
@@ -58,7 +60,9 @@ async function build() {
 
 function page(url) {
   const fixture = url.searchParams.get('fixture') || 'prometheus-line';
-  if (!fixtures.includes(fixture)) return null;
+  if (!fixtures.includes(fixture)) {
+    return null;
+  }
   const theme = url.searchParams.get('theme') === 'light' ? 'light' : 'dark';
   const dimension = (key, fallback) => Math.max(240, Math.min(2400, Number(url.searchParams.get(key)) || fallback));
   const width = dimension('width', 960);
