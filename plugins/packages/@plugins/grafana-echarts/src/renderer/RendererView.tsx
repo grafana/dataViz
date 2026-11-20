@@ -26,7 +26,6 @@ import { type RefreshCause, type RefreshStatus } from './refresh';
 import { RendererErrorView } from './RendererErrorView';
 import { RendererTitle } from './RendererTitle';
 import { RendererToolbar } from './RendererToolbar';
-import { ChartResetTimeRangeButton } from './ChartResetTimeRangeButton';
 import { rootClassName } from './rootStyles';
 
 interface Props {
@@ -110,12 +109,7 @@ export const RendererView = ({
               <CommitSignal prepared={prepared} onCommit={onCommit} />
               <div className={rootClass} style={{ width, height }}>
                 {refresh && (
-                  <RendererToolbar
-                    {...refresh}
-                    onReset={timeNavigation?.onReset}
-                    timeRange={prepared.timeRange}
-                    timeZone={prepared.timeZone}
-                  />
+                  <RendererToolbar {...refresh} timeRange={prepared.timeRange} timeZone={prepared.timeZone} />
                 )}
                 {prepared.title !== undefined && <RendererTitle title={prepared.title} />}
                 <div style={{ position: 'relative', width, height: chartHeight }}>
@@ -148,7 +142,6 @@ export const RendererView = ({
                         </TooltipActionContext.Provider>
                       </TimeDragContext.Provider>
                       <ChartNotices notices={toChartNotices(prepared.notices)} corner="top-left" />
-                      {timeNavigation?.localRange && <ChartResetTimeRangeButton onClick={timeNavigation.onReset} />}
                     </ChartErrorBoundary>
                   )}
                 </div>

@@ -8,7 +8,6 @@ import { RefreshButton } from './RefreshButton';
 import { type RefreshCause, type RefreshStatus } from './refresh';
 import { TimePicker } from './TimePicker';
 import { type TimeRangeCause } from './timeRangeRequest';
-import { ResetTimeRangeButton } from './ResetTimeRangeButton';
 
 interface Props {
   status: RefreshStatus;
@@ -17,8 +16,6 @@ interface Props {
   timeZone: TimeZone;
   onRequest: (cause: RefreshCause) => void;
   onPick: (cause: TimeRangeCause) => void;
-  onReset?: () => void;
-  canReset: boolean;
 }
 
 /**
@@ -26,7 +23,7 @@ interface Props {
  * (`refresh.4`): the pickers have no `disabled` prop, so a disabled `fieldset` disables their buttons.
  * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/fieldset#disabled
  */
-export const RendererToolbar = ({ status, timeRange, timeZone, onRequest, onPick, onReset, canReset }: Props) => {
+export const RendererToolbar = ({ status, timeRange, timeZone, onRequest, onPick }: Props) => {
   const styles = useStyles2(getStyles);
   return (
     <div className={styles.bar}>
@@ -35,7 +32,6 @@ export const RendererToolbar = ({ status, timeRange, timeZone, onRequest, onPick
       </span>
       <fieldset className={styles.controls} disabled={status.busy} aria-busy={status.busy}>
         {timeRange && <TimePicker value={timeRange} timeZone={timeZone} onPick={onPick} />}
-        {onReset && (timeRange || canReset) && <ResetTimeRangeButton disabled={!canReset} onClick={onReset} />}
         <RefreshButton busy={status.busy} onRequest={onRequest} />
       </fieldset>
     </div>

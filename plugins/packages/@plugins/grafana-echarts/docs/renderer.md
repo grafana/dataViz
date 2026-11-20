@@ -17,12 +17,19 @@ The module has three exports. Their types are in `renderer-api.d.ts` of the cont
 `render` throws only if `el` is not an `HTMLElement`. A spec that is not correct gives the `error` state. The handle has `update(spec)`, `setRefreshed(id, ok, error)`, `setAnnotated(id, ok, error)` and `destroy()`. The App can give these callbacks in `options`:
 
 - `onState` receives each new final state: `ready`, `no-data` or `error`, with the notices. The same state is in the `data-viz-state` and `data-viz-error` attributes of `el`.
-- `onRefresh` receives a request when the user clicks Refresh, picks a time range, zooms, zooms out, pans, or clicks Reset time range. Each request has a new `id`. Two handles of the same Renderer module never give the same `id`. `setRefreshed` gives the result of the request with that `id`, and does nothing for the `id` of an older request. The Renderer shows Refresh and the time picker only when the App gives `onRefresh`.
+- `onRefresh` receives a request when the user clicks Refresh, picks a time range, zooms, zooms out, pans,. Each request has a new `id`. Two handles of the same Renderer module never give the same `id`. `setRefreshed` gives the result of the request with that `id`, and does nothing for the `id` of an older request. The Renderer shows Refresh and the time picker only when the App gives `onRefresh`.
 - If the App gives `onMessage`, the pinned tooltip shows Ask in chat for the selected field. A click sends the series name, labels, query ID and point to the App. A message holds one field. For a point with more than one field, for example a candlestick, the message holds the first field of the tooltip. A state timeline tooltip that shows all the lanes has no Ask in chat. A point that has no value in the tooltip has none also, for example a node that shows only its edges.
 
-Drag across the plot to zoom in. Double-click the plot or use the time picker to zoom out. Drag the time axis labels to pan. Pan sends one request when the drag ends. The Renderer ignores time range actions while a request runs.
+Drag across the plot to zoom in. Double-click the plot to zoom out. Drag the time axis labels to pan. Pan sends one request when the drag ends. The Renderer ignores time range actions while a request runs.
 
-Reset time range asks for the last pick in the time picker or the original query range. It keeps relative values such as `now-15m`. Without `onRefresh`, zoom and pan stay within the supplied data. Reset time range shows the full range again.
+The renderer omits Reset time range in both toolbar and chart-only views. Without `onRefresh`, zoom and pan
+stay within the supplied data; double-click zooms out within that data.
+
+This intentionally differs from contract 1.11.0. The proposed contract change makes Reset optional in both
+modes, while preserving its behavior requirements when a renderer offers it. Until that revision is published,
+`renderer.42`, `renderer.43`, `renderer.45`, `renderer.48`, the reset use of `spec.17`, and `delivery.12`
+remain pending here. The earlier removal of the picker zoom-out button also differs from `renderer.44`;
+that is separate from making Reset optional. The remaining zoom and pan behavior is unchanged.
 
 The user can hide, show and color the items of the legend. The Renderer keeps these legend overrides in memory until `destroy`, and draws each new viz spec with them (`renderer.34` to `renderer.37`). A legend override finds an item by its name, so it stays for a name that is not in the new data. The Renderer keeps what the user chose, not the difference to the viz spec, and it draws the legend overrides after the overrides of the viz spec, so they win whatever the order of those. It does not change the viz spec, and the App does not get it. A new `render` starts with none.
 
