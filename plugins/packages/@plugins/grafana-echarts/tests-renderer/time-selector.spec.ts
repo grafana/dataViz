@@ -14,6 +14,12 @@ for (const theme of ['dark', 'light']) {
       await expect(app.getByRole('button', { name: 'Zoom out time range' })).toHaveCount(0);
       await trigger.click();
       await expect(app.getByRole('dialog', { name: 'Time range picker' })).toBeVisible();
+      const base = await trigger.evaluate((el) => {
+        const style = getComputedStyle(el);
+        return { color: style.color, font: style.fontFamily };
+      });
+      await expect(app.getByText('Last 5 minutes', { exact: true })).toHaveCSS('color', base.color);
+      await expect(app.getByText('Last 5 minutes', { exact: true })).toHaveCSS('font-family', base.font);
       await page.screenshot({ path: `/tmp/renderer-time-selector-${width}-${theme}.png` });
       const search = app.getByRole('textbox', { name: 'Search quick ranges' });
       if (width < 1024) {

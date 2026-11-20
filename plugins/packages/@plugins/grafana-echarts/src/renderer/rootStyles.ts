@@ -28,5 +28,7 @@ export const rootClassName = (theme: GrafanaTheme2): string =>
     [within(['*', '*::before', '*::after'])]: { boxSizing: 'inherit' },
     // A browser gives a button `color: buttontext` (black), for example on each legend label.
     [within(FORM_ELEMENTS)]: { borderRadius: 0, color: 'inherit', font: 'inherit', lineHeight: 'inherit', margin: 0 },
+    [within(['fieldset'])]: { minWidth: 0, margin: 0, padding: 0, border: 0 },
+    [within(['label'])]: { display: 'inline-block' },
     [within(['button'])]: { letterSpacing: theme.typography.body.letterSpacing, cursor: 'pointer' },
   });

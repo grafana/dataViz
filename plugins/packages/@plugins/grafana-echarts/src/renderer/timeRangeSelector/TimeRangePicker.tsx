@@ -19,6 +19,7 @@ import { FocusScope } from '@react-aria/focus';
 import { useOverlay } from '@react-aria/overlays';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useMedia } from 'react-use';
+import { rootClassName } from '../rootStyles';
 import { getPositioningMiddleware } from './floating';
 import { getModalStyles } from './getModalStyles';
 import { getQuickOptions } from './options';
@@ -154,7 +155,7 @@ export function TimeRangePicker(props: TimeRangePickerProps) {
             />
             <FocusScope contain autoFocus restoreFocus>
               <section
-                className={styles.content}
+                className={cx(rootClassName(theme), styles.content)}
                 ref={setOverlayRef}
                 style={isNarrow ? undefined : floatingStyles}
                 {...overlayProps}
