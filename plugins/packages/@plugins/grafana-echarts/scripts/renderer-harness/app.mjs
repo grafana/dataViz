@@ -3,6 +3,11 @@
 // the built Renderer (`dist-renderer/renderer.js`), as `delivery.1` says the App build adds the Renderer to `app.html`.
 // The page gives the viz spec in `<script type="application/json" id="viz-spec">`, the harness options in
 // `<script type="application/json" id="harness-options">`, and reads the messages.
+import { createElement } from 'react';
+import { createRoot } from 'react-dom/client';
+import { flushSync } from 'react-dom';
+import { createTheme } from '@grafana/data';
+import { GlobalStyles, ThemeContext } from '@grafana/ui';
 import { cacheStore } from 'react-inlinesvg';
 import icons from '../../dist-renderer/icons.json';
 import { render, specVersions, version } from '../../dist-renderer/renderer.js';
@@ -20,6 +25,18 @@ const post = (message) => parent.postMessage(message, '*');
 post({ type: 'module', version, specVersions });
 const spec = JSON.parse(document.getElementById('viz-spec').textContent);
 const options = JSON.parse(document.getElementById('harness-options').textContent);
+// The App owns document styles, including content rendered through portals.
+const stylesHost = document.createElement('div');
+document.body.appendChild(stylesHost);
+const stylesRoot = createRoot(stylesHost);
+function applyGlobalStyles(spec) {
+  const theme = createTheme({ colors: { mode: spec?.theme === 'light' ? 'light' : 'dark' } });
+  flushSync(() =>
+    stylesRoot.render(createElement(ThemeContext.Provider, { value: theme }, createElement(GlobalStyles)))
+  );
+}
+applyGlobalStyles(spec);
+
 // After the first state, `idle` comes when the iframe has no work left in its queue: the effects of the first draw
 // have run, and so have their requests and CSP reports.
 // https://developer.mozilla.org/en-US/docs/Web/API/Window/requestIdleCallback
@@ -42,6 +59,7 @@ addEventListener('message', (event) => {
     handle.setRefreshed(event.data.id, event.data.ok, event.data.error);
   }
   if (event.data?.type === 'update') {
+    applyGlobalStyles(event.data.spec);
     handle.update(event.data.spec);
   }
   if (event.data?.type === 'ping') {
