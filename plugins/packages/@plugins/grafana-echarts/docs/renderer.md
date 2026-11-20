@@ -37,6 +37,21 @@ The Renderer does not bundle React or the Grafana UI packages. The App gives the
 
 The build writes a `package.json` next to the bundle. Its `peerDependencies` list these packages, with caret ranges of the versions in the package `package.json`. All other code is in the bundle, for example ECharts, rxjs and `@grafana/i18n`. The bundle has no `@grafana/runtime` module: the build replaces `src/lib/grafana/GrafanaPanelServices.tsx`, the only entry point of the panel code to it, with `src/renderer/GrafanaPanelServices.tsx`.
 
+## Local development
+
+From `plugins/`, run:
+
+```bash
+pnpm --filter @plugins/grafana-echarts run dev:renderer
+```
+
+Open <http://127.0.0.1:4174>. The server builds the renderer and harness, then shows a fixture in a sandbox iframe.
+Choose a fixture, theme, width, and height in the page. Source edits rebuild both bundles and reload the page.
+Build failures appear above the preview; the last successful preview stays available.
+
+Use `PORT=4175` before the command to choose another port. Stop with Ctrl-C. No Grafana server is needed.
+Refresh and time-range requests are displayed and acknowledged; fixture data does not change and no datasource is queried.
+
 ## Build
 
 Run these commands in `plugins/packages/@plugins/grafana-echarts`. Install the workspace first with `pnpm install` in `plugins/`.
