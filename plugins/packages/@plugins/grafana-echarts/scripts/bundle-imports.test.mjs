@@ -29,3 +29,14 @@ describe('bundleImports', () => {
     assert.deepEqual(bundleImports('import("lodash");import.meta.url;a.import("x");'), []);
   });
 });
+
+test('ignores import-like text in strings, comments, and selector properties', () => {
+  const code = `
+    const selectors = { export: "Export", import: "Import", Dashboard: { url: "dashboard" } };
+    const text = 'import "not-a-package"';
+    // import "comment-package";
+    /* export * from "another-comment"; */
+    import { value } from "@grafana/data";
+  `;
+  assert.deepEqual(bundleImports(code), ['@grafana/data']);
+});

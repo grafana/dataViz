@@ -1,5 +1,5 @@
 // The page of the Renderer sandbox test: the test App in `<iframe sandbox="allow-scripts" srcdoc>` with the default
-// content security policy of MCP Apps (`renderer.6`).
+// content security policy of MCP Apps (`renderer.6`), plus embedded harness fonts.
 import { expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -14,6 +14,7 @@ export const MCP_APPS_DEFAULT_CSP = [
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data:",
+  'font-src data:',
   "media-src 'self' data:",
   "connect-src 'none'",
   "frame-src 'none'",

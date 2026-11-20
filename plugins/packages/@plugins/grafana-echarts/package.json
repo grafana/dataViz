@@ -37,11 +37,13 @@
     "server:e2e:nightly": "pnpm run build:relations && export GRAFANA_IMAGE=grafana GRAFANA_VERSION=nightly GRAFANA_PORT=${GRAFANA_PORT:-4002} GF_FEATURE_TOGGLES_ENABLE=grafana.panelPluginTransformations && COMPOSE_PROJECT_NAME=grafana-echarts-panel-relations-$GRAFANA_PORT docker compose -f docker-compose-relations.yaml build --pull && pnpm run server:relations",
     "e2e:nightly": "GRAFANA_PORT=${GRAFANA_PORT:-4002} playwright test",
     "server:lgtm": "pnpm run build && COMPOSE_PROJECT_NAME=${GRAFANA_CONTAINER_NAME:-grafana-echarts-panel-lgtm-${GRAFANA_PORT:-3010}} docker compose -f docker-compose-lgtm.yaml up --build",
-    "sign": "sign-plugin"
+    "sign": "sign-plugin",
+    "dev:renderer": "node scripts/renderer-dev.mjs"
   },
   "author": "Grafana",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@fontsource/inter": "5.3.0",
     "@grafana/eslint-config": "9.0.0",
     "@grafana/plugin-e2e": "3.15.4",
     "@grafana/sign-plugin": "3.3.3",
@@ -112,6 +114,14 @@
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "rxjs": "7.8.2",
-    "topojson-client": "3.1.0"
+    "topojson-client": "3.1.0",
+    "@floating-ui/react": "0.27.19",
+    "@react-aria/dialog": "3.6.1",
+    "@react-aria/focus": "3.21.2",
+    "@react-aria/overlays": "3.32.1",
+    "@grafana/e2e-selectors": "13.3.0",
+    "react-use": "17.6.1",
+    "react-calendar": "6.0.1",
+    "react-hook-form": "7.85.0"
   }
 }

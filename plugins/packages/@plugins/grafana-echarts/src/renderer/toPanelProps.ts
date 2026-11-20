@@ -1,7 +1,7 @@
 // The props of `Panel` for a viz spec, made as Grafana makes them for a panel JSON (`spec.10`).
 import {
   applyFieldOverrides,
-  createTheme,
+  getThemeById,
   EventBusSrv,
   getPanelOptionsWithDefaults,
   type GrafanaTheme2,
@@ -29,7 +29,8 @@ const themes = new Map<VizSpec['theme'], GrafanaTheme2>();
 export function themeOf(mode: VizSpec['theme']): GrafanaTheme2 {
   let theme = themes.get(mode);
   if (!theme) {
-    theme = createTheme({ colors: { mode } });
+    const base = getThemeById(`visual_refresh_${mode}`);
+    theme = { ...base, flags: { ...base.flags, visualDesignRefresh: true } };
     themes.set(mode, theme);
   }
   return theme;

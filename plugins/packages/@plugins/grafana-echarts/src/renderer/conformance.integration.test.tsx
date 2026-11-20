@@ -94,7 +94,7 @@ function markup(root: HTMLElement): string[] {
 }
 
 describe('Ask in chat', () => {
-  const link = { name: 'Ask in chat' };
+  const button = { name: 'Ask in chat' };
   const messageSets = allFixtureSets().filter((set) => fs.existsSync(path.join(FIXTURES_DIR, set, 'message.json')));
 
   // contract-rule: renderer.30
@@ -118,7 +118,7 @@ describe('Ask in chat', () => {
       await dispatch(chart, 'mousemove', x, y);
       await clickAt(chart, x, y);
       expect(onMessage).not.toHaveBeenCalled();
-      fireEvent.click(screen.getByRole('link', link));
+      fireEvent.click(screen.getByRole('button', button));
       expect(onMessage.mock.calls).toEqual([[request]]);
       onMessage.mockClear();
     }
@@ -128,7 +128,7 @@ describe('Ask in chat', () => {
    * Pins the first point whose tooltip has the link, and gives the text of that tooltip. The points that are on a
    * chart element come first, one for each element. The other points of the grid follow, for a tooltip of the axis.
    */
-  async function pinPointWithLink(chart: NonNullable<ReturnType<typeof getChart>['chart']>): Promise<string> {
+  async function pinPointWithAction(chart: NonNullable<ReturnType<typeof getChart>['chart']>): Promise<string> {
     // The `findHover` of the ZRender Handler is not part of the public typings.
     const { handler } = chart.getZr() as unknown as {
       handler: { findHover: (x: number, y: number) => { target?: object } };
@@ -145,7 +145,7 @@ describe('Ask in chat', () => {
         return false;
       }
       await clickAt(chart, x, y);
-      return screen.queryByRole('link', link) !== null;
+      return screen.queryByRole('button', button) !== null;
     };
     // The hit test of a map is slow, so each point gets its hit test only when the scan comes to it.
     const targets = new Set<object>();
@@ -160,7 +160,7 @@ describe('Ask in chat', () => {
         return tooltipText();
       }
     }
-    throw new Error('No point has the Ask in chat link');
+    throw new Error('No point has the Ask in chat button');
   }
 
   // The gauge panel has no tooltip, so it has no Ask in chat.
@@ -174,8 +174,8 @@ describe('Ask in chat', () => {
     const spec = fixtureSpec(set);
     const onMessage = jest.fn();
     const { el } = await draw(spec, { onMessage });
-    const text = await pinPointWithLink(getChart(el).chart!);
-    fireEvent.click(screen.getByRole('link', link));
+    const text = await pinPointWithAction(getChart(el).chart!);
+    fireEvent.click(screen.getByRole('button', button));
     expect(onMessage).toHaveBeenCalledTimes(1);
     const { series, point }: MessageRequest = onMessage.mock.calls[0][0];
 
@@ -190,8 +190,8 @@ describe('Ask in chat', () => {
   it('sends the lower bound of a histogram bucket as a number, with the refId of the raw field', async () => {
     const onMessage = jest.fn();
     const { el } = await draw(fixtureSpec('smoke-histogram'), { onMessage });
-    await pinPointWithLink(getChart(el).chart!);
-    fireEvent.click(screen.getByRole('link', link));
+    await pinPointWithAction(getChart(el).chart!);
+    fireEvent.click(screen.getByRole('button', button));
     const { series, point }: MessageRequest = onMessage.mock.calls[0][0];
     expect(series).toEqual({ name: 'latency', labels: {}, refId: 'A' });
     expect(point.xType).toBe('number');
@@ -210,11 +210,11 @@ describe('Ask in chat', () => {
       await dispatch(chart, 'mousemove', ...node);
       await clickAt(chart, ...node);
       expect(tooltipText()).not.toBe('');
-      expect(screen.queryByRole('link', link)).toBeNull();
+      expect(screen.queryByRole('button', button)).toBeNull();
 
       // The header of an edge is `source → target`.
-      expect(await pinPointWithLink(chart)).toContain(' → ');
-      fireEvent.click(screen.getByRole('link', link));
+      expect(await pinPointWithAction(chart)).toContain(' → ');
+      fireEvent.click(screen.getByRole('button', button));
       expect(onMessage.mock.calls[0][0].point.y).not.toBe('');
     }
   );
@@ -231,7 +231,7 @@ describe('Ask in chat', () => {
     await clickAt(chart, x, y);
     expect(tooltipText()).toContain('many labels');
     expect(tooltipText()).toContain('plain');
-    fireEvent.click(screen.getByRole('link', link));
+    fireEvent.click(screen.getByRole('button', button));
     expect(onMessage.mock.calls).toEqual([
       [
         expect.objectContaining({
@@ -250,7 +250,7 @@ describe('Ask in chat', () => {
     const [x, y] = chart.convertToPixel({ seriesIndex: 0 }, [0, 10]) as number[];
     await dispatch(chart, 'mousemove', x, y);
     await clickAt(chart, x, y);
-    fireEvent.click(screen.getByRole('link', link));
+    fireEvent.click(screen.getByRole('button', button));
     expect(onMessage.mock.calls).toEqual([
       [
         expect.objectContaining({
@@ -271,23 +271,23 @@ describe('Ask in chat', () => {
     const chart = getChart(el).chart!;
     const [x, y] = chart.convertToPixel({ seriesIndex: 0 }, [1790352660000, 2]) as number[];
     await dispatch(chart, 'mousemove', x, y);
-    expect(screen.queryByRole('link', link)).toBeNull();
+    expect(screen.queryByRole('button', button)).toBeNull();
     await clickAt(chart, x, y);
-    const action = screen.getByRole('link', link);
+    const action = screen.getByRole('button', button);
     fireEvent.click(action);
     expect(consoleError).toHaveBeenCalledWith('grafana-viz:', error);
     expect(action).toBeVisible();
     expect(el.dataset.vizState).toBe('ready');
   });
 
-  it('omits the link when the App has no onMessage callback', async () => {
+  it('omits the button when the App has no onMessage callback', async () => {
     const { el } = await draw(fixtureSpec('message-no-title'));
     const chart = getChart(el).chart!;
     const [x, y] = chart.convertToPixel({ seriesIndex: 0 }, [1790352660000, 2]) as number[];
     await dispatch(chart, 'mousemove', x, y);
     await clickAt(chart, x, y);
     expect(tooltipText()).toContain('many labels');
-    expect(screen.queryByRole('link', link)).toBeNull();
+    expect(screen.queryByRole('button', button)).toBeNull();
   });
 });
 

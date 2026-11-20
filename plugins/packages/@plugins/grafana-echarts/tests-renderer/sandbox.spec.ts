@@ -90,7 +90,14 @@ test('the delivery.8 interactions reach their states', async ({ page }) => {
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   // A count, not a visible check: with no icon, the close button has no size.
   await expect(app.getByRole('button', { name: 'Close' })).toHaveCount(1);
-  await app.getByRole('link', { name: 'Ask in chat' }).click();
+  const askInChat = app.getByRole('button', { name: 'Ask in chat' });
+  const widths = await askInChat.evaluate((button) => ({
+    button: button.getBoundingClientRect().width,
+    footer: button.parentElement!.getBoundingClientRect().width,
+  }));
+  expect(widths.button).toBeLessThan(widths.footer);
+  await expect(askInChat.locator('..')).toHaveCSS('padding', '8px');
+  await askInChat.click();
   await settle(page);
   expect((await readMessages(page)).filter((message) => message.type === 'message')).toHaveLength(1);
   expect(await iconRequests(page)).toEqual([]);
@@ -99,7 +106,8 @@ test('the delivery.8 interactions reach their states', async ({ page }) => {
   await expect(app.getByTestId('data-testid Tab Colors')).toBeVisible();
   await page.keyboard.press('Escape');
   await app.getByTestId('data-testid TimePicker Open Button').click();
-  await expect(app.getByText('Absolute time range')).toBeVisible();
+  await app.getByRole('tab', { name: 'Absolute', exact: true }).click();
+  await expect(app.getByRole('button', { name: 'Apply time range', exact: true })).toBeVisible();
 });
 
 test('the manifest gives the version and the specVersions of the built bundle', async ({ page }) => {
@@ -187,6 +195,6 @@ test('the text of the panel has the theme color, also in a button (a legend labe
   // contract-rule: renderer.11
   await draw(page, fixtureSpec('prometheus-line'));
   const app = page.frameLocator('#app');
-  // The dark theme: `text.primary` is rgb(204, 204, 220). A browser gives a button black text with no reset.
-  await expect(app.locator('button', { hasText: /^\/api\/annotations$/ })).toHaveCSS('color', 'rgb(204, 204, 220)');
+  // The refreshed dark theme uses ink150 for `text.primary`. A browser gives a button black text with no reset.
+  await expect(app.locator('button', { hasText: /^\/api\/annotations$/ })).toHaveCSS('color', 'rgb(201, 206, 212)');
 });

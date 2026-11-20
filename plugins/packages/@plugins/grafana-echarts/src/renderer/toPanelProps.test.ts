@@ -121,9 +121,13 @@ describe('toPanelProps', () => {
   });
 
   // contract-rule: renderer.11
-  it('uses the theme of the spec, dark by default', () => {
+  it('uses visual refresh for both spec themes', () => {
     expect(themeOf('dark').isDark).toBe(true);
     expect(themeOf('light').isLight).toBe(true);
+    expect(themeOf('dark').name).toBe('Visual Refresh (Dark)');
+    expect(themeOf('light').name).toBe('Visual Refresh (Light)');
+    expect(themeOf('dark').flags.visualDesignRefresh).toBe(true);
+    expect(themeOf('light').flags.visualDesignRefresh).toBe(true);
   });
 
   it('gives the time zone of the spec and the time range of data.range', () => {

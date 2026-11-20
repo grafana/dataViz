@@ -226,6 +226,11 @@ const getStyles = (theme: GrafanaTheme2) => ({
     boxShadow: theme.shadows.z2,
     userSelect: 'text',
   }),
+  // Match VizTooltipFooter sections for custom actions.
+  actionSection: css({
+    borderTop: `1px solid ${theme.colors.border.medium}`,
+    padding: theme.spacing(1),
+  }),
   pinned: css({
     boxShadow: theme.shadows.z3,
   }),
@@ -339,9 +344,17 @@ export const EChartsTooltip: React.FC<Props> = ({ state, dismiss, annotate, mode
     const [source] = sources;
     const onPointAction = action && source ? action.resolve(model, source) : undefined;
     const pointAction = action && onPointAction && (
-      <Button role="link" icon="link" fill="text" size="sm" onClick={onPointAction}>
-        {action.title}
-      </Button>
+      <div className={styles.actionSection}>
+        <Button
+          icon="comment-alt"
+          variant="secondary"
+          size="sm"
+          style={{ width: 'fit-content' }}
+          onClick={onPointAction}
+        >
+          {action.title}
+        </Button>
+      </div>
     );
     const filters = resolveFilters(state, sources);
     const adHocFilters = collectAdHocFilters(filters.each, onAddAdHocFilter);
