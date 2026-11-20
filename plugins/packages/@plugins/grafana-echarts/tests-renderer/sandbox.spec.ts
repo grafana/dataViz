@@ -99,7 +99,8 @@ test('the delivery.8 interactions reach their states', async ({ page }) => {
   await expect(app.getByTestId('data-testid Tab Colors')).toBeVisible();
   await page.keyboard.press('Escape');
   await app.getByTestId('data-testid TimePicker Open Button').click();
-  await expect(app.getByText('Absolute time range')).toBeVisible();
+  await app.getByRole('tab', { name: 'Absolute', exact: true }).click();
+  await expect(app.getByRole('button', { name: 'Apply time range', exact: true })).toBeVisible();
 });
 
 test('the manifest gives the version and the specVersions of the built bundle', async ({ page }) => {
