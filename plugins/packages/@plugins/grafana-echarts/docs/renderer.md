@@ -53,6 +53,8 @@ pnpm --filter @plugins/grafana-echarts run dev:renderer
 ```
 
 Open <http://127.0.0.1:4174>. The server builds the renderer and harness, then shows a fixture in a sandbox iframe.
+The harness mounts Grafana global styles and embeds Inter (Latin, normal and italic, weights 300–600) from
+`@fontsource/inter`. Its font CSP permits data URLs only; no font requests leave the sandbox.
 Choose a fixture, theme, width, and height in the page. Source edits rebuild both bundles and reload the page.
 Build failures appear above the preview; the last successful preview stays available.
 

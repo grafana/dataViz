@@ -298,6 +298,9 @@ importers:
         specifier: 3.1.0
         version: 3.1.0
     devDependencies:
+      '@fontsource/inter':
+        specifier: 5.3.0
+        version: 5.3.0
       '@grafana/eslint-config':
         specifier: 9.0.0
         version: 9.0.0(@stylistic/eslint-plugin-ts@4.4.1(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3))(@typescript-eslint/eslint-plugin@8.62.1(@typescript-eslint/parser@8.62.1(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3))(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3))(@typescript-eslint/parser@8.62.1(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3))(eslint-config-prettier@10.1.8(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1)))(eslint-plugin-jsdoc@63.0.10(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1))(eslint-plugin-react-hooks@7.1.1(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1))(eslint-plugin-react@7.37.5(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1)))(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(typescript@5.9.3)
@@ -1495,6 +1498,9 @@ packages:
 
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
+
+  '@fontsource/inter@5.3.0':
+    resolution: {integrity: sha512-RofMylZmjlJEfELXeNHFWBRcSs75rGU/6bV2S2jfnvv/3rPXPGe0LgUJTklcHZ9lM4OZmAVFhcJPnACfb91A3g==}
 
   '@formatjs/bigdecimal@0.2.7':
     resolution: {integrity: sha512-B4+XY/e4u5v261r3a37Kq2ax91gPZSKGyVpx8X5dygAggLlUz+6MeBpmAhaBFGB8WQ4JB1qD+QtKHk9aJkEb9Q==}
@@ -8679,6 +8685,8 @@ snapshots:
 
   '@floating-ui/utils@0.2.12': {}
 
+  '@fontsource/inter@5.3.0': {}
+
   '@formatjs/bigdecimal@0.2.7': {}
 
   '@formatjs/ecma402-abstract@2.3.6':
@@ -14086,7 +14094,7 @@ snapshots:
       jest-regex-util: 30.4.0
       jest-util: 30.4.1
       jest-worker: 30.4.1
-      picomatch: 4.0.5
+      picomatch: 4.0.7
       walker: 1.0.8
     optionalDependencies:
       fsevents: 2.3.3

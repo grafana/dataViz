@@ -4,7 +4,7 @@
 // output of the real App build can differ: escaping, CSS injection, and the `eval` check of `@grafana/data`.
 import fs from 'fs';
 import path from 'path';
-import { type Configuration } from 'webpack';
+import webpack, { type Configuration } from 'webpack';
 
 /**
  * The folder of the `react-inlinesvg` that `@grafana/ui` imports. pnpm puts the dependencies of `@grafana/ui` in the
@@ -17,8 +17,16 @@ const config = (): Configuration => ({
   mode: 'production',
   entry: path.resolve(process.cwd(), 'scripts/renderer-harness/app.mjs'),
   target: 'web',
+  plugins: [
+    new webpack.NormalModuleReplacementPlugin(/^\.\/fonts\.mjs$/, (resource) => {
+      if (resource.context.endsWith('themes/GlobalStyles')) {
+        resource.request = path.resolve(process.cwd(), 'scripts/renderer-harness/fonts.mjs');
+      }
+    }),
+  ],
   module: {
     rules: [
+      { test: /\.woff2$/, type: 'asset/inline' },
       // `@grafana/ui` imports CSS. `style-loader` adds it as `<style>`, which `style-src 'unsafe-inline'` allows.
       { test: /\.css$/, use: ['style-loader', 'css-loader'] },
     ],

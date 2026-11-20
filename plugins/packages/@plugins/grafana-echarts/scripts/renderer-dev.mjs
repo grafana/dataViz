@@ -66,7 +66,7 @@ function page(url) {
   const spec = { ...JSON.parse(readFileSync(join(fixturesDir, fixture, 'spec.json'), 'utf8')), theme };
   const inner = bundle
     ? `<!doctype html><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; font-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'">
 <style>html,body{margin:0}#root{width:${width}px;height:${height}px}</style><div id="root"></div>
 <script type="application/json" id="viz-spec">${json(spec)}</script>
 <script type="application/json" id="harness-options">{"onRefresh":true,"onMessage":true}</script>

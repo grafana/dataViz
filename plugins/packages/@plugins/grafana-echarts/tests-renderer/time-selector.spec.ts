@@ -9,6 +9,10 @@ for (const theme of ['dark', 'light']) {
       const app = page.frameLocator('#app');
       const trigger = app.getByTestId('data-testid TimePicker Open Button');
       await expect(trigger).toBeVisible();
+      await expect(trigger).toHaveCSS('border-radius', '6px');
+      await expect(trigger).toHaveCSS('font-weight', '500');
+      await trigger.evaluate(() => document.fonts.load('500 14px Inter'));
+      await expect.poll(() => trigger.evaluate(() => document.fonts.check('500 14px Inter'))).toBe(true);
       await expect(app.getByRole('button', { name: 'Move time range backwards' })).toHaveCount(0);
       await expect(app.getByRole('button', { name: 'Move time range forwards' })).toHaveCount(0);
       await expect(app.getByRole('button', { name: 'Zoom out time range' })).toHaveCount(0);
