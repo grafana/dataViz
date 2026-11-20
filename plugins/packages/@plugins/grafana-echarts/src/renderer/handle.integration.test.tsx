@@ -431,7 +431,7 @@ describe('refresh', () => {
     const { el } = draw(fixtureSpec('smoke-timeseries'), { onRefresh });
     await waitForState(el, 'ready');
     await userEvent.click(within(el).getByTestId(/TimePicker Open Button/i));
-    await userEvent.click(await screen.findByText('Last 6 hours'));
+    await userEvent.click(await screen.findByText('6 hours'));
     expect(onRefresh).toHaveBeenCalledWith({ id: expect.any(String), cause: 'timeRange', from: 'now-6h', to: 'now' });
   });
 

@@ -144,7 +144,7 @@ test('Reset uses the last time picker selection after a zoom', async ({ page }) 
   const app = page.frameLocator('#app');
   const ui = controls(page);
   await ui.picker.click();
-  await app.getByText('Last 6 hours', { exact: true }).click();
+  await app.getByText('6 hours', { exact: true }).click();
   const pick = await nextRequest(page, 1);
   expect([pick.from, pick.to]).toEqual(['now-6h', 'now']);
   await answer(page, { type: 'update', spec });

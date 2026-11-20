@@ -18,15 +18,15 @@ for (const theme of ['dark', 'light']) {
         const style = getComputedStyle(el);
         return { color: style.color, font: style.fontFamily };
       });
-      await expect(app.getByText('Last 5 minutes', { exact: true })).toHaveCSS('color', base.color);
-      await expect(app.getByText('Last 5 minutes', { exact: true })).toHaveCSS('font-family', base.font);
+      await expect(app.getByText('5 minutes', { exact: true })).toHaveCSS('color', base.color);
+      await expect(app.getByText('5 minutes', { exact: true })).toHaveCSS('font-family', base.font);
       await page.screenshot({ path: `/tmp/renderer-time-selector-${width}-${theme}.png` });
       const search = app.getByRole('textbox', { name: 'Search quick ranges' });
       if (width < 1024) {
         await search.fill('3h');
         await search.press('Enter');
       } else {
-        await app.getByText('Last 3 hours', { exact: true }).click();
+        await app.getByText('3 hours', { exact: true }).click();
       }
       await expect.poll(async () => (await readMessages(page)).filter((m) => m.type === 'refresh').length).toBe(1);
       expect((await readMessages(page)).filter((m) => m.type === 'error')).toEqual([]);
