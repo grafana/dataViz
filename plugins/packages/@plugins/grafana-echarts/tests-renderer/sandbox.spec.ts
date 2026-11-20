@@ -96,6 +96,7 @@ test('the delivery.8 interactions reach their states', async ({ page }) => {
     footer: button.parentElement!.getBoundingClientRect().width,
   }));
   expect(widths.button).toBeLessThan(widths.footer);
+  await expect(askInChat.locator('..')).toHaveCSS('padding', '8px');
   await askInChat.click();
   await settle(page);
   expect((await readMessages(page)).filter((message) => message.type === 'message')).toHaveLength(1);
