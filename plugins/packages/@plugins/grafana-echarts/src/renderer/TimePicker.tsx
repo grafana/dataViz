@@ -38,6 +38,7 @@ export const TimePicker = ({ value, timeZone, onPick }: Props) => {
     <TimeRangePicker
       quickRanges={quickRanges}
       compactDesign="tabs"
+      hideText
       hideHistory
       hideTimeZone
       hideFiscalYear
