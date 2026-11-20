@@ -435,20 +435,13 @@ describe('refresh', () => {
     expect(onRefresh).toHaveBeenCalledWith({ id: expect.any(String), cause: 'timeRange', from: 'now-6h', to: 'now' });
   });
 
-  it('calls onRefresh with an absolute range for the move back button', async () => {
-    const onRefresh = jest.fn();
-    const spec = fixtureSpec('smoke-timeseries');
-    const { from, to } = (spec.data as { range: { from: number; to: number } }).range;
-    const { el } = draw(spec, { onRefresh });
+  it('omits time navigation and zoom buttons from the picker', async () => {
+    const { el } = draw(fixtureSpec('smoke-timeseries'), { onRefresh: jest.fn() });
     await waitForState(el, 'ready');
-    await userEvent.click(within(el).getByRole('button', { name: /move time range backwards/i }));
-    const half = (to - from) / 2;
-    expect(onRefresh).toHaveBeenCalledWith({
-      id: expect.any(String),
-      cause: 'timeRange',
-      from: String(from - half),
-      to: String(to - half),
-    });
+    expect(within(el).getByTestId(/TimePicker Open Button/i)).toBeVisible();
+    expect(within(el).queryByRole('button', { name: /move time range backwards/i })).not.toBeInTheDocument();
+    expect(within(el).queryByRole('button', { name: /move time range forwards/i })).not.toBeInTheDocument();
+    expect(within(el).queryByRole('button', { name: /zoom out time range/i })).not.toBeInTheDocument();
   });
 });
 

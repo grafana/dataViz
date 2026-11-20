@@ -243,9 +243,15 @@ importers:
       '@emotion/css':
         specifier: 11.10.6
         version: 11.10.6(supports-color@8.1.1)
+      '@floating-ui/react':
+        specifier: 0.27.19
+        version: 0.27.19(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@grafana/data':
         specifier: 13.3.0
         version: 13.3.0(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.3)
+      '@grafana/e2e-selectors':
+        specifier: 13.3.0
+        version: 13.3.0
       '@grafana/i18n':
         specifier: 13.3.0
         version: 13.3.0(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.3)
@@ -258,15 +264,33 @@ importers:
       '@grafana/ui':
         specifier: 13.3.0
         version: 13.3.0(@babel/runtime@8.0.5)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.2)(@codemirror/theme-one-dark@6.1.3)(@types/react@19.3.0)(codemirror@6.0.2)(eslint@9.32.0(jiti@2.7.0)(supports-color@8.1.1))(js-cookie@3.0.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@5.9.3)
+      '@react-aria/dialog':
+        specifier: 3.6.1
+        version: 3.6.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@react-aria/focus':
+        specifier: 3.21.2
+        version: 3.21.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@react-aria/overlays':
+        specifier: 3.32.1
+        version: 3.32.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       echarts:
         specifier: 6.1.0
         version: 6.1.0
       react:
         specifier: 19.2.7
         version: 19.2.7
+      react-calendar:
+        specifier: 6.0.1
+        version: 6.0.1(@types/react@19.3.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       react-dom:
         specifier: 19.2.7
         version: 19.2.7(react@19.2.7)
+      react-hook-form:
+        specifier: 7.85.0
+        version: 7.85.0(react@19.2.7)
+      react-use:
+        specifier: 17.6.1
+        version: 17.6.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       rxjs:
         specifier: 7.8.2
         version: 7.8.2
@@ -10350,7 +10374,7 @@ snapshots:
     dependencies:
       '@react-aria/focus': 3.21.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@react-aria/overlays': 3.32.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@react-aria/utils': 3.27.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@react-aria/utils': 3.34.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@react-types/dialog': 3.6.0(@react-spectrum/provider@3.11.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@react-types/shared': 3.36.1(react@18.3.1)
       '@swc/helpers': 0.5.23
@@ -10376,7 +10400,7 @@ snapshots:
   '@react-aria/focus@3.19.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@react-aria/interactions': 3.28.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@react-aria/utils': 3.27.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@react-aria/utils': 3.34.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@react-types/shared': 3.36.1(react@18.3.1)
       '@swc/helpers': 0.5.23
       clsx: 2.1.1
@@ -10435,7 +10459,7 @@ snapshots:
       '@react-aria/i18n': 3.13.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@react-aria/interactions': 3.28.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@react-aria/ssr': 3.10.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@react-aria/utils': 3.27.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@react-aria/utils': 3.34.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@react-aria/visually-hidden': 3.9.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@react-stately/overlays': 3.7.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@react-types/button': 3.16.0(@react-spectrum/provider@3.11.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -14577,7 +14601,7 @@ snapshots:
 
   nano-css@5.6.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.5
+      '@jridgewell/sourcemap-codec': 1.6.0
       css-tree: 1.1.3
       csstype: 3.2.3
       fastest-stable-stringify: 2.0.2
@@ -14590,7 +14614,7 @@ snapshots:
 
   nano-css@5.6.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
     dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.5
+      '@jridgewell/sourcemap-codec': 1.6.0
       css-tree: 1.1.3
       csstype: 3.2.3
       fastest-stable-stringify: 2.0.2

@@ -34,7 +34,7 @@ export const RendererToolbar = ({ status, timeRange, timeZone, onRequest, onPick
         {status.message}
       </span>
       <fieldset className={styles.controls} disabled={status.busy} aria-busy={status.busy}>
-        {timeRange && <TimePicker value={timeRange} timeZone={timeZone} onRequest={onRequest} onPick={onPick} />}
+        {timeRange && <TimePicker value={timeRange} timeZone={timeZone} onPick={onPick} />}
         {onReset && (timeRange || canReset) && <ResetTimeRangeButton disabled={!canReset} onClick={onReset} />}
         <RefreshButton busy={status.busy} onRequest={onRequest} />
       </fieldset>

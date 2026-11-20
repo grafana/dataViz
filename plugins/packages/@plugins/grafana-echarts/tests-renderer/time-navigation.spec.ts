@@ -83,7 +83,7 @@ test('time range actions ask the App once, and a busy chart ignores more actions
   await chart.zoomOut();
   const wide = await nextRequest(page, 1);
   expect([wide.from, wide.to]).toEqual(['1790352127294', '1790353927294']);
-  await expect(ui.zoomOut).toBeDisabled();
+  await expect(ui.zoomOut).toHaveCount(0);
   await expect(ui.reset).toBeDisabled();
   await chart.zoomIn();
   await chart.zoomOut();
@@ -98,7 +98,7 @@ test('time range actions ask the App once, and a busy chart ignores more actions
   await settle(page);
   expect(await refreshes(page)).toHaveLength(1);
 
-  await ui.zoomOut.click();
+  await chart.zoomOut();
   const pickerZoom = await nextRequest(page, 2);
   expect([pickerZoom.from, pickerZoom.to]).toEqual([wide.from, wide.to]);
   await answer(page, { type: 'setRefreshed', id: pickerZoom.id, ok: true });

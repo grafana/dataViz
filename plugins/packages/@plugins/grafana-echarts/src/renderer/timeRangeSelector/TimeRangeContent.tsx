@@ -1,0 +1,295 @@
+import { css } from '@emotion/css';
+import { Button, Icon, Tooltip, useStyles2, type WeekStart } from '@grafana/ui';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useController, useForm } from 'react-hook-form';
+
+import {
+  type DateTime,
+  dateTimeFormat,
+  dateTimeParse,
+  type GrafanaTheme2,
+  isDateTime,
+  rangeUtil,
+  type RawTimeRange,
+  type TimeRange,
+} from '@grafana/data';
+import { selectors } from '@grafana/e2e-selectors';
+import { t, Trans } from '@grafana/i18n';
+import { type TimeZone } from '@grafana/schema';
+
+import { isValid } from './utils';
+
+import { TimeRangeFields } from './TimeRangeFields';
+
+interface Props {
+  compact?: boolean;
+  calendarAnchor?: HTMLElement | null;
+  isFullscreen: boolean;
+  value: TimeRange;
+  onApply: (range: TimeRange) => void;
+  timeZone?: TimeZone;
+  fiscalYearStartMonth?: number;
+  roundup?: boolean;
+  isReversed?: boolean;
+  onError?: (error?: string) => void;
+  weekStart?: WeekStart;
+}
+
+interface FormState {
+  from: string;
+  to: string;
+}
+
+const ERROR_MESSAGES = {
+  default: () =>
+    t(
+      'time-picker.range-content.default-error',
+      'Enter a date ({{dateExample}}) or relative time ({{relativeTimeExample1}}, {{relativeTimeExample2}})',
+      {
+        dateExample: 'YYYY-MM-DD HH:mm:ss',
+        relativeTimeExample1: 'now',
+        relativeTimeExample2: 'now-1h',
+      }
+    ),
+  range: () => t('time-picker.range-content.range-error', '"From" date must be before "To" date'),
+};
+
+export const TimeRangeContent = (props: Props) => {
+  const {
+    value,
+    isFullscreen = false,
+    calendarAnchor,
+    timeZone,
+    onApply: onApplyFromProps,
+    isReversed,
+    fiscalYearStartMonth,
+    onError,
+    weekStart,
+  } = props;
+  const style = useStyles2(getStyles, props.compact);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
+  const {
+    handleSubmit,
+    control,
+    formState: { errors },
+    setValue,
+  } = useForm<FormState>({
+    defaultValues: {
+      from: valueAsString(value.raw.from, timeZone),
+      to: valueAsString(value.raw.to, timeZone),
+    },
+  });
+
+  const { field: fromField } = useController({
+    name: 'from',
+    control,
+    rules: {
+      required: ERROR_MESSAGES.default(),
+      validate: (value, formValues) => {
+        if (!isValid(value, false, timeZone)) {
+          return ERROR_MESSAGES.default();
+        }
+        if (
+          !!formValues.to &&
+          isValid(formValues.to, true, timeZone) &&
+          isRangeInvalid(value, formValues.to, timeZone)
+        ) {
+          return ERROR_MESSAGES.range();
+        }
+        return true;
+      },
+    },
+  });
+  const { field: toField } = useController({
+    name: 'to',
+    control,
+    rules: {
+      required: ERROR_MESSAGES.default(),
+      validate: (value, formValues) => {
+        if (!isValid(value, true, timeZone)) {
+          return ERROR_MESSAGES.default();
+        }
+        if (
+          !!formValues.from &&
+          isValid(formValues.from, false, timeZone) &&
+          isRangeInvalid(formValues.from, value, timeZone)
+        ) {
+          return ERROR_MESSAGES.range();
+        }
+        return true;
+      },
+    },
+  });
+
+  // Synchronize internal state with external value
+  useEffect(() => {
+    setValue('from', valueAsString(value.raw.from, timeZone));
+    setValue('to', valueAsString(value.raw.to, timeZone));
+  }, [value.raw.from, value.raw.to, setValue, timeZone]);
+
+  const onApply = useCallback(() => {
+    handleSubmit((data) => {
+      const raw: RawTimeRange = { from: data.from, to: data.to };
+      const timeRange = rangeUtil.convertRawToRange(raw, timeZone, fiscalYearStartMonth);
+      onApplyFromProps(timeRange);
+    })();
+  }, [handleSubmit, timeZone, fiscalYearStartMonth, onApplyFromProps]);
+
+  const onChange = useCallback(
+    (from: DateTime | string, to: DateTime | string) => {
+      setValue('from', valueAsString(from, timeZone));
+      setValue('to', valueAsString(to, timeZone));
+    },
+    [setValue, timeZone]
+  );
+
+  const onCopy = () => {
+    const rawSource: RawTimeRange = value.raw;
+    const clipboardPayload = rangeUtil.formatRawTimeRange(rawSource);
+    navigator.clipboard.writeText(JSON.stringify(clipboardPayload));
+  };
+
+  const onPaste = async () => {
+    const raw = await navigator.clipboard.readText();
+    let range: unknown;
+
+    try {
+      range = JSON.parse(raw);
+    } catch (error) {
+      if (onError) {
+        onError(raw);
+      }
+      return;
+    }
+
+    if (
+      !range ||
+      typeof range !== 'object' ||
+      !('from' in range) ||
+      !('to' in range) ||
+      typeof range.from !== 'string' ||
+      typeof range.to !== 'string'
+    ) {
+      onError?.(raw);
+      return;
+    }
+    setValue('from', valueAsString(range.from, timeZone));
+    setValue('to', valueAsString(range.to, timeZone));
+  };
+
+  const fiscalYear = rangeUtil.convertRawToRange({ from: 'now/fy', to: 'now/fy' }, timeZone, fiscalYearStartMonth);
+
+  const fyTooltip = (
+    <div className={style.tooltip}>
+      {rangeUtil.isFiscal(value) ? (
+        <Tooltip
+          content={t('time-picker.range-content.fiscal-year', 'Fiscal year: {{from}} - {{to}}', {
+            from: fiscalYear.from.format('MMM-DD'),
+            to: fiscalYear.to.format('MMM-DD'),
+          })}
+        >
+          <Icon name="info-circle" />
+        </Tooltip>
+      ) : null}
+    </div>
+  );
+
+  return (
+    <div>
+      <TimeRangeFields
+        fieldSuffix={props.compact ? undefined : fyTooltip}
+        fullWidth={props.compact}
+        inlineCalendar={props.compact}
+        onCalendarOpenChange={setCalendarOpen}
+        onSubmit={onApply}
+        from={{
+          value: fromField.value,
+          onChange: fromField.onChange,
+          onBlur: fromField.onBlur,
+          inputRef: fromField.ref,
+          error: errors.from?.message,
+          testId: selectors.components.TimePicker.fromField,
+        }}
+        to={{
+          value: toField.value,
+          onChange: toField.onChange,
+          onBlur: toField.onBlur,
+          inputRef: toField.ref,
+          error: errors.to?.message,
+          testId: selectors.components.TimePicker.toField,
+        }}
+        calendar={{
+          isFullscreen,
+          from: dateTimeParse(fromField.value, { timeZone }),
+          to: dateTimeParse(toField.value, { timeZone }),
+          onApply,
+          onChange,
+          timeZone,
+          isReversed,
+          weekStart,
+          referenceElement: calendarAnchor,
+        }}
+      />
+      {!(calendarOpen && props.compact) && (
+        <div className={style.buttonsContainer}>
+          <Button
+            data-testid={selectors.components.TimePicker.copyTimeRange}
+            icon="copy"
+            variant="secondary"
+            tooltip={t('time-picker.copy-paste.tooltip-copy', 'Copy time range to clipboard')}
+            type="button"
+            onClick={onCopy}
+          />
+          <Button
+            data-testid={selectors.components.TimePicker.pasteTimeRange}
+            icon="clipboard-alt"
+            variant="secondary"
+            tooltip={t('time-picker.copy-paste.tooltip-paste', 'Paste time range')}
+            type="button"
+            onClick={onPaste}
+          />
+          <Button data-testid={selectors.components.TimePicker.applyTimeRange} type="button" onClick={onApply}>
+            <Trans i18nKey="time-picker.range-content.apply-button">Apply time range</Trans>
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+function isRangeInvalid(from: string, to: string, timezone?: string): boolean {
+  const raw: RawTimeRange = { from, to };
+  const timeRange = rangeUtil.convertRawToRange(raw, timezone);
+  const valid = timeRange.from.isSame(timeRange.to) || timeRange.from.isBefore(timeRange.to);
+
+  return !valid;
+}
+
+function valueAsString(value: DateTime | string, timeZone?: TimeZone): string {
+  if (isDateTime(value)) {
+    return dateTimeFormat(value, { timeZone });
+  }
+
+  if (value.endsWith('Z')) {
+    const dt = dateTimeParse(value);
+    return dateTimeFormat(dt, { timeZone });
+  }
+
+  return value;
+}
+
+function getStyles(theme: GrafanaTheme2, compact?: boolean) {
+  return {
+    buttonsContainer: css({
+      display: 'flex',
+      gap: theme.spacing(0.5),
+      marginTop: theme.spacing(1),
+      ...(compact && { '& > button:last-child': { marginLeft: 'auto' } }),
+    }),
+    tooltip: css({
+      paddingLeft: theme.spacing(1),
+      paddingTop: theme.spacing(3),
+    }),
+  };
+}

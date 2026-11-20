@@ -112,6 +112,14 @@
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "rxjs": "7.8.2",
-    "topojson-client": "3.1.0"
+    "topojson-client": "3.1.0",
+    "@floating-ui/react": "0.27.19",
+    "@react-aria/dialog": "3.6.1",
+    "@react-aria/focus": "3.21.2",
+    "@react-aria/overlays": "3.32.1",
+    "@grafana/e2e-selectors": "13.3.0",
+    "react-use": "17.6.1",
+    "react-calendar": "6.0.1",
+    "react-hook-form": "7.85.0"
   }
 }
