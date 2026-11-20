@@ -6,7 +6,7 @@
 import { createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 import { flushSync } from 'react-dom';
-import { createTheme } from '@grafana/data';
+import { getThemeById } from '@grafana/data';
 import { GlobalStyles, ThemeContext } from '@grafana/ui';
 import { cacheStore } from 'react-inlinesvg';
 import icons from '../../dist-renderer/icons.json';
@@ -30,7 +30,8 @@ const stylesHost = document.createElement('div');
 document.body.appendChild(stylesHost);
 const stylesRoot = createRoot(stylesHost);
 function applyGlobalStyles(spec) {
-  const theme = createTheme({ colors: { mode: spec?.theme === 'light' ? 'light' : 'dark' } });
+  const base = getThemeById(`visual_refresh_${spec?.theme === 'light' ? 'light' : 'dark'}`);
+  const theme = { ...base, flags: { ...base.flags, visualDesignRefresh: true } };
   flushSync(() =>
     stylesRoot.render(createElement(ThemeContext.Provider, { value: theme }, createElement(GlobalStyles)))
   );

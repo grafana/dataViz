@@ -188,6 +188,6 @@ test('the text of the panel has the theme color, also in a button (a legend labe
   // contract-rule: renderer.11
   await draw(page, fixtureSpec('prometheus-line'));
   const app = page.frameLocator('#app');
-  // The dark theme: `text.primary` is rgb(204, 204, 220). A browser gives a button black text with no reset.
-  await expect(app.locator('button', { hasText: /^\/api\/annotations$/ })).toHaveCSS('color', 'rgb(204, 204, 220)');
+  // The refreshed dark theme uses ink150 for `text.primary`. A browser gives a button black text with no reset.
+  await expect(app.locator('button', { hasText: /^\/api\/annotations$/ })).toHaveCSS('color', 'rgb(201, 206, 212)');
 });
