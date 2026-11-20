@@ -24,9 +24,9 @@
     "@grafana/data": "11.6.16",
     "@grafana/runtime": "11.6.16",
     "@swc/jest": "0.2.39",
-    "@types/jest": "^30.0.0",
+    "@types/jest": "30.0.0",
     "@types/react": "18.3.26",
-    "jest": "^30.4.2",
+    "jest": "30.4.2",
     "react": "18.3.1",
     "typescript": "5.9.3"
   },
