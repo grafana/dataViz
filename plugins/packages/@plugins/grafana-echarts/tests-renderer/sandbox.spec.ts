@@ -90,7 +90,13 @@ test('the delivery.8 interactions reach their states', async ({ page }) => {
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   // A count, not a visible check: with no icon, the close button has no size.
   await expect(app.getByRole('button', { name: 'Close' })).toHaveCount(1);
-  await app.getByRole('button', { name: 'Ask in chat' }).click();
+  const askInChat = app.getByRole('button', { name: 'Ask in chat' });
+  const widths = await askInChat.evaluate((button) => ({
+    button: button.getBoundingClientRect().width,
+    footer: button.parentElement!.getBoundingClientRect().width,
+  }));
+  expect(widths.button).toBeLessThan(widths.footer);
+  await askInChat.click();
   await settle(page);
   expect((await readMessages(page)).filter((message) => message.type === 'message')).toHaveLength(1);
   expect(await iconRequests(page)).toEqual([]);

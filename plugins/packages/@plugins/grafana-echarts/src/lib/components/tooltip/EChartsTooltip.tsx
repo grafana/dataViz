@@ -339,7 +339,7 @@ export const EChartsTooltip: React.FC<Props> = ({ state, dismiss, annotate, mode
     const [source] = sources;
     const onPointAction = action && source ? action.resolve(model, source) : undefined;
     const pointAction = action && onPointAction && (
-      <Button icon="comment-alt" variant="secondary" size="sm" onClick={onPointAction}>
+      <Button icon="comment-alt" variant="secondary" size="sm" style={{ width: 'fit-content' }} onClick={onPointAction}>
         {action.title}
       </Button>
     );
