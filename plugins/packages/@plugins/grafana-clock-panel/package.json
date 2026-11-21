@@ -100,5 +100,5 @@
     "node": ">=24"
   },
   "//packageManager": "Looks redundant with the workspace root but is NOT - Grafana's shared plugin CD workflow reads it from this file. Do not delete. See DEVELOPING.md.",
-  "packageManager": "pnpm@11.21.0"
+  "packageManager": "pnpm@11.28.13"
 }
